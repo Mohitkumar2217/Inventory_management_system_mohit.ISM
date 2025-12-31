@@ -1,0 +1,190 @@
+import React, { useState } from "react";
+import StaffSummaryCard from "../../components/Summerys/StaffSummaryCard.jsx";
+import StaffForm from "../../components/Forms/StaffForm.jsx";
+import { 
+  Search, Plus, Trash2, Eye, ArrowLeft, Edit2, 
+  UserCog, UserCheck, ShieldCheck, Mail, Briefcase, 
+  Calendar, Info 
+} from "lucide-react";
+
+export default function Staff() {
+  const initialStaff = Array.from({ length: 20 }).map((_, i) => ({
+    id: i + 1,
+    name: `Employee ${i + 1}`,
+    role: i % 5 === 0 ? "Admin" : i % 3 === 0 ? "Manager" : "Staff",
+    status: i % 4 === 0 ? "Inactive" : "Active",
+    works: `Senior logistics coordinator for Department ${i + 1}. Oversees inventory reconciliation and vendor communication.`,
+    email: `employee${i + 1}@company.com`,
+    joinedDate: "2023-05-12"
+  }));
+
+  const [staffList, setStaffList] = useState(initialStaff);
+  const [selectedStaff, setSelectedStaff] = useState(null);
+  const [view, setView] = useState("list");
+  const [search, setSearch] = useState("");
+  const [formData, setFormData] = useState({ name: "", works: "", role: "Staff", status: "Active" });
+
+  const itemsSummary = {
+    totalStaff: staffList.length,
+    activeStaff: staffList.filter(s => s.status === "Active").length,
+    inactiveStaff: staffList.filter(s => s.status === "Inactive").length,
+    admins: staffList.filter(s => s.role === "Admin").length,
+    managers: staffList.filter(s => s.role === "Manager").length,
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.id) {
+      setStaffList(staffList.map(s => s.id === formData.id ? { ...formData } : s));
+    } else {
+      setStaffList([{ ...formData, id: Date.now() }, ...staffList]);
+    }
+    setView("list");
+  };
+
+  // --- Fixed handleOpenDetails logic ---
+  const handleOpenDetails = (staff) => {
+    setSelectedStaff(staff);
+    setView("view-details");
+  };
+
+  const filteredStaff = staffList.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
+      {view === "list" ? (
+        <div className="max-w-7xl mx-auto p-4 md:p-6 animate-in fade-in duration-700">
+          <StaffSummaryCard items={itemsSummary} nameSum="Team" />
+
+          <div className="flex justify-between items-center mb-8 mt-8">
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
+              <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+                <UserCog size={14} className="text-indigo-500" /> {filteredStaff.length} Members active
+              </p>
+            </div>
+            <button onClick={() => { setFormData({ name: "", works: "", role: "Staff", status: "Active" }); setView("add"); }} className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg active:scale-95 transition-all">
+              <Plus size={20} /> Register Staff
+            </button>
+          </div>
+
+          <div className="bg-white rounded-[2rem] p-4 mb-6 border border-slate-100 shadow-sm flex items-center gap-4">
+            <Search className="text-slate-400 ml-2" size={20} />
+            <input type="text" placeholder="Search by employee name..." className="flex-1 bg-transparent outline-none font-bold text-sm" value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-black border-b border-slate-50 tracking-widest">
+                  <tr>
+                    <th className="p-5">Member Name</th>
+                    <th className="p-5">Organization Role</th>
+                    <th className="p-5">Employment Status</th>
+                    <th className="p-5 text-center">Manage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 text-sm font-bold">
+                  {filteredStaff.map((staff) => (
+                    <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="p-5 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black shadow-inner">{staff.name.charAt(0)}</div>
+                        <span className="text-slate-700">{staff.name}</span>
+                      </td>
+                      <td className="p-5">
+                         <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] uppercase font-black text-slate-500">{staff.role}</span>
+                      </td>
+                      <td className="p-5">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${staff.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>{staff.status}</span>
+                      </td>
+                      <td className="p-5 text-center">
+                        <div className="flex justify-center gap-2">
+                          {/* Corrected onClick passing */}
+                          <button onClick={() => handleOpenDetails(staff)} className="p-2 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
+                          <button onClick={() => { setFormData(staff); setView("add"); }} className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
+                          <button onClick={() => setStaffList(staffList.filter(s => s.id !== staff.id))} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      ) : view === "view-details" && selectedStaff ? (
+        /* ================= DETAILS VIEW ================= */
+        <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700">
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
+              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={20} /></div>
+              Back to Directory
+            </button>
+            <div className="text-right">
+              <span className={`px-4 py-1.5 rounded-full text-xs font-black uppercase ${selectedStaff.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                {selectedStaff.status}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 relative overflow-hidden">
+            <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
+              <div className="w-32 h-32 bg-indigo-50 rounded-[2.5rem] flex items-center justify-center text-5xl font-black text-indigo-600 border border-indigo-100 shadow-inner">
+                {selectedStaff.name.charAt(0)}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">{selectedStaff.name}</h1>
+                <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em] mb-8">{selectedStaff.role} • Security Level {selectedStaff.role === 'Admin' ? '01' : '02'}</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <DetailItem icon={<Mail size={14}/>} label="Work Email" value={selectedStaff.email} />
+                  <DetailItem icon={<Briefcase size={14}/>} label="Department" value="Logistics Hub" />
+                  <DetailItem icon={<Calendar size={14}/>} label="Joined Date" value={selectedStaff.joinedDate} />
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12 bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-1.5 bg-white rounded-lg shadow-sm text-indigo-500">
+                   <Info size={16} />
+                </div>
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Work Responsibilities & Bio</h3>
+              </div>
+              <p className="text-slate-600 font-medium leading-relaxed italic">
+                "{selectedStaff.works}"
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ADD / EDIT FORM VIEW */
+        <div className="max-w-5xl mx-auto p-6 animate-in fade-in duration-500">
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
+              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={20} /></div>
+              Back to Directory
+            </button>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">{formData.id ? "Edit Employee Profile" : "Register New Member"}</h1>
+          </div>
+          <StaffForm formData={formData} handleInputChange={handleInputChange} handleSubmit={handleSubmit} onCancel={() => setView("list")} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Detail Item Sub-component ---
+function DetailItem({ icon, label, value }) {
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">{icon} {label}</p>
+      <p className="text-sm font-bold text-slate-700">{value}</p>
+    </div>
+  );
+}
