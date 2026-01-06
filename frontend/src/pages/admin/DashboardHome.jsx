@@ -55,7 +55,7 @@ const DashboardHome = () => {
     });
 
     return (
-        <div className="p-4 min-h-screen bg-gray-50">
+        <div className="p-2 md:p-4 min-h-screen bg-gray-50">
             <SummaryCard items={dashboardData} />
             <TopProducts />
             <div className="flex items-center justify-between mb-4">

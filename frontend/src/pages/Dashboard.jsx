@@ -16,7 +16,7 @@ function Dashboard() {
         <Navbar isCollapsed={isCollapsed} />
         
         {/* Main Content Area */}
-        <main className={`pt-20 transition-all duration-300 m-0 ${isCollapsed ? 'ml-24' : 'ml-64'}`}>
+        <main className={`pt-20 p-4 transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
            <Outlet />
         </main>
       </div>

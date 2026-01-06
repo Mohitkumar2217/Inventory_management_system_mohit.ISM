@@ -3,10 +3,11 @@ import ProductSummaryCard from "../../components/Summerys/ProductSummaryCard.jsx
 
 import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
-  ArrowLeft, Save, Package, IndianRupee, Layers, X, ChevronDown, Printer, Share2,
-  ChevronLeft, ChevronRight
+  ArrowLeft, Package, IndianRupee, X, ChevronLeft, ChevronRight,
+  Layers
 } from "lucide-react";
 import ProductForm from "../../components/Forms/ProductForm.jsx";
+import { Fa500Px, FaAccusoft } from "react-icons/fa";
 
 export default function Products() {
   const initialProducts = [
@@ -40,10 +41,8 @@ export default function Products() {
   const [products, setProducts] = useState(initialProducts);
   const [view, setView] = useState("list");
   const [search, setSearch] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [activeFilters, setActiveFilters] = useState({ category: "All", stockStatus: "All", priceRange: "All" });
   const filterRef = useRef(null);
@@ -65,22 +64,10 @@ export default function Products() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- ACTIONS: EYE, EDIT, DELETE ---
-  const handleOpenDetails = (product) => {
-    setSelectedProduct(product);
-    setView("view-details");
-  };
+  const handleOpenDetails = (product) => { setView("view-details"); setFormData(product); };
+  const handleEditDetails = (product) => { setFormData({ ...product }); setView("edit"); };
+  const handleDeleteProduct = (id) => { if (window.confirm("Remove this product?")) setProducts(products.filter(p => p.id !== id)); };
 
-  const handleEditDetails = (product) => {
-    setFormData({ ...product });
-    setView("edit");
-  };
-
-  const handleDeleteProduct = (id) => {
-    setProducts(products.filter(p => p.id !== id));
-  };
-
-  //--- ACTIONS: FORMS DETAILS ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -95,146 +82,93 @@ export default function Products() {
       stock: parseInt(formData.stock) || 0,
       img: formData.img || "📦"
     };
-
     if (formData.id) {
       setProducts(products.map(p => p.id === formData.id ? productData : p));
     } else {
       setProducts([{ ...productData, id: Date.now() }, ...products]);
     }
-
     setFormData(initialFormState);
     setView("list");
   };
 
-  // --- FILTER LOGIC ---
+  // --- FILTER & SEARCH LOGIC ---
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = activeFilters.category === "All" || p.category === activeFilters.category;
     const matchesStock = activeFilters.stockStatus === "All" || (activeFilters.stockStatus === "Low Stock" ? p.stock < 20 : p.stock >= 20);
-
     let matchesPrice = true;
     if (activeFilters.priceRange === "Under ₹500") matchesPrice = p.price < 500;
     else if (activeFilters.priceRange === "₹500 - ₹2000") matchesPrice = p.price >= 500 && p.price <= 2000;
     else if (activeFilters.priceRange === "Above ₹2000") matchesPrice = p.price > 2000;
-
     return matchesSearch && matchesCategory && matchesStock && matchesPrice;
   });
-  // --- CORRECTED SUMMARY CALCULATION ---
+
+  // --- SUMMARY MAPPING ---
   const itemsSummary = {
     totalProducts: products.length,
     totalStock: products.reduce((sum, p) => sum + p.stock, 0),
-    totalOrders: products.filter(p => p.stock < 20).length, // Mapped as Low Stock Alerts
-    totalCancelled: new Set(products.map(p => p.category)).size, // Mapped as Categories
-    totalRevenue: products.reduce((sum, p) => sum + (p.price * p.stock), 0), // Inventory Valuation
+    totalOrders: products.filter(p => p.stock < 20).length,
+    totalCancelled: new Set(products.map(p => p.category)).size,
+    totalRevenue: products.reduce((sum, p) => sum + (p.price * p.stock), 0),
   };
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const activePage = currentPage > totalPages ? 1 : currentPage;
-  const indexOfLastItem = activePage * itemsPerPage;
+  const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
   const categories = ["All", ...new Set(products.map(p => p.category))];
 
   return (
-    <div className="p-2 md:p-4 min-h-screen bg-slate-50/50 font-sans text-slate-900">
-
+    <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
-        <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
+        <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
           <ProductSummaryCard items={itemsSummary} nameSum="Inventory" />
 
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-visible">
+          {/* MAIN PAGE TITLE - PRESERVED */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Products Inventory</h1>
+            <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+              <Layers size={14} className="text-indigo-500" /> {filteredProducts.length} Types of Products
+            </p>
+          </div>
+
+          {/* list */}
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm mt-8 overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-              {/* show page */}
-              <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
-                Show
-                <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="border border-slate-200 rounded-xl px-3 py-1 bg-slate-50 outline-none">
-                  <option value={5}>5</option>
+              <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
+                <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer">
+                  <option value={5}>05</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
-                  <option value={initialProducts.length}>all</option>
+                  <option value={products.length}>All</option>
                 </select>
-                Entries
               </div>
 
-              <div className="flex gap-3 w-full md:w-auto relative">
-                {/* search section */}
-                <div className="relative flex-1 md:w-80">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input type="text" placeholder="Search..." className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-cyan-100" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
+              <div className="flex flex-1 gap-3 w-full md:max-w-2xl justify-end">
+                <div className="relative flex-1 group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-cyan-400 transition-colors" size={18} />
+                  <input type="text" placeholder="Search product name or code..." className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all placeholder:text-slate-300" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
                 </div>
-                {/* filter section */}
+
                 <div className="relative" ref={filterRef}>
-                  <button
-                    onClick={() => setShowFilterPopup(!showFilterPopup)}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-sm transition-all border ${showFilterPopup
-                      ? 'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'
-                      : 'bg-white text-slate-600 border-slate-100 hover:bg-slate-50'
-                      }`}
-                  >
-                    <Filter size={18} />
-                    Filter
+                  <button onClick={() => setShowFilterPopup(!showFilterPopup)} className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border ${showFilterPopup ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm'}`}>
+                    <Filter size={16} /> Filter
                   </button>
                   {showFilterPopup && (
-                    <div className="absolute right-0 top-14 z-50 w-72 bg-white border border-slate-100 shadow-2xl rounded-3xl p-6 origin-top-right animate-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 top-14 z-[100] w-72 bg-white border border-slate-100 shadow-2xl rounded-[2rem] p-6 animate-in zoom-in-95 duration-200">
                       <div className="grid gap-5">
-                        {/* Category Filter */}
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
-                          <select
-                            value={activeFilters.category}
-                            onChange={(e) => setActiveFilters({ ...activeFilters, category: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-cyan-100 transition-all"
-                          >
-                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                          </select>
-                        </div>
-
-                        {/* Stock Status Filter */}
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Availability</label>
-                          <select
-                            value={activeFilters.stockStatus}
-                            onChange={(e) => setActiveFilters({ ...activeFilters, stockStatus: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-cyan-100 transition-all"
-                          >
-                            <option value="All">All Items</option>
-                            <option value="In Stock">In Stock Only</option>
-                            <option value="Low Stock">Low Stock Alert</option>
-                          </select>
-                        </div>
-
-                        {/* Price Range Filter */}
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Price Range</label>
-                          <select
-                            value={activeFilters.priceRange}
-                            onChange={(e) => setActiveFilters({ ...activeFilters, priceRange: e.target.value })}
-                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-cyan-100 transition-all"
-                          >
-                            <option value="All">Any Price</option>
-                            <option value="Under ₹500">Under ₹500</option>
-                            <option value="₹500 - ₹2000">₹500 - ₹2000</option>
-                            <option value="Above ₹2000">Above ₹2000</option>
-                          </select>
-                        </div>
-
-                        {/* Reset Action */}
-                        <button
-                          onClick={() => setActiveFilters({ category: "All", stockStatus: "All", priceRange: "All" })}
-                          className="w-full py-2 mt-2 text-rose-500 hover:bg-rose-50 rounded-xl font-black text-[10px] uppercase tracking-wider transition-colors"
-                        >
-                          Reset
-                        </button>
+                        <FilterSelect label="Category" value={activeFilters.category} options={categories} onChange={(v) => setActiveFilters({ ...activeFilters, category: v })} />
+                        <FilterSelect label="Stock Status" value={activeFilters.stockStatus} options={["All", "In Stock", "Low Stock"]} onChange={(v) => setActiveFilters({ ...activeFilters, stockStatus: v })} />
+                        <FilterSelect label="Price Range" value={activeFilters.priceRange} options={["All", "Under ₹500", "₹500 - ₹2000", "Above ₹2000"]} onChange={(v) => setActiveFilters({ ...activeFilters, priceRange: v })} />
+                        <button onClick={() => setActiveFilters({ category: "All", stockStatus: "All", priceRange: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset Filters</button>
                       </div>
                     </div>
                   )}
                 </div>
-                {/* add product */}
-                <button
-                  onClick={() => { setFormData(initialFormState); setView("add"); }}
-                  className="bg-cyan-400 hover:bg-cyan-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-cyan-100 transition-all active:scale-95"
-                >
-                  <Plus size={20} /> Product
+
+                <button onClick={() => { setFormData(initialFormState); setView("add"); }} className="bg-cyan-400 hover:bg-cyan-500 text-white px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-cyan-100 transition-all active:scale-95">
+                  <Plus size={18} /> Product
                 </button>
               </div>
             </div>
@@ -243,43 +177,38 @@ export default function Products() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-black border-b border-slate-50">
-                    <th className="p-5">Product Info</th>
-                    <th className="p-5">Identifier</th>
-                    <th className="p-5">Department</th>
-                    <th className="p-5">M.R.P</th>
-                    <th className="p-5">Availability</th>
-                    <th className="p-5 text-center">Manage</th>
+                    <th className="p-6">Product Item</th>
+                    <th className="p-6">ID Code</th>
+                    <th className="p-6">Department</th>
+                    <th className="p-6">Retail Price</th>
+                    <th className="p-6">Stock Status</th>
+                    <th className="p-6 text-center">Manage</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-sm font-bold">
                   {currentItems.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="p-5 flex items-center gap-3">
-                        <span className="text-2xl">{item.img}</span>
+                      <td className="p-6 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-slate-100">{item.img}</div>
                         <div className="flex flex-col">
-                          <span className="text-slate-700">{item.name}</span>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-tighter">{item.brand}</span>
+                          <span className="text-slate-800 font-black">{item.name}</span>
+                          <span className="text-[10px] text-slate-400 uppercase tracking-widest">{item.brand}</span>
                         </div>
                       </td>
-                      <td className="p-5 text-slate-500 font-mono text-xs">{item.code}</td>
-                      <td className="p-5"><span className="bg-white border border-slate-100 px-2.5 py-1 rounded-lg text-slate-500 uppercase text-[9px] shadow-sm">{item.category}</span></td>
-                      <td className="p-5 text-slate-800">₹{item.price.toFixed(2)}</td>
-                      <td className="p-5">
-                        <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black ${item.stock < 20 ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}`}>
+                      <td className="p-6 text-slate-500 font-mono text-xs">{item.code}</td>
+                      <td className="p-6"><span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-slate-400 uppercase text-[9px] font-black shadow-sm">{item.category}</span></td>
+                      <td className="p-6 text-slate-800 font-black flex items-center gap-1 mt-3"><IndianRupee size={12} />{item.price.toFixed(2)}</td>
+                      <td className="p-6">
+                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black ${item.stock < 20 ? 'bg-rose-50 text-rose-500 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${item.stock < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                           {item.stock} Units
-                        </span>
+                        </div>
                       </td>
-                      <td className="p-5">
-                        <div className="flex justify-center gap-2 transition-opacity">
-                          <button onClick={() => handleOpenDetails(item)} className="p-2 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm">
-                            <Eye size={14} />
-                          </button>
-                          <button onClick={() => handleEditDetails(item)} className="p-2 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDeleteProduct(item.id)} className="p-2 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm">
-                            <Trash2 size={14} />
-                          </button>
+                      <td className="p-6">
+                        <div className="flex justify-center gap-2 transition-all">
+                          <ActionBtn onClick={() => handleOpenDetails(item)} icon={<Eye size={14} />} color="bg-cyan-50 text-cyan-500 hover:bg-cyan-500" />
+                          <ActionBtn onClick={() => handleEditDetails(item)} icon={<Edit2 size={14} />} color="bg-slate-50 text-slate-500 hover:bg-slate-800" />
+                          <ActionBtn onClick={() => handleDeleteProduct(item.id)} icon={<Trash2 size={14} />} color="bg-rose-50 text-rose-500 hover:bg-rose-500" />
                         </div>
                       </td>
                     </tr>
@@ -288,106 +217,80 @@ export default function Products() {
               </table>
             </div>
 
-            {/* --- PAGINATION FOOTER --- */}
-            <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">
-                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredProducts.length)} of {filteredProducts.length} entries
+            <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredProducts.length)} / {filteredProducts.length} entries
               </p>
-
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={activePage === 1}
-                  className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-
-                <div className="flex items-center gap-1">
+                <NavBtn onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} icon={<ChevronLeft size={18} />} />
+                <div className="flex gap-1">
                   {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i + 1}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${activePage === i + 1
-                        ? 'bg-cyan-400 text-white shadow-lg shadow-cyan-100'
-                        : 'text-slate-400 hover:bg-slate-50'
-                        }`}
-                    >
-                      {i + 1}
-                    </button>
+                    <button key={i + 1} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-cyan-400 text-white shadow-xl shadow-cyan-100' : 'text-slate-400 hover:bg-slate-50'}`}>{i + 1}</button>
                   ))}
                 </div>
-
-                <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={activePage === totalPages || totalPages === 0}
-                  className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                >
-                  <ChevronRight size={18} />
-                </button>
+                <NavBtn onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} icon={<ChevronRight size={18} />} />
               </div>
             </div>
           </div>
         </div>
-      ) : view === "view-details" && selectedProduct ? (
-        /* ================= DETAILS VIEW ================= */
-        <div className="max-w-5xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20">
-          <div className="flex items-center justify-between mb-8">
-            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold group">
-              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={20} /></div>
-              Back to List
-            </button>
-          </div>
-          <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 relative overflow-hidden">
-            <div className="flex flex-col md:flex-row gap-8 relative z-10">
-              <div className="w-40 h-40 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-7xl border border-slate-100">
-                {selectedProduct.img}
-              </div>
+      ) : view === "view-details" ? (
+        <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500">
+          <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
+            <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back
+          </button>
+          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
+            <div className="flex flex-col md:flex-row gap-12 items-center md:items-start text-center md:text-left">
+              <div className="w-48 h-48 bg-slate-50 rounded-[3rem] flex items-center justify-center text-8xl shadow-inner border border-slate-100">{formData.img}</div>
               <div className="flex-1">
-                <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">{selectedProduct.name}</h1>
-                <p className="text-xs font-black text-cyan-500 uppercase tracking-[0.3em] mb-6">{selectedProduct.brand}</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="space-y-1"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Price</p><p className="text-xl font-black text-slate-800">₹{selectedProduct.price}</p></div>
-                  <div className="space-y-1"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock</p><p className="text-xl font-black text-slate-800">{selectedProduct.stock} Units</p></div>
+                <span className="text-cyan-500 font-black text-xs uppercase tracking-[0.3em] mb-2 block">{formData.brand}</span>
+                <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-6">{formData.name}</h1>
+                <div className="grid grid-cols-2 gap-8 max-w-sm">
+                  <DetailBox label="Identifier" val={formData.code} />
+                  <DetailBox label="Retail Price" val={`₹${formData.price}`} highlight />
+                  <DetailBox label="Stock Level" val={`${formData.stock} Units`} />
+                  <DetailBox label="Department" val={formData.category} />
                 </div>
               </div>
             </div>
-            <div className="mt-12 bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
-              <h3 className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-4">Description</h3>
-              <p className="text-slate-600 font-medium leading-relaxed italic">"{selectedProduct.details}"</p>
+            <div className="mt-16 bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
+              <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Product Description</div>
+              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{formData.details}"</p>
             </div>
           </div>
         </div>
       ) : (
-        /* ================= ADD / EDIT FORM ================= */
-        <div className="max-w-5xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20">
-          <div className="flex items-center justify-between mb-8">
-            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-bold group">
-              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 transition-all"><ArrowLeft size={20} /></div>
-              Go Back
-            </button>
-            <div className="text-right">
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">{formData.id ? "Edit Product" : "New Entry"}</h1>
-            </div>
-          </div>
-
-          <ProductForm
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleSubmit={handleAddProduct}
-            onCancel={() => setView("list")}
-          />
+        <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
+          <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
+            <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Cancel
+          </button>
+          <ProductForm formData={formData} handleInputChange={handleInputChange} handleSubmit={handleAddProduct} onCancel={() => setView("list")} />
         </div>
       )}
     </div>
   );
 }
 
-function FormInput({ label, name, value, onChange, placeholder, type = "text", required = false }) {
-  return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label} {required && "*"}</label>
-      <input required={required} name={name} value={value} onChange={onChange} type={type} placeholder={placeholder} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all text-sm font-bold text-slate-700 shadow-inner" />
-    </div>
-  );
-}
+// --- SUB-COMPONENTS ---
+const FilterSelect = ({ label, value, options, onChange }) => (
+  <div className="space-y-2">
+    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all">
+      {options.map(o => <option key={o} value={o}>{o}</option>)}
+    </select>
+  </div>
+);
+
+const ActionBtn = ({ onClick, icon, color }) => (
+  <button onClick={onClick} className={`p-2.5 rounded-xl transition-all shadow-sm ${color} hover:text-white hover:scale-110 active:scale-90`}>{icon}</button>
+);
+
+const NavBtn = ({ onClick, disabled, icon }) => (
+  <button onClick={onClick} disabled={disabled} className="p-2.5 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95">{icon}</button>
+);
+
+const DetailBox = ({ label, val, highlight }) => (
+  <div className="space-y-1">
+    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{label}</p>
+    <p className={`text-xl font-black ${highlight ? 'text-indigo-600' : 'text-slate-700'}`}>{val}</p>
+  </div>
+);
