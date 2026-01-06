@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, PackageSearch, TrendingUp } from 'lucide-react';
-import OrderAnalysisModal from '../Charts/OrderAnalysisModel.jsx'; 
+import OrderAnalysisModal from '../Charts/OrderAnalysisModel.jsx';
 
 const OrderSummaryCard = ({ items = {}, nameSum }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,16 +86,19 @@ const OrderSummaryCard = ({ items = {}, nameSum }) => {
                         <div
                             key={index}
                             onClick={() => handleOpenModal(item)}
-                            className="cursor-pointer bg-white border border-slate-100 rounded-[2.2rem] p-6 shadow-sm hover:shadow-xl hover:shadow-slate-200/40 transition-all group relative border-b-4 flex flex-col justify-between h-48 active:scale-95"
+                            className="cursor-pointer bg-white border border-slate-100 rounded-[2.2rem] p-6 shadow-sm group hover:shadow-xl hover:shadow-slate-200/40 transition-all group relative border-b-4 flex flex-col justify-between h-48 active:scale-95"
                             style={{ borderBottomColor: item.isWarning ? '#f59e0b' : '#e2e8f0' }}
                         >
                             <div className="flex justify-between items-start">
                                 <div className={`${item.bg} w-14 h-14 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500 shadow-sm`}>
                                     {item.icon}
                                 </div>
-                                <div className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg ${item.isWarning ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'
-                                    }`}>
-                                    <TrendingUp size={10} className="mr-0.5" /> {item.stats}
+                                <div className='flex flex-col items-end'>
+                                    <div className={`items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg ${item.isWarning ? 'bg-orange-50 text-orange-600' : 'bg-emerald-50 text-emerald-600'
+                                        }`}>
+                                        <TrendingUp size={10} className="mr-0.5" /> {item.stats}
+                                    </div>
+                                    <span className="text-[8px] font-bold text-slate-300 opacity-0 group-hover:opacity-100 mt-1 transition-opacity">View Details</span>
                                 </div>
                             </div>
 

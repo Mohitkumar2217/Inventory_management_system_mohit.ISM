@@ -55,6 +55,11 @@ export default function Warehouse() {
     setView("view-details");
   };
 
+  const handleDeleteStock = (id) => { 
+    if (!window.confirm("Delete this stock record?")) return;
+    setStockList(stockList.filter(s => s.id !== id));
+  };
+
   // Filter & Search Logic
   const filteredStock = stockList.filter(s => {
     const matchesSearch = s.product.toLowerCase().includes(search.toLowerCase());
@@ -164,7 +169,7 @@ export default function Warehouse() {
                         <div className="flex justify-center gap-2">
                           <button onClick={() => handleOpenDetails(stock)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
                           <button onClick={() => { setFormData(stock); setView("add"); }} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
-                          <button onClick={() => setStockList(stockList.filter(s => s.id !== stock.id))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDeleteStock(stock.id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>

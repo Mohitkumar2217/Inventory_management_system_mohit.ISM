@@ -107,7 +107,10 @@ export default function Orders() {
     setView("add");
   };
 
-  const removeOrder = (id) => { if(window.confirm("Delete this order record?")) setOrders(orders.filter(o => o.id !== id)); };
+  const removeOrder = (id) => {
+    if (!window.confirm("Delete this order record?")) return; 
+    setOrders(orders.filter(o => o.id !== id));
+  };
   const updateStatus = (id, status) => setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
 
   const itemsSummary = {

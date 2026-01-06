@@ -92,8 +92,11 @@ const SummaryCard = ({ items, userName = "Mohit" }) => {
                                 <div className={`${item.bg} w-14 h-14 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform duration-500`}>
                                     <span className="flex items-center justify-center">{item.icon}</span>
                                 </div>
-                                <div className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg ${item.isNegative ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                                    {item.isNegative ? <FiTrendingDown /> : <FiTrendingUp />} {item.trend}
+                                <div className='flex flex-col items-end'>
+                                    <div className={`flex items-center gap-1 text-[10px] font-black px-2.5 py-1 rounded-lg ${item.isNegative ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                        {item.isNegative ? <FiTrendingDown /> : <FiTrendingUp />} {item.trend}
+                                    </div>
+                                    <span className="text-[8px] font-bold text-slate-300 opacity-0 group-hover:opacity-100 mt-1 transition-opacity">View Details</span>
                                 </div>
                             </div>
                             <h3 className="text-slate-400 text-[10px] font-black uppercase tracking-widest mb-1.5">{item.label}</h3>

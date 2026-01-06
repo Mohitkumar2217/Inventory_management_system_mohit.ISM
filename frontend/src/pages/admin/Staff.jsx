@@ -57,6 +57,10 @@ export default function Staff() {
     setSelectedStaff(staff);
     setView("view-details");
   };
+  const handleDeleteStaff = (id) => {
+    if (!window.confirm("Delete this staff member?")) return;
+    setStaffList(staffList.filter(s => s.id !== id));
+  };
 
   // Filter Logic
   const filteredStaff = staffList.filter(s => {
@@ -171,7 +175,7 @@ export default function Staff() {
                         <div className="flex justify-center gap-2">
                           <button onClick={() => handleOpenDetails(staff)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
                           <button onClick={() => { setFormData(staff); setView("add"); }} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
-                          <button onClick={() => setStaffList(staffList.filter(s => s.id !== staff.id))} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDeleteStaff(staff.id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>

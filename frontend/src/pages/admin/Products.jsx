@@ -66,7 +66,10 @@ export default function Products() {
 
   const handleOpenDetails = (product) => { setView("view-details"); setFormData(product); };
   const handleEditDetails = (product) => { setFormData({ ...product }); setView("edit"); };
-  const handleDeleteProduct = (id) => { if (window.confirm("Remove this product?")) setProducts(products.filter(p => p.id !== id)); };
+  const handleDeleteProduct = (id) => {
+    if (!window.confirm("Remove this product?")) return;
+    setProducts(products.filter(p => p.id !== id));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

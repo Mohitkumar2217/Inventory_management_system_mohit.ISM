@@ -58,9 +58,8 @@ export default function Suppliers() {
   };
 
   const handleDeleteVendor = (id) => {
-    if (window.confirm("Are you sure you want to remove this partner from the network?")) {
-      setVendors(vendors.filter(v => v.id !== id));
-    }
+    if (!window.confirm("Are you sure you want to remove this partner from the network?")) return;
+    setVendors(vendors.filter(v => v.id !== id));
   };
 
   // --- FILTER & SEARCH LOGIC ---
