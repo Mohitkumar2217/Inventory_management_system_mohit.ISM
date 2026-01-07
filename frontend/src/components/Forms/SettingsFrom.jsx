@@ -4,11 +4,10 @@ import { Save, Loader2 } from "lucide-react";
 export default function SettingsForm({ activeTab, formData, onChange, onSave, isSaving }) {
   return (
     <form onSubmit={onSave} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      
+
       {/* --- PROFILE SETTINGS --- */}
       {activeTab === "profile" && (
-        <div className="space-y-6">
-          <SectionHeader title="Profile Information" subtitle="Update your personal details" />
+        <div className="space-y-6"> 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput label="Full Name" name="userName" value={formData.userName} onChange={onChange} />
             <FormInput label="Job Title" name="jobTitle" value={formData.jobTitle} onChange={onChange} />
