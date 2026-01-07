@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import WareHouseSummaryCard from "../../components/Summerys/WareHouseSummaryCard.jsx";
+import WareHouseSummaryCard from "../../components/Summerys/WarehouseSummaryCard.jsx";
 import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
