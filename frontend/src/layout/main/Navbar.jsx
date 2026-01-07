@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Added for navigation
 import { FaSearch, FaRegEnvelope } from 'react-icons/fa'; 
 import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi'; 
-import { FiChevronDown, FiCheck } from 'react-icons/fi';
+import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 
-export default function Navbar({ isCollapsed }) {
+export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedWarehouse, setSelectedWarehouse] = useState({
     name: "Jaipur Branch",
@@ -19,7 +21,48 @@ export default function Navbar({ isCollapsed }) {
     { id: 3, name: "Mumbai Port", label: "Import Unit", capacity: "12%" },
   ];
 
-  // Close dropdown when clicking outside
+  // --- SMART NAVIGATION MAP ---
+  // Maps every single important word to its respective route
+  const pageSignatures = [
+    { route: "/products", keys: ["product", "item", "inventory", "stock", "sku", "brand", "electronics", "beauty", "food", "lakme", "sony", "apple", "nike", "cream", "serum", "watch"] },
+    { route: "/orders", keys: ["order", "purchase", "bill", "invoice", "price", "pending", "completed", "cancelled", "gst", "vendor", "valuation"] },
+    { route: "/staff", keys: ["staff", "employee", "team", "member", "admin", "manager", "worker", "role", "email", "security"] },
+    { route: "/warehouse", keys: ["warehouse", "zone", "location", "storage", "pallet", "bay", "ledger", "out of stock"] },
+    { route: "/suppliers", keys: ["supplier", "dealer", "distributor", "network", "partner", "verified"] },
+    { route: "/categories", keys: ["category", "dept", "group", "class", "department", "tax", "slug"] },
+    { route: "/reports", keys: ["report", "analytics", "chart", "forecast", "revenue", "data", "roi", "velocity"] },
+    { route: "/settings", keys: ["settings", "config", "profile", "password", "setup", "business"] },
+    { route: "/dashboard", keys: ["dash", "home", "main", "overview"] }
+  ];
+
+  // --- HANDLE ENTER KEY ---
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim() !== "") {
+      const input = searchQuery.toLowerCase().trim();
+      const inputWords = input.split(/\s+/); // Split sentence into words
+
+      let targetRoute = null;
+
+      // Scan every word against every page signature
+      for (const page of pageSignatures) {
+        const isMatch = inputWords.some(word => 
+          page.keys.some(key => key.includes(word) || word.includes(key))
+        );
+        
+        if (isMatch) {
+          targetRoute = page.route;
+          break; // Take the first best match
+        }
+      }
+
+      if (targetRoute) {
+        navigate(targetRoute);
+      } else {
+        console.log("No specific page match, filtering current page for:", input);
+      }
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -31,101 +74,63 @@ export default function Navbar({ isCollapsed }) {
   }, []);
 
   return (
-    <nav 
-      className={`fixed top-0 right-0 h-20 bg-[#1a1c23] text-white z-40 transition-all duration-300 flex items-center border-b border-gray-800
-      ${isCollapsed ? 'left-20' : 'left-64'}`} 
-    >
+    <nav className={`fixed top-0 right-0 h-20 bg-[#1a1c23] text-white z-40 transition-all duration-300 flex items-center border-b border-gray-800 ${isCollapsed ? 'left-20' : 'left-64'}`}>
       <div className="w-full px-6 flex items-center justify-between">
 
-        {/* LEFT: Location & Search Group */}
+        {/* LEFT: Location & Search */}
         <div className="flex items-center gap-6 flex-1">
-          
-          {/* Warehouse Selector Dropdown */}
           <div className="relative" ref={dropdownRef}>
-            <div 
-              onClick={() => setIsOpen(!isOpen)}
-              className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-lg border transition-all cursor-pointer
-                ${isOpen ? 'bg-gray-700 border-blue-500' : 'bg-gray-800/40 border-gray-700 hover:bg-gray-700'}`}
-            >
+            <div onClick={() => setIsOpen(!isOpen)} className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${isOpen ? 'bg-gray-700 border-blue-500' : 'bg-gray-800/40 border-gray-700 hover:bg-gray-700'}`}>
               <HiOutlineOfficeBuilding className={isOpen ? "text-blue-400" : "text-blue-500"} />
-              <div className="flex flex-col">
+              <div className="flex flex-col text-left">
                 <span className="text-[10px] text-gray-400 leading-none">{selectedWarehouse.label}</span>
                 <span className="text-xs font-semibold">{selectedWarehouse.name}</span>
               </div>
-              <FiChevronDown className={`text-gray-500 ml-1 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              <FiChevronDown className={`text-gray-500 ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </div>
 
-            {/* Dropdown Menu */}
             {isOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-[#24262d] border border-gray-700 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-150">
-                <div className="p-2 border-b border-gray-700">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase px-2">Switch Location</span>
-                </div>
-                <div className="py-1">
-                  {warehouses.map((wh) => (
-                    <div
-                      key={wh.id}
-                      onClick={() => {
-                        setSelectedWarehouse(wh);
-                        setIsOpen(false);
-                      }}
-                      className="flex items-center justify-between px-4 py-2.5 hover:bg-blue-600/10 hover:text-blue-400 cursor-pointer transition-colors group"
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-xs font-medium">{wh.name}</span>
-                        <span className="text-[10px] text-gray-500 group-hover:text-blue-300/60">{wh.label}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-bold text-gray-500 bg-gray-800 px-1.5 py-0.5 rounded group-hover:bg-blue-500/20">
-                          {wh.capacity}
-                        </span>
-                        {selectedWarehouse.id === wh.id && <FiCheck className="text-blue-500" />}
-                      </div>
+              <div className="absolute top-full left-0 mt-2 w-56 bg-[#24262d] border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                {warehouses.map((wh) => (
+                  <div key={wh.id} onClick={() => { setSelectedWarehouse(wh); setIsOpen(false); }} className="flex items-center justify-between px-4 py-2.5 hover:bg-blue-600/10 hover:text-blue-400 cursor-pointer transition-colors group">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium">{wh.name}</span>
+                      <span className="text-[10px] text-gray-500">{wh.label}</span>
                     </div>
-                  ))}
-                </div>
+                    {selectedWarehouse.id === wh.id && <FiCheck className="text-blue-500" />}
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Search Section */}
-          <div className="flex items-center bg-[#24262d] border border-gray-700 rounded-xl px-4 py-2.5 w-full max-w-md transition-all focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20">
-            <FaSearch className="text-gray-500 mr-3" />
+          {/* SEARCH BAR WITH ENTER TRIGGER */}
+          <div className="flex items-center bg-[#24262d] border border-gray-700 rounded-xl px-4 py-2.5 w-full max-w-md transition-all focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 relative">
+            <FaSearch className="text-gray-500 mr-3 shrink-0" />
             <input
               type="text"
-              placeholder="Search products, SKU or suppliers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={handleKeyDown} 
+              placeholder="Search word (e.g. 'Pending', 'Zone', 'Sony')..."
               className="bg-transparent outline-none text-sm w-full placeholder-gray-500"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="ml-2 text-gray-500 hover:text-white transition-colors">
+                <FiX size={16} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* RIGHT: Action Center */}
+        {/* RIGHT: User Profile */}
         <div className="flex items-center gap-3">
-          <button className="p-2.5 bg-gray-800/30 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700 transition-all">
-            <FaRegEnvelope size={18} />
-          </button>
-
-          <button className="relative p-2.5 bg-gray-800/30 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700 transition-all">
-            <HiOutlineBell size={20} />
-            <span className="absolute top-2 right-2.5 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-            </span>
-          </button>
-
-          <div className="h-8 w-[1px] bg-gray-700 mx-2"></div>
-
-          {/* User Profile */}
-          <div className="flex items-center gap-3 pl-2 cursor-pointer group">
+          <div className="flex items-center gap-3 pl-2 group cursor-pointer">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-sm font-semibold text-gray-200">Mohit Kumar</span>
-              <span className="text-[10px] text-green-400 font-medium bg-green-400/10 px-1.5 rounded">Admin</span>
+              <span className="text-[10px] text-green-400 font-medium bg-green-400/10 px-1.5 rounded uppercase">Admin</span>
             </div>
-            <img
-              src="https://i.pravatar.cc/40?img=11"
-              alt="Profile"
-              className="w-10 h-10 rounded-xl border-2 border-gray-700 group-hover:border-blue-500 transition-all"
-            />
+            <img src="https://i.pravatar.cc/40?img=11" alt="Profile" className="w-10 h-10 rounded-xl border-2 border-gray-700 group-hover:border-blue-500 transition-all" />
           </div>
         </div>
       </div>

@@ -3,11 +3,11 @@ import OrderSummaryCard from "../../components/Summerys/OrderSummaryCard.jsx";
 import OrderForm from "../../components/Forms/OrderForm.jsx";
 import {
   Search, Filter, Plus, Trash2,
-  Eye, ArrowLeft, IndianRupee,
-  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle,Layers
+  Eye, ArrowLeft, IndianRupee, Package,
+  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, Layers
 } from "lucide-react";
 
-export default function Orders() {
+export default function Orders({ searchQuery }) {
   // --- INITIAL DATA ---
   const initialOrders = Array.from({ length: 45 }).map((_, i) => ({
     id: 1000 + i,
@@ -24,7 +24,7 @@ export default function Orders() {
   const [orders, setOrders] = useState(initialOrders);
   const [view, setView] = useState("list");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState(""); // Inner table search
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const filterRef = useRef(null);
 
@@ -48,6 +48,11 @@ export default function Orders() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // RESET TO PAGE 1 WHEN SEARCHING
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, localSearch]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -77,10 +82,18 @@ export default function Orders() {
     setView("list");
   };
 
-  // --- FILTER & PAGINATION LOGIC ---
+  // --- FILTER & PAGINATION LOGIC (Now includes searchQuery) ---
   const filteredOrders = orders.filter((o) => {
     const totalPrice = o.amount * o.price;
-    const matchesSearch = o.client.toLowerCase().includes(search.toLowerCase()) || o.id.toString().includes(search);
+    
+    // Combine Global Navbar Search and Local Table Search
+    const finalSearch = (searchQuery || localSearch).toLowerCase();
+    
+    const matchesSearch = 
+        o.client.toLowerCase().includes(finalSearch) || 
+        o.id.toString().includes(finalSearch) ||
+        o.category.toLowerCase().includes(finalSearch);
+
     const matchesStatus = activeFilters.status === "All" || o.status === activeFilters.status;
 
     let matchesPrice = true;
@@ -111,6 +124,7 @@ export default function Orders() {
     if (!window.confirm("Delete this order record?")) return; 
     setOrders(orders.filter(o => o.id !== id));
   };
+  
   const updateStatus = (id, status) => setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
 
   const itemsSummary = {
@@ -127,15 +141,16 @@ export default function Orders() {
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
           <OrderSummaryCard items={itemsSummary} nameSum={'Orders'} />
 
-          {/* MAIN PAGE TITLE - PRESERVED */}
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Orders Inventory</h1>
-            <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
-              <Layers size={14} className="text-indigo-500" /> {filteredOrders.length} Orders
-            </p>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Orders Inventory</h1>
+              <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+                <Layers size={14} className="text-indigo-500" /> {filteredOrders.length} Results Found
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm mt-8 overflow-visible">
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-4">
               
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
@@ -151,7 +166,13 @@ export default function Orders() {
               <div className="flex flex-1 gap-3 w-full lg:max-w-3xl justify-end">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                  <input type="text" placeholder="Search client name or ID..." className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all placeholder:text-slate-300" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
+                  <input 
+                    type="text" 
+                    placeholder="Quick search Client, ID or Category..." 
+                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all placeholder:text-slate-300" 
+                    value={localSearch} 
+                    onChange={(e) => setLocalSearch(e.target.value)} 
+                  />
                 </div>
                 
                 <div className="relative" ref={filterRef}>
@@ -223,6 +244,11 @@ export default function Orders() {
                   ))}
                 </tbody>
               </table>
+              {filteredOrders.length === 0 && (
+                  <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
+                      No matching orders found.
+                  </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
@@ -241,7 +267,7 @@ export default function Orders() {
             </div>
           </div>
         </div>
-      ) : view === "view-details" ? (
+      ) : view === "view-details" && selectedOrder ? (
         <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-100"><ArrowLeft size={18} /></div> Back

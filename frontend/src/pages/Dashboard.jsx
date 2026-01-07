@@ -5,6 +5,7 @@ import { Outlet } from 'react-router';
 
 function Dashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState(""); // Shared state
 
   return (
     <div className="flex">
@@ -13,11 +14,11 @@ function Dashboard() {
       
       <div className="flex-1">
         {/* Pass state to Navbar */}
-        <Navbar isCollapsed={isCollapsed} />
+        <Navbar isCollapsed={isCollapsed} searchQuery={globalSearch} setSearchQuery={setGlobalSearch} />
         
         {/* Main Content Area */}
         <main className={`pt-20 p-4 transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
-           <Outlet />
+           <Outlet searchQuery={globalSearch} />
         </main>
       </div>
     </div>

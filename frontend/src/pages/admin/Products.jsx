@@ -6,10 +6,9 @@ import {
   ArrowLeft, Package, IndianRupee, X, ChevronLeft, ChevronRight,
   Layers
 } from "lucide-react";
-import ProductForm from "../../components/Forms/ProductForm.jsx";
-import { Fa500Px, FaAccusoft } from "react-icons/fa";
+import ProductForm from "../../components/Forms/ProductForm.jsx"; 
 
-export default function Products() {
+export default function Products({ searchQuery }) {
   const initialProducts = [
     { id: 1, name: "Organic Cream", code: "CREM01", category: "Beauty", price: 250.0, cost: 100.0, stock: 10, brand: "Lakme", img: "🧴", details: "Premium organic skin cream." },
     { id: 2, name: "Rain Umbrella", code: "UM01", category: "Grocery", price: 300.0, cost: 200.0, stock: 15, brand: "Sun", img: "⛱️", details: "Heavy-duty windproof umbrella." },
@@ -40,7 +39,7 @@ export default function Products() {
 
   const [products, setProducts] = useState(initialProducts);
   const [view, setView] = useState("list");
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState(""); // local table search
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
@@ -63,6 +62,11 @@ export default function Products() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // AUTO-RESET PAGINATION ON SEARCH
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, localSearch, activeFilters]);
 
   const handleOpenDetails = (product) => { setView("view-details"); setFormData(product); };
   const handleEditDetails = (product) => { setFormData({ ...product }); setView("edit"); };
@@ -96,13 +100,22 @@ export default function Products() {
 
   // --- FILTER & SEARCH LOGIC ---
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.code.toLowerCase().includes(search.toLowerCase());
+    // Combine Global Search Query and Local Table Search
+    const finalSearch = (searchQuery || localSearch).toLowerCase();
+    
+    const matchesSearch = 
+        p.name.toLowerCase().includes(finalSearch) || 
+        p.code.toLowerCase().includes(finalSearch) ||
+        p.brand.toLowerCase().includes(finalSearch);
+
     const matchesCategory = activeFilters.category === "All" || p.category === activeFilters.category;
     const matchesStock = activeFilters.stockStatus === "All" || (activeFilters.stockStatus === "Low Stock" ? p.stock < 20 : p.stock >= 20);
+    
     let matchesPrice = true;
     if (activeFilters.priceRange === "Under ₹500") matchesPrice = p.price < 500;
     else if (activeFilters.priceRange === "₹500 - ₹2000") matchesPrice = p.price >= 500 && p.price <= 2000;
     else if (activeFilters.priceRange === "Above ₹2000") matchesPrice = p.price > 2000;
+    
     return matchesSearch && matchesCategory && matchesStock && matchesPrice;
   });
 
@@ -119,7 +132,7 @@ export default function Products() {
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
-  const categories = ["All", ...new Set(products.map(p => p.category))];
+  const categoriesList = ["All", ...new Set(products.map(p => p.category))];
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
@@ -127,15 +140,15 @@ export default function Products() {
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
           <ProductSummaryCard items={itemsSummary} nameSum="Inventory" />
 
-          {/* MAIN PAGE TITLE - PRESERVED */}
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-black text-slate-800 tracking-tight">Products Inventory</h1>
-            <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
-              <Layers size={14} className="text-indigo-500" /> {filteredProducts.length} Types of Products
-            </p>
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Products Inventory</h1>
+              <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+                <Layers size={14} className="text-indigo-500" /> {filteredProducts.length} Match Found
+              </p>
+            </div>
           </div>
 
-          {/* list */}
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm mt-8 overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
@@ -151,7 +164,13 @@ export default function Products() {
               <div className="flex flex-1 gap-3 w-full md:max-w-2xl justify-end">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                  <input type="text" placeholder="Search product name or code..." className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all placeholder:text-slate-300" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
+                  <input 
+                    type="text" 
+                    placeholder="Search inside results..." 
+                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all placeholder:text-slate-300" 
+                    value={localSearch} 
+                    onChange={(e) => setLocalSearch(e.target.value)} 
+                  />
                 </div>
 
                 <div className="relative" ref={filterRef}>
@@ -161,7 +180,7 @@ export default function Products() {
                   {showFilterPopup && (
                     <div className="absolute right-0 top-14 z-[100] w-72 bg-white border border-slate-100 shadow-2xl rounded-[2rem] p-6 animate-in zoom-in-95 duration-200">
                       <div className="grid gap-5">
-                        <FilterSelect label="Category" value={activeFilters.category} options={categories} onChange={(v) => setActiveFilters({ ...activeFilters, category: v })} />
+                        <FilterSelect label="Category" value={activeFilters.category} options={categoriesList} onChange={(v) => setActiveFilters({ ...activeFilters, category: v })} />
                         <FilterSelect label="Stock Status" value={activeFilters.stockStatus} options={["All", "In Stock", "Low Stock"]} onChange={(v) => setActiveFilters({ ...activeFilters, stockStatus: v })} />
                         <FilterSelect label="Price Range" value={activeFilters.priceRange} options={["All", "Under ₹500", "₹500 - ₹2000", "Above ₹2000"]} onChange={(v) => setActiveFilters({ ...activeFilters, priceRange: v })} />
                         <button onClick={() => setActiveFilters({ category: "All", stockStatus: "All", priceRange: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset Filters</button>
@@ -218,6 +237,11 @@ export default function Products() {
                   ))}
                 </tbody>
               </table>
+              {filteredProducts.length === 0 && (
+                <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
+                  No matching products found.
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">

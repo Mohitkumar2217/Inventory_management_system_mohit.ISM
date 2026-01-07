@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import StaffSummaryCard from "../../components/Summerys/StaffSummaryCard.jsx";
 import StaffForm from "../../components/Forms/StaffForm.jsx";
 import { 
@@ -7,7 +7,7 @@ import {
   Calendar, Info, ChevronLeft, ChevronRight, Filter
 } from "lucide-react";
 
-export default function Staff() {
+export default function Staff({ searchQuery }) {
   const initialStaff = Array.from({ length: 45 }).map((_, i) => ({
     id: i + 1,
     name: `Employee ${i + 1}`,
@@ -21,7 +21,7 @@ export default function Staff() {
   const [staffList, setStaffList] = useState(initialStaff);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [view, setView] = useState("list");
-  const [search, setSearch] = useState("");
+  const [localSearch, setLocalSearch] = useState(""); // Local table search bar
   const [roleFilter, setRoleFilter] = useState("All");
   
   // Pagination State
@@ -29,6 +29,11 @@ export default function Staff() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [formData, setFormData] = useState({ name: "", works: "", role: "Staff", status: "Active" });
+
+  // AUTO-RESET PAGINATION ON SEARCH
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, localSearch, roleFilter]);
 
   const itemsSummary = {
     totalStaff: staffList.length,
@@ -57,15 +62,24 @@ export default function Staff() {
     setSelectedStaff(staff);
     setView("view-details");
   };
+  
   const handleDeleteStaff = (id) => {
     if (!window.confirm("Delete this staff member?")) return;
     setStaffList(staffList.filter(s => s.id !== id));
   };
 
-  // Filter Logic
+  // --- FILTER LOGIC (Now includes global searchQuery) ---
   const filteredStaff = staffList.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase());
+    // Combine Global Search and Local Search
+    const finalSearch = (searchQuery || localSearch).toLowerCase();
+    
+    const matchesSearch = 
+        s.name.toLowerCase().includes(finalSearch) || 
+        s.email.toLowerCase().includes(finalSearch) ||
+        s.role.toLowerCase().includes(finalSearch);
+
     const matchesRole = roleFilter === "All" || s.role === roleFilter;
+    
     return matchesSearch && matchesRole;
   });
 
@@ -82,48 +96,45 @@ export default function Staff() {
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
           <StaffSummaryCard items={itemsSummary} nameSum="Team" />
 
-          {/* MAIN PAGE TITLE - PRESERVED */}
-          <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
-              <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
-                <UserCog size={14} className="text-indigo-500" /> {filteredStaff.length} Members active
-              </p>
+          {/* MAIN PAGE TITLE */}
+          <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
+                <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+                    <UserCog size={14} className="text-indigo-500" /> {filteredStaff.length} Members Matching
+                </p>
+              </div>
           </div>
 
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
-            {/* TABLE HEADER SECTION WITH ACTIONS */}
             <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-4 bg-white">
               
-              {/* Entries Selector */}
-              <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
-                Show
+              <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
                 <select 
                   value={itemsPerPage} 
                   onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} 
-                  className="border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-100 cursor-pointer font-black"
+                  className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer"
                 >
-                  <option value={5}>5</option>
+                  <option value={5}>05</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={staffList.length}>All</option>
                 </select>
-                Entries
               </div>
 
               <div className="flex flex-1 items-center gap-3 w-full lg:max-w-3xl justify-end">
-                {/* Search Input */}
                 <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5 flex items-center gap-2 group focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
-                  <Search className="text-slate-400" size={18} />
+                  <Search className="text-slate-300 group-focus-within:text-indigo-400" size={18} />
                   <input 
                     type="text" 
-                    placeholder="Search members..." 
+                    placeholder="Quick search name, email or role..." 
                     className="bg-transparent outline-none font-bold text-sm w-full placeholder:text-slate-300"
-                    value={search}
-                    onChange={(e) => {setSearch(e.target.value); setCurrentPage(1);}}
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
 
-                {/* Filter Dropdown */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center gap-2">
                   <Filter size={16} className="text-slate-400" />
                   <select 
@@ -138,7 +149,6 @@ export default function Staff() {
                   </select>
                 </div>
 
-                {/* Register Button Inside Table Header */}
                 <button 
                   onClick={() => { setFormData({ name: "", works: "", role: "Staff", status: "Active" }); setView("add"); }} 
                   className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 active:scale-95 transition-all whitespace-nowrap"
@@ -163,7 +173,10 @@ export default function Staff() {
                     <tr key={staff.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="p-5 flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black shadow-inner">{staff.name.charAt(0)}</div>
-                        <span className="text-slate-700">{staff.name}</span>
+                        <div>
+                            <p className="text-slate-700">{staff.name}</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-black">{staff.email}</p>
+                        </div>
                       </td>
                       <td className="p-5">
                          <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] uppercase font-black text-slate-500">{staff.role}</span>
@@ -182,12 +195,16 @@ export default function Staff() {
                   ))}
                 </tbody>
               </table>
+              {filteredStaff.length === 0 && (
+                  <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
+                      No matching team members found.
+                  </div>
+              )}
             </div>
 
-            {/* INTEGRATED PAGINATION FOOTER */}
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredStaff.length)} / {filteredStaff.length} entries
+                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredStaff.length)} / {filteredStaff.length} members
               </p>
               
               <div className="flex items-center gap-2">
@@ -208,7 +225,7 @@ export default function Staff() {
                     >
                       {i + 1}
                     </button>
-                  )).slice(Math.max(0, activePage - 3), Math.min(totalPages, activePage + 2))}
+                  ))}
                 </div>
 
                 <button 

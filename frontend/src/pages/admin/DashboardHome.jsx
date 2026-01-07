@@ -1,5 +1,5 @@
-import React from 'react';
-import { FaSearch, FaTimes, FaFilter } from "react-icons/fa";
+import React, { useMemo } from 'react';
+import { SearchX } from "lucide-react";
 import OutOfStockCard from '../../components/OutStockCard.jsx';
 import LowStockCard from '../../components/LowStockCard.jsx';
 import SummaryCard from '../../components/Summerys/SummaryCard.jsx';
@@ -7,7 +7,7 @@ import SalesChart from '../../components/Charts/SalesChart.jsx';
 import TopProducts from '../../components/TopProducts.jsx';
 import RevenueChart from '../../components/Charts/RevenueCostChart.jsx';
 
-const DashboardHome = () => {
+const DashboardHome = ({ searchQuery = "" }) => {
     const [dashboardData, setDashboardData] = React.useState({
         totalProducts: 563,
         totalStock: 1200,
@@ -54,20 +54,62 @@ const DashboardHome = () => {
         ],
     });
 
+    // --- SEARCH FILTER LOGIC ---
+    const query = searchQuery.toLowerCase();
+
+    const filteredOutOfStock = useMemo(() => 
+        dashboardData.outOfStockItems.filter(item => 
+            item.name.toLowerCase().includes(query) || 
+            item.category.name.toLowerCase().includes(query)
+        ), [query, dashboardData.outOfStockItems]
+    );
+
+    const filteredLowStock = useMemo(() => 
+        dashboardData.lowStockItems.filter(item => 
+            item.name.toLowerCase().includes(query) || 
+            item.category.name.toLowerCase().includes(query)
+        ), [query, dashboardData.lowStockItems]
+    );
+
+    const hasResults = filteredOutOfStock.length > 0 || filteredLowStock.length > 0;
+
     return (
-        <div className="p-2 md:p-4 min-h-screen bg-gray-50">
+        <div className="p-2 md:p-4 min-h-screen bg-gray-50 animate-in fade-in duration-700">
+            {/* Summary Cards always visible */}
             <SummaryCard items={dashboardData} />
-            <TopProducts />
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight ml-4">Inventory Insights</h2>
+            
+            {/* Top Products visible only when not searching or specific match found */}
+            {!searchQuery && <TopProducts />}
+
+            <div className="flex items-center justify-between mb-4 mt-8">
+                <h2 className="text-xl font-black text-slate-900 tracking-tight ml-4 uppercase">
+                    {searchQuery ? `Search Results for: "${searchQuery}"` : "Inventory Insights"}
+                </h2>
             </div>
-            <div className='m-3 grid grid-cols-1 md:grid-cols-2 gap-4'>
-                <OutOfStockCard />
-                <LowStockCard />
-                <SalesChart />
-                <RevenueChart />
-            </div>
-        </div >
+
+            {!hasResults ? (
+                <div className="flex flex-col items-center justify-center py-20 text-slate-300">
+                    <SearchX size={64} className="mb-4 opacity-20" />
+                    <p className="text-sm font-black uppercase tracking-widest">No matching items found on dashboard</p>
+                </div>
+            ) : (
+                <div className='m-3 grid grid-cols-1 md:grid-cols-2 gap-6'>
+                    {/* Pass filtered data to the components if they accept props, 
+                        otherwise they will render their own logic. 
+                        Assuming these cards pull from a global state or you'll update them to accept props: */}
+                    <OutOfStockCard items={filteredOutOfStock} />
+                    <LowStockCard items={filteredLowStock} />
+                    
+                    {/* Hide charts when actively searching to keep screen clean */}
+                    {!searchQuery && (
+                        <>
+                            <SalesChart />
+                            <RevenueChart />
+                        </>
+                    )}
+                </div>
+            )}
+        </div>
     );
 };
 
