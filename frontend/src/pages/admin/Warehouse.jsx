@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import WarehouseSummaryCard from "../../components/Summerys/WareHouseSummaryCard.jsx";
+import WareHouseSummaryCard from "../../components/Summerys/WareHouseSummaryCard.jsx";
 import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
@@ -90,7 +90,7 @@ export default function Warehouse({ searchQuery }) {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
-          <WarehouseSummaryCard items={itemsSummary} nameSum="Inventory" />
+          <WareHouseSummaryCard items={itemsSummary} nameSum="Inventory" />
 
           {/* PAGE TITLE */}
           <div className="flex justify-between items-center mb-6">

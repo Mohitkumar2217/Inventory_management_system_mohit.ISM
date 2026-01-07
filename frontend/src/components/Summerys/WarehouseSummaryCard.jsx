@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Package, Hash, CheckCircle, XCircle, BarChart3, TrendingUp } from 'lucide-react';
 
-const WarehouseSummaryCard = ({ items = {}, nameSum }) => {
+const WareHouseSummaryCard = ({ items = {}, nameSum }) => {
     const [currentTime, setCurrentTime] = useState(new Date());
     // --- FEATURE: Real-time clock for "System Management" feel ---
     useEffect(() => {
@@ -72,4 +72,4 @@ const WarehouseSummaryCard = ({ items = {}, nameSum }) => {
     );
 };
 
-export default WarehouseSummaryCard;
+export default WareHouseSummaryCard;
