@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Added for navigation
-import { FaSearch, FaRegEnvelope } from 'react-icons/fa'; 
-import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi'; 
+import { useNavigate } from 'react-router-dom';
+import { FaSearch, FaRegEnvelope } from 'react-icons/fa'; // Added FaRegEnvelope
+import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi'; // Added HiOutlineBell
 import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 
 export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
@@ -21,37 +21,31 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
     { id: 3, name: "Mumbai Port", label: "Import Unit", capacity: "12%" },
   ];
 
-  // --- SMART NAVIGATION MAP ---
-  // Maps every single important word to its respective route
   const pageSignatures = [
     { route: "/products", keys: ["product", "item", "inventory", "stock", "sku", "brand", "electronics", "beauty", "food", "lakme", "sony", "apple", "nike", "cream", "serum", "watch"] },
     { route: "/orders", keys: ["order", "purchase", "bill", "invoice", "price", "pending", "completed", "cancelled", "gst", "vendor", "valuation"] },
     { route: "/staff", keys: ["staff", "employee", "team", "member", "admin", "manager", "worker", "role", "email", "security"] },
     { route: "/warehouse", keys: ["warehouse", "zone", "location", "storage", "pallet", "bay", "ledger", "out of stock"] },
     { route: "/suppliers", keys: ["supplier", "dealer", "distributor", "network", "partner", "verified"] },
-    { route: "/categories", keys: ["category", "dept", "group", "class", "department", "tax", "slug"] },
+    { route: "/categories", keys: ['categories', "category", "dept", "group", "class", "department", "tax", "slug"] },
     { route: "/reports", keys: ["report", "analytics", "chart", "forecast", "revenue", "data", "roi", "velocity"] },
     { route: "/settings", keys: ["settings", "config", "profile", "password", "setup", "business"] },
     { route: "/dashboard", keys: ["dash", "home", "main", "overview"] }
   ];
 
-  // --- HANDLE ENTER KEY ---
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== "") {
       const input = searchQuery.toLowerCase().trim();
-      const inputWords = input.split(/\s+/); // Split sentence into words
+      const inputWords = input.split(/\s+/);
 
       let targetRoute = null;
-
-      // Scan every word against every page signature
       for (const page of pageSignatures) {
         const isMatch = inputWords.some(word => 
           page.keys.some(key => key.includes(word) || word.includes(key))
         );
-        
         if (isMatch) {
           targetRoute = page.route;
-          break; // Take the first best match
+          break;
         }
       }
 
@@ -104,7 +98,7 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
             )}
           </div>
 
-          {/* SEARCH BAR WITH ENTER TRIGGER */}
+          {/* SEARCH BAR */}
           <div className="flex items-center bg-[#24262d] border border-gray-700 rounded-xl px-4 py-2.5 w-full max-w-md transition-all focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 relative">
             <FaSearch className="text-gray-500 mr-3 shrink-0" />
             <input
@@ -112,7 +106,7 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown} 
-              placeholder="Search word (e.g. 'Pending', 'Zone', 'Sony')..."
+              placeholder="Search (e.g. 'Orders', 'Stock')..."
               className="bg-transparent outline-none text-sm w-full placeholder-gray-500"
             />
             {searchQuery && (
@@ -123,8 +117,27 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
           </div>
         </div>
 
-        {/* RIGHT: User Profile */}
-        <div className="flex items-center gap-3">
+        {/* RIGHT: Action Center & User Profile */}
+        <div className="flex items-center gap-4">
+          
+          {/* Mail Button */}
+          <button className="p-2.5 bg-gray-800/30 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700 transition-all relative">
+            <FaRegEnvelope size={18} />
+          </button>
+
+          {/* Notifications Button */}
+          <button className="relative p-2.5 bg-gray-800/30 rounded-xl border border-gray-700 text-gray-400 hover:text-white hover:bg-gray-700 transition-all">
+            <HiOutlineBell size={20} />
+            {/* Red Notification Dot with Pulse */}
+            <span className="absolute top-2 right-2.5 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+            </span>
+          </button>
+
+          <div className="h-8 w-[1px] bg-gray-700 mx-1"></div>
+
+          {/* User Profile */}
           <div className="flex items-center gap-3 pl-2 group cursor-pointer">
             <div className="hidden md:flex flex-col items-end">
               <span className="text-sm font-semibold text-gray-200">Mohit Kumar</span>
