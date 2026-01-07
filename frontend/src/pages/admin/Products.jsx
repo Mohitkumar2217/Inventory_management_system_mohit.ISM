@@ -286,7 +286,7 @@ export default function Products({ searchQuery }) {
           </div>
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
+        <div className="max-w-5xl mx-auto pt-6 animate-in fade-in duration-500">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Cancel
           </button>

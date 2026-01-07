@@ -1,21 +1,35 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Chart from 'react-apexcharts';
+import { Calendar, ChevronDown } from 'lucide-react';
 
 const SalesChart = () => {
-    // 1. Time Range State
+    // 1. Time Range & Dropdown State
     const [range, setRange] = useState(7); // Default 7 days
+    const [showRangeMenu, setShowRangeMenu] = useState(false);
+    const rangeRef = useRef(null);
 
-    // 2. Dynamic Data Generator (Keeps Candlestick format: [Open, High, Low, Close])
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (rangeRef.current && !rangeRef.current.contains(e.target)) {
+                setShowRangeMenu(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // 2. Dynamic Data Generator (Candlestick format: [Open, High, Low, Close])
     const chartSeries = useMemo(() => {
-        const baseTime = 1538778600000;
+        const baseTime = new Date().getTime() - (range * 86400000);
         const data = Array.from({ length: range }, (_, i) => {
             const open = Math.floor(Math.random() * (7000 - 6000) + 6000);
             const close = Math.floor(Math.random() * (7000 - 6000) + 6000);
             const high = Math.max(open, close) + Math.floor(Math.random() * 50);
             const low = Math.min(open, close) - Math.floor(Math.random() * 50);
-            
+
             return {
-                x: new Date(baseTime + (i * 86400000)), // Increment by day
+                x: new Date(baseTime + (i * 86400000)), 
                 y: [open, high, low, close]
             };
         });
@@ -23,6 +37,7 @@ const SalesChart = () => {
         return [{ data }];
     }, [range]);
 
+    // 3. ApexChart Configurations
     const chartOptions = {
         chart: {
             type: 'candlestick',
@@ -48,20 +63,20 @@ const SalesChart = () => {
         grid: {
             borderColor: '#f8fafc',
             strokeDashArray: 4,
-            padding: { left: 0, right: 0 }
+            padding: { left: 10, right: 10 }
         },
         plotOptions: {
             candlestick: {
-                colors: { 
-                    upward: '#3b82f6', // Consistent Blue
-                    downward: '#f43f5e' // Consistent Rose/Red
+                colors: {
+                    upward: '#3b82f6', 
+                    downward: '#f43f5e' 
                 },
                 wick: { useFillColor: true }
             }
         },
         tooltip: {
             theme: 'dark',
-            custom: function({ seriesIndex, dataPointIndex, w }) {
+            custom: function ({ seriesIndex, dataPointIndex, w }) {
                 const o = w.globals.seriesCandleO[seriesIndex][dataPointIndex];
                 const h = w.globals.seriesCandleH[seriesIndex][dataPointIndex];
                 const l = w.globals.seriesCandleL[seriesIndex][dataPointIndex];
@@ -101,22 +116,48 @@ const SalesChart = () => {
                         Inventory Valuation Analytics
                     </p>
                 </div>
-                
-                {/* Time Range Selector */}
-                <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
-                    {[5, 10, 30].map((d) => (
-                        <button
-                            key={d}
-                            onClick={() => setRange(d)}
-                            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${
-                                range === d 
-                                ? 'bg-white text-blue-600 shadow-sm border border-slate-100' 
-                                : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                        >
-                            {d}D
-                        </button>
-                    ))}
+
+                {/* Time Range Selector Dropdown */}
+                <div className="relative" ref={rangeRef}>
+                    <button
+                        onClick={() => setShowRangeMenu(!showRangeMenu)}
+                        className="flex items-center gap-3 bg-white border border-slate-200 px-4 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.15em] text-slate-600 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
+                    >
+                        <Calendar size={14} className="text-blue-500" />
+                        <span>Last {range} Days</span>
+                        <ChevronDown
+                            size={14}
+                            className={`text-slate-400 transition-transform duration-300 ${showRangeMenu ? 'rotate-180' : ''}`}
+                        />
+                    </button>
+
+                    {/* Dropdown Content */}
+                    {showRangeMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-100 rounded-[1.5rem] shadow-2xl shadow-slate-200/50 p-2 z-[110] animate-in fade-in zoom-in-95 duration-200">
+                            <div className="px-3 py-2 border-b border-slate-50 mb-1">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Select Interval</span>
+                            </div>
+                            {[5, 10, 30, 90].map((d) => (
+                                <button
+                                    key={d}
+                                    onClick={() => {
+                                        setRange(d);
+                                        setShowRangeMenu(false);
+                                    }}
+                                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all group/item ${
+                                        range === d ? 'bg-blue-50 text-blue-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                    }`}
+                                >
+                                    <span className="text-[11px] font-bold uppercase tracking-wider">
+                                        {d === 90 ? 'Last Quarter' : `Last ${d} Days`}
+                                    </span>
+                                    {range === d && (
+                                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
