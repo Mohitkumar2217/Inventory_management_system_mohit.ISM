@@ -5,6 +5,18 @@ export default function SettingsForm({ activeTab, formData, onChange, onSave, is
   return (
     <form onSubmit={onSave} className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       
+      {/* --- PROFILE SETTINGS --- */}
+      {activeTab === "profile" && (
+        <div className="space-y-6">
+          <SectionHeader title="Profile Information" subtitle="Update your personal details" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormInput label="Full Name" name="userName" value={formData.userName} onChange={onChange} />
+            <FormInput label="Job Title" name="jobTitle" value={formData.jobTitle} onChange={onChange} />
+            <FormInput label="Employee ID" name="employeeId" value={formData.employeeId} onChange={onChange} />
+            <FormSelect label="Gender" name="gender" value={formData.gender} onChange={onChange} options={["Male", "Female", "Non-Binary"]} />
+          </div>
+        </div>
+      )}
       {/* --- GENERAL SETTINGS --- */}
       {activeTab === "general" && (
         <div className="space-y-6">
@@ -52,8 +64,8 @@ export default function SettingsForm({ activeTab, formData, onChange, onSave, is
 
       {/* Submit Section */}
       <div className="pt-8 border-t border-slate-50 flex justify-end">
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isSaving}
           className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl shadow-blue-100 transition-all active:scale-95 disabled:opacity-50"
         >
