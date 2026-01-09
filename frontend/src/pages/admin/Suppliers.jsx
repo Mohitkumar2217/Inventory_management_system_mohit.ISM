@@ -113,12 +113,13 @@ export default function Suppliers({ searchQuery }) {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredVendors.slice(indexOfFirstItem, indexOfLastItem);
 
+  // --- SUMMARY CALCULATION ---
   const itemsSummary = {
     totalProducts: vendors.length,
     totalStock: vendors.filter(v => v.verification === "Verified").length,
-    totalOrders: vendors.filter(v => v.status === "Active").length,
-    totalCancelled: vendors.filter(v => v.status === "Inactive").length,
-    totalRevenue: vendors.reduce((sum, v) => sum + v.suppliesQuantity, 0),
+    totalOrders: vendors.filter(v => v.status === "Active").length, // Active Vendors
+    totalCancelled: vendors.filter(v => v.status === "Inactive").length, // Inactive Vendors
+    totalRevenue: vendors.reduce((sum, v) => sum + (v.suppliesQuantity || 0), 0),
   };
 
   if (loading && vendors.length === 0) {
@@ -201,7 +202,7 @@ export default function Suppliers({ searchQuery }) {
                     <th className="p-5">Partner Profile</th>
                     <th className="p-5">Geo Location</th>
                     <th className="p-5">Inventory Vol</th>
-                    <th className="p-5">Trust Level</th>
+                    <th className="p-5">Verification</th>
                     <th className="p-5">Network Status</th>
                     <th className="p-5 text-center">Actions</th>
                   </tr>
@@ -218,19 +219,20 @@ export default function Suppliers({ searchQuery }) {
                       </td>
                       <td className="p-5">
                         <span className="flex items-center gap-1 text-slate-500 text-xs font-medium">
-                          <MapPin size={12} className="text-rose-400" /> {v.address.split(',')[0]}
+                          <MapPin size={12} className="text-rose-400" /> {v.address?.split(',')[0]}
                         </span>
                       </td>
                       <td className="p-5 text-slate-600 font-black text-xs">{v.suppliesQuantity} SKUs</td>
                       <td className="p-5">
-                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full ${v.verification === 'Verified' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                        <span className={`text-[9px] font-black uppercase px-3 py-1 rounded-full border ${v.verification === 'Verified' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'}`}>
                           {v.verification}
                         </span>
                       </td>
+                      {/* FIXED STATUS COLUMN */}
                       <td className="p-5">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${v.status === "Active"
-                            ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                            : "bg-rose-50 text-rose-600 border border-rose-100"
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${v.status === "Active"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            : "bg-rose-50 text-rose-600 border-rose-100"
                           }`}>
                           {v.status}
                         </span>
@@ -248,6 +250,7 @@ export default function Suppliers({ searchQuery }) {
               </table>
             </div>
 
+            {/* Pagination Footer */}
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                 Viewing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredVendors.length)} / {filteredVendors.length} Partners
@@ -286,6 +289,7 @@ export default function Suppliers({ searchQuery }) {
           </div>
         </div>
       ) : view === "view-details" && selectedVendor ? (
+        /* Details View */
         <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 pb-20 mt-10">
           <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest mb-8 group transition-all">
             <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={18} /></div>
@@ -298,7 +302,7 @@ export default function Suppliers({ searchQuery }) {
                 <span className="text-green-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block">Enterprise Partner Profile</span>
                 <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-4">{selectedVendor.name}</h1>
                 <div className="flex flex-wrap gap-3">
-                  <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-blue-100"><ShieldCheck size={12} /> Verified Security Tier</span>
+                  <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 border border-blue-100"><ShieldCheck size={12} /> {selectedVendor.verification} Status</span>
                   <span className="bg-slate-100 text-slate-500 px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">{selectedVendor.hierarchy} Priority</span>
                   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${selectedVendor.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>{selectedVendor.status}</span>
                 </div>
@@ -308,22 +312,23 @@ export default function Suppliers({ searchQuery }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
               <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Contract Details</p>
-                <p className="text-slate-600 font-bold">Email: <span className="text-slate-800">{selectedVendor.email}</span></p>
-                <p className="text-slate-600 font-bold">Address: <span className="text-slate-800">{selectedVendor.address}</span></p>
+                <p className="text-slate-600 font-bold text-sm">Email: <span className="text-slate-800">{selectedVendor.email}</span></p>
+                <p className="text-slate-600 font-bold text-sm mt-1">Address: <span className="text-slate-800">{selectedVendor.address}</span></p>
               </div>
               <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 flex flex-col justify-center">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Truck size={14} className="text-green-600" /> Strategic Note</p>
-                <p className="text-slate-600 italic leading-relaxed font-bold text-lg opacity-80">"{selectedVendor.details}"</p>
+                <p className="text-slate-600 italic leading-relaxed font-bold text-lg opacity-80">"{selectedVendor.details || 'No additional directives recorded.'}"</p>
               </div>
             </div>
           </div>
         </div>
       ) : (
+        /* Form View */
         <div className="max-w-5xl mx-auto p-6 animate-in fade-in duration-500 mt-10">
           <div className="flex items-center justify-between mb-8">
             <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
               <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100"><ArrowLeft size={18} /></div>
-              Cancel Registration
+              Go Back
             </button>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-widest">{formData._id ? "Sync Profile" : "Registry Protocol"}</h1>
           </div>

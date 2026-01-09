@@ -1,58 +1,84 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext"; //
 import WareHouseSummaryCard from "../../components/Summerys/WarehouseSummaryCard.jsx";
 import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
-  PackageSearch, MapPin, Info, Hash, ChevronLeft, ChevronRight, Filter
+  PackageSearch, MapPin, Info, Hash, ChevronLeft, ChevronRight, Filter, Loader2
 } from "lucide-react";
 
 export default function Warehouse({ searchQuery }) {
-  const initialStock = Array.from({ length: 45 }).map((_, i) => ({
-    id: i + 1,
-    product: `Product ${i + 1}`,
-    quantity: Math.floor(Math.random() * 100),
-    status: i % 5 === 0 ? "Out of Stock" : "In Stock",
-    zone: `Zone ${String.fromCharCode(65 + (i % 4))}-${i + 1}`,
-    details: `Handling instructions for Product ${i + 1}. Ensure temperature control if applicable. SKU-WARE-${100 + i}.`,
-  }));
+  const { token } = useAuth(); //
 
-  const [stockList, setStockList] = useState(initialStock);
+  // --- STATES ---
+  const [stockList, setStockList] = useState([]);
   const [view, setView] = useState("list");
-  const [localSearch, setLocalSearch] = useState(""); // Inner search
+  const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState(""); 
   const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedStock, setSelectedStock] = useState(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [formData, setFormData] = useState({ product: "", quantity: 0, status: "In Stock", details: "", zone: "" });
+  const initialFormState = { product: "", quantity: 0, status: "In Stock", details: "", zone: "" };
+  const [formData, setFormData] = useState(initialFormState);
+
+  // --- API CONFIGURATION ---
+  const api = axios.create({
+    baseURL: "http://localhost:4000/api",
+    headers: { Authorization: `Bearer ${token}` } //
+  });
+
+  // --- 1. FETCH DATA FROM BACKEND ---
+  const fetchStock = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/warehouse"); //
+      if (res.data.success) {
+        setStockList(res.data.stocks);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (token) fetchStock();
+  }, [token]);
 
   // --- AUTO-RESET PAGINATION ON SEARCH ---
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, localSearch, statusFilter]);
 
-  const itemsSummary = {
-    totalProducts: stockList.length,
-    totalQuantity: stockList.reduce((sum, s) => sum + s.quantity, 0),
-    inStockCount: stockList.filter(s => s.status === "In Stock").length,
-    outOfStockCount: stockList.filter(s => s.status === "Out of Stock").length,
-  };
-
+  // --- HANDLERS ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // --- 2. ADD OR UPDATE STOCK ---
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.id) {
-      setStockList(stockList.map(s => s.id === formData.id ? { ...formData } : s));
-    } else {
-      setStockList([{ ...formData, id: Date.now() }, ...stockList]);
+    try {
+      const res = formData._id
+        ? await api.put(`/warehouse/${formData._id}`, formData) //
+        : await api.post("/warehouse", formData); //
+
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchStock();
+        setView("list");
+        setFormData(initialFormState);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Operation failed");
     }
-    setView("list");
   };
 
   const handleOpenDetails = (stock) => {
@@ -60,22 +86,27 @@ export default function Warehouse({ searchQuery }) {
     setView("view-details");
   };
 
-  const handleDeleteStock = (id) => { 
-    if (!window.confirm("Delete this stock record?")) return;
-    setStockList(stockList.filter(s => s.id !== id));
+  // --- 3. DELETE STOCK ---
+  const handleDeleteStock = async (id) => { 
+    if (!window.confirm("Delete this stock record permanently?")) return;
+    try {
+      const res = await api.delete(`/warehouse/${id}`); //
+      if (res.data.success) {
+        fetchStock();
+      }
+    } catch (err) {
+      alert("Failed to delete record.");
+    }
   };
 
-  // --- FILTER & SEARCH LOGIC (Combined) ---
+  // --- FILTER & SEARCH LOGIC ---
   const filteredStock = stockList.filter(s => {
     const finalQuery = (searchQuery || localSearch).toLowerCase();
-    
     const matchesSearch = 
         s.product.toLowerCase().includes(finalQuery) || 
-        s.details.toLowerCase().includes(finalQuery) ||
+        s.details?.toLowerCase().includes(finalQuery) ||
         s.zone.toLowerCase().includes(finalQuery);
-
     const matchesStatus = statusFilter === "All" || s.status === statusFilter;
-    
     return matchesSearch && matchesStatus;
   });
 
@@ -86,13 +117,27 @@ export default function Warehouse({ searchQuery }) {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredStock.slice(indexOfFirstItem, indexOfLastItem);
 
+  const itemsSummary = {
+    totalProducts: stockList.length,
+    totalQuantity: stockList.reduce((sum, s) => sum + s.quantity, 0),
+    inStockCount: stockList.filter(s => s.status === "In Stock").length,
+    outOfStockCount: stockList.filter(s => s.status === "Out of Stock").length,
+  };
+
+  if (loading && stockList.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-12 h-12 animate-spin text-orange-600" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
           <WareHouseSummaryCard items={itemsSummary} nameSum="Inventory" />
 
-          {/* PAGE TITLE */}
           <div className="flex justify-between items-center mb-6">
             <div>
                 <h1 className="text-3xl font-black text-slate-800 tracking-tight">Warehouse Ledger</h1>
@@ -120,7 +165,6 @@ export default function Warehouse({ searchQuery }) {
               </div>
 
               <div className="flex flex-1 items-center gap-3 w-full lg:max-w-3xl justify-end">
-                {/* Search Input */}
                 <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5 flex items-center gap-2 group focus-within:ring-2 focus-within:ring-orange-100 transition-all">
                   <Search className="text-slate-300 group-focus-within:text-orange-500" size={18} />
                   <input
@@ -132,7 +176,6 @@ export default function Warehouse({ searchQuery }) {
                   />
                 </div>
 
-                {/* Status Filter */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center gap-2">
                   <Filter size={16} className="text-slate-400" />
                   <select
@@ -147,7 +190,7 @@ export default function Warehouse({ searchQuery }) {
                 </div>
 
                 <button
-                  onClick={() => { setFormData({ product: "", quantity: 0, status: "In Stock", details: "", zone: "" }); setView("add"); }}
+                  onClick={() => { setFormData(initialFormState); setView("add"); }}
                   className="bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-100 active:scale-95 transition-all whitespace-nowrap"
                 >
                   <Plus size={18} /> Add Stock
@@ -167,7 +210,7 @@ export default function Warehouse({ searchQuery }) {
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-sm font-bold">
                   {currentItems.map((stock) => (
-                    <tr key={stock.id} className="hover:bg-slate-50/50 transition-colors group">
+                    <tr key={stock._id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="p-5 flex items-center gap-3 font-bold text-slate-700">{stock.product}</td>
                       <td className="p-5 text-slate-500">
                         <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm group-hover:border-orange-200 transition-all">{stock.zone}</span>
@@ -179,7 +222,7 @@ export default function Warehouse({ searchQuery }) {
                         <div className="flex justify-center gap-2">
                           <button onClick={() => handleOpenDetails(stock)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
                           <button onClick={() => { setFormData(stock); setView("add"); }} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
-                          <button onClick={() => handleDeleteStock(stock.id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                          <button onClick={() => handleDeleteStock(stock._id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
@@ -193,24 +236,23 @@ export default function Warehouse({ searchQuery }) {
               )}
             </div>
 
-            {/* PAGINATION FOOTER */}
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                 Viewing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredStock.length)} / {filteredStock.length} items
               </p>
 
               <div className="flex items-center gap-2">
-                <button
+                <button 
                   disabled={activePage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95"
                 >
                   <ChevronLeft size={18} />
                 </button>
-
+                
                 <div className="flex gap-1">
                   {[...Array(totalPages)].map((_, i) => (
-                    <button
+                    <button 
                       key={i + 1}
                       onClick={() => setCurrentPage(i + 1)}
                       className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${activePage === i + 1 ? "bg-orange-600 text-white shadow-xl shadow-orange-100" : "text-slate-400 hover:bg-slate-50"}`}
@@ -220,7 +262,7 @@ export default function Warehouse({ searchQuery }) {
                   ))}
                 </div>
 
-                <button
+                <button 
                   disabled={activePage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95"
@@ -232,12 +274,10 @@ export default function Warehouse({ searchQuery }) {
           </div>
         </div>
       ) : view === "view-details" && selectedStock ? (
-        <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700">
-          <div className="flex items-center justify-between mb-8">
+        <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 pb-20">
+          <div className="flex items-center justify-between mb-8 mt-10">
             <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all">
-                <ArrowLeft size={18} />
-              </div>
+              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={18} /></div>
               Back to Ledger
             </button>
             <div className="text-right">
@@ -249,12 +289,10 @@ export default function Warehouse({ searchQuery }) {
 
           <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-100 relative overflow-hidden">
             <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
-              <div className="w-40 h-40 bg-orange-50 rounded-[2.5rem] flex items-center justify-center text-7xl border border-orange-100 shadow-2xl">
-                📦
-              </div>
+              <div className="w-40 h-40 bg-orange-50 rounded-[3rem] flex items-center justify-center text-7xl border border-orange-100 shadow-2xl">📦</div>
               <div className="flex-1 pt-4">
                 <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedStock.product}</h1>
-                <p className="text-xs font-black text-orange-500 uppercase tracking-[0.3em] mb-10">Asset Deployment ID: #WARE-{selectedStock.id}</p>
+                <p className="text-xs font-black text-orange-500 uppercase tracking-[0.3em] mb-10">ID: #{selectedStock._id.slice(-6).toUpperCase()}</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-10 pt-8 border-t border-slate-50">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={12} className="text-orange-500"/> Zone Allocation</p>
@@ -269,18 +307,18 @@ export default function Warehouse({ searchQuery }) {
             </div>
             <div className="mt-16 bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
               <div className="absolute -top-3 left-10 bg-slate-900 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Logistical Directives</div>
-              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedStock.details}"</p>
+              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedStock.details || 'No specific directives recorded.'}"</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto p-6 animate-in fade-in duration-500">
+        <div className="max-w-5xl mx-auto p-6 animate-in fade-in duration-500 mt-10">
           <div className="flex items-center justify-between mb-8">
-            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 transition-all"><ArrowLeft size={18} /></div>
-              Go Back
+            <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
+              <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={18} /></div>
+              Back to Ledger
             </button>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-widest">{formData.id ? "Update Deployment" : "New Inventory Log"}</h1>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-widest">{formData._id ? "Update Deployment" : "New Inventory Log"}</h1>
           </div>
           <WarehouseForm formData={formData} handleInputChange={handleInputChange} handleSubmit={handleSubmit} onCancel={() => setView("list")} />
         </div>

@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.js";
 import categoryRoutes from "./routes/category.js";
 import supplierRoutes from "./routes/supplier.js";
 import staffRoutes from "./routes/staff.js";
+import warehouseRoutes from "./routes/warehouse.js";
 // import productRoutes from "./routes/product.js"; 
 // import orderRoutes from "./routes/order.js";
 
@@ -20,6 +21,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/api/staffs", staffRoutes);
+app.use("/api/warehouse", warehouseRoutes);
 // app.use("/api/products", productRoutes); 
 // app.use("/api/orders", orderRoutes);
 

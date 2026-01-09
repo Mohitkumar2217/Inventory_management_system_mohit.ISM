@@ -36,7 +36,7 @@ const Login = () => {
           admin: "/admin/dashboard",
           manager: "/manager/dashboard",
           staff: "/staff/dashboard",
-          "warehouse admin": "/warehouse/dashboard",
+          warehouse: "/warehouse/dashboard",
           accountant: "/accounting/dashboard"
         };
         navigate(roleRedirects[user.role] || "/login");

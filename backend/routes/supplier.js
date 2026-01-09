@@ -4,16 +4,12 @@ import { verifyUser, checkRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Matches: GET /api/suppliers
+// Get list and summary
 router.get("/", verifyUser, getSuppliers);
 
-// Matches: POST /api/suppliers (Add)
+// Protected Management Routes
 router.post("/", verifyUser, checkRole(['admin', 'manager']), addSupplier);
-
-// Matches: PUT /api/suppliers/:id (Update)
 router.put("/:id", verifyUser, checkRole(['admin', 'manager']), addSupplier);
-
-// Matches: DELETE /api/suppliers/:id
 router.delete("/:id", verifyUser, checkRole(['admin']), deleteSupplier);
 
 export default router;

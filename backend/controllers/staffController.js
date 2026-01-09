@@ -1,15 +1,39 @@
 import User from "../models/User.js";
-import bcrypt from "bcrypt";
 
-// Fetch all staff members
 export const getStaffList = async (req, res) => {
-    try {
-        // Fetch all users except the currently logged-in admin (optional)
-        const staff = await User.find().select("-password").sort({ createdAt: -1 });
-        res.status(200).json({ success: true, staff });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Internal Server Error" });
-    }
+  try {
+    const staff = await User.find().select("-password").sort({ createdAt: -1 });
+
+    // --- ANALYTICS LOGIC ---
+    const totalStaff = staff.length;
+    const activeStaff = staff.filter(s => s.status === "Active").length;
+    const inactiveStaff = staff.filter(s => s.status === "Inactive").length;
+    
+    // Counts by Role
+    const admins = staff.filter(s => s.role === "admin").length;
+    const managers = staff.filter(s => s.role === "manager").length;
+
+    // Productivity Calculation: (Active / Total) * 100
+    // This represents the current operational "strength" of the team
+    const productivityBase = totalStaff > 0 
+      ? ((activeStaff / totalStaff) * 100).toFixed(1) 
+      : 0;
+
+    res.status(200).json({
+      success: true,
+      staff, // The full list for the table
+      summary: {
+        totalStaff,
+        activeStaff,
+        inactiveStaff,
+        admins,
+        managers,
+        productivity: `${productivityBase}%`
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching staff directory" });
+  }
 };
 
 // Add or Update Staff member
