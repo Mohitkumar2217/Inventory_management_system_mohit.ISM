@@ -18,14 +18,53 @@ const OrderSummaryCard = ({ items = {}, nameSum }) => {
     };
 
     const summaryData = [
-        { label: "Total Revenue", value: `₹${(items.totalRevenue || 0).toLocaleString('en-IN')}`, stats: '90%', color: "bg-pink-600", bg: "bg-pink-50", icon: "💰" },
-        { label: "Total Orders", value: items.totalProducts || 0, stats: '85%', color: "bg-blue-600", bg: "bg-blue-50", icon: "📥" },
-        { label: "Avg. Fulfillment", value: items.avgFulfillment || "1.2 Days", stats: '-4h', color: "bg-indigo-600", bg: "bg-indigo-50", icon: <Clock size={22} className="text-indigo-600" /> },
-        { label: "Order Accuracy", value: items.accuracyRate || "98.4%", stats: 'Stable', color: "bg-emerald-600", bg: "bg-emerald-50", icon: <CheckCircle size={22} className="text-emerald-600" /> },
-        { label: "Backorder Volume", value: items.backorderCount || 14, stats: 'High', color: "bg-orange-600", bg: "bg-orange-50", icon: <PackageSearch size={22} className="text-orange-600" />, isWarning: true },
-        { label: "Total Stock", value: items.totalStock || 0, stats: '40%', color: "bg-cyan-600", bg: "bg-cyan-50", icon: "🏢" },
+        {
+            label: "Total Revenue",
+            value: `₹${(items.totalRevenue || 0).toLocaleString('en-IN')}`,
+            stats: 'Growth', // You can calculate growth vs last month on backend
+            color: "bg-pink-600", bg: "bg-pink-50", icon: "💰",
+            percent: 90
+        },
+        {
+            label: "Total Orders",
+            value: items.totalProducts || 0,
+            stats: items.totalProducts > 0 ? `${Math.round((items.totalOrders / items.totalProducts) * 100)}%` : '0%',
+            color: "bg-blue-600", bg: "bg-blue-50", icon: "📥",
+            percent: 85
+        },
+        {
+            label: "Avg. Fulfillment",
+            value: items.avgFulfillment || "0 Days",
+            stats: '-2h',
+            color: "bg-indigo-600", bg: "bg-indigo-50",
+            icon: <Clock size={22} className="text-indigo-600" />,
+            percent: 60
+        },
+        {
+            label: "Order Accuracy",
+            value: items.accuracyRate || "0%",
+            stats: 'Live',
+            color: "bg-emerald-600", bg: "bg-emerald-50",
+            icon: <CheckCircle size={22} className="text-emerald-600" />,
+            percent: parseFloat(items.accuracyRate) || 0
+        },
+        {
+            label: "Backorder Volume",
+            value: items.backorderCount || 0,
+            stats: items.backorderCount > 10 ? 'High' : 'Stable',
+            color: "bg-orange-600", bg: "bg-orange-50",
+            icon: <PackageSearch size={22} className="text-orange-600" />,
+            isWarning: (items.backorderCount > 5),
+            percent: items.totalProducts > 0 ? (items.backorderCount / items.totalProducts) * 100 : 0
+        },
+        {
+            label: "Pending Action",
+            value: items.totalStock || 0,
+            stats: 'Active',
+            color: "bg-cyan-600", bg: "bg-cyan-50", icon: "🏢",
+            percent: 40
+        },
     ];
-
     const notices = [
         { id: 1, text: "2 Orders are placed for delivery.", type: "urgent" },
         { id: 2, text: "You have 4 new orders to process.", type: "promo" },

@@ -1,30 +1,24 @@
 import React, { useState, useRef, useEffect } from "react";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 import OrderSummaryCard from "../../components/Summerys/OrderSummaryCard.jsx";
 import OrderForm from "../../components/Forms/OrderForm.jsx";
 import {
   Search, Filter, Plus, Trash2,
   Eye, ArrowLeft, IndianRupee, Package,
-  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, Layers
+  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, Layers, Loader2
 } from "lucide-react";
 
 export default function Orders({ searchQuery }) {
-  // --- INITIAL DATA ---
-  const initialOrders = Array.from({ length: 45 }).map((_, i) => ({
-    id: 1000 + i,
-    client: `Vendor ${i + 1}`,
-    category: i % 2 === 0 ? "Electronics" : "Beauty",
-    amount: Math.floor(Math.random() * 5) + 1,
-    price: (i + 1) * 500,
-    status: i % 3 === 0 ? "Completed" : i % 3 === 1 ? "Pending" : "Cancelled",
-    stockUpdated: true,
-    details: `Stock procurement for order #${1000 + i}. Priority shipping requested from vendor.`,
-  }));
-
+  const { token } = useAuth();
+  
   // --- STATES ---
-  const [orders, setOrders] = useState(initialOrders);
+  const [orders, setOrders] = useState([]);
+  const [summaryData, setSummaryData] = useState({});
   const [view, setView] = useState("list");
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [localSearch, setLocalSearch] = useState(""); // Inner table search
+  const [loading, setLoading] = useState(true);
+  const [localSearch, setLocalSearch] = useState(""); 
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const filterRef = useRef(null);
 
@@ -34,13 +28,39 @@ export default function Orders({ searchQuery }) {
   const [activeFilters, setActiveFilters] = useState({ status: "All", priceRange: "All" });
 
   const initialPurchaseForm = {
-    id: null, vendorName: "", itemName: "", category: "Electronics",
+    _id: null, vendorName: "", itemName: "", category: "Electronics",
     quantity: 1, unitPrice: "", warehouse: "Main Warehouse",
     expectedDate: "", paymentTerms: "Due on Receipt", notes: ""
   };
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
 
-  // --- HANDLERS ---
+  // API Instance Config
+  const api = axios.create({
+    baseURL: "http://localhost:4000/api",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // --- 1. FETCH DATA FROM BACKEND ---
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/orders");
+      if (res.data.success) {
+        setOrders(res.data.orders);
+        setSummaryData(res.data.summary);
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { 
+    if (token) fetchOrders(); 
+  }, [token]);
+
+  // Click outside filter logic
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterRef.current && !filterRef.current.contains(event.target)) setShowFilterPopup(false);
@@ -59,89 +79,86 @@ export default function Orders({ searchQuery }) {
     setPurchaseOrder(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAddPurchaseOrder = (e) => {
+  // --- 2. ADD OR UPDATE ORDER ---
+  const handleAddPurchaseOrder = async (e) => {
     if (e) e.preventDefault();
-    const newEntry = {
-      id: purchaseOrder.id || 1000 + orders.length + 1,
-      client: purchaseOrder.vendorName,
-      category: purchaseOrder.category,
-      amount: parseInt(purchaseOrder.quantity),
-      price: parseFloat(purchaseOrder.unitPrice) || 0,
-      status: purchaseOrder.id ? orders.find(o => o.id === purchaseOrder.id).status : "Pending",
-      stockUpdated: false,
-      details: purchaseOrder.notes || `Stock order for ${purchaseOrder.itemName}`
-    };
+    try {
+      const res = purchaseOrder._id 
+        ? await api.put(`/orders/${purchaseOrder._id}`, purchaseOrder)
+        : await api.post("/orders", purchaseOrder);
 
-    if (purchaseOrder.id) {
-      setOrders(orders.map(o => o.id === purchaseOrder.id ? newEntry : o));
-    } else {
-      setOrders([newEntry, ...orders]);
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchOrders();
+        setView("list");
+        setPurchaseOrder(initialPurchaseForm);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Sync failed");
     }
-
-    setPurchaseOrder(initialPurchaseForm);
-    setView("list");
   };
 
-  // --- FILTER & PAGINATION LOGIC (Now includes searchQuery) ---
+  // --- 3. QUICK STATUS UPDATE ---
+  const updateStatus = async (id, status) => {
+    try {
+      const res = await api.patch(`/orders/status/${id}`, { status });
+      if (res.data.success) fetchOrders();
+    } catch (err) {
+      alert("Status update failed");
+    }
+  };
+
+  // --- 4. DELETE ORDER ---
+  const removeOrder = async (id) => {
+    if (!window.confirm("Delete this order record permanently?")) return; 
+    try {
+      const res = await api.delete(`/orders/${id}`);
+      if (res.data.success) fetchOrders();
+    } catch (err) {
+      alert("Delete operation failed");
+    }
+  };
+
+  // --- FILTER & SEARCH LOGIC ---
   const filteredOrders = orders.filter((o) => {
-    const totalPrice = o.amount * o.price;
-    
-    // Combine Global Navbar Search and Local Table Search
     const finalSearch = (searchQuery || localSearch).toLowerCase();
     
     const matchesSearch = 
-        o.client.toLowerCase().includes(finalSearch) || 
-        o.id.toString().includes(finalSearch) ||
+        o.vendorName.toLowerCase().includes(finalSearch) || 
+        o._id.toLowerCase().includes(finalSearch) ||
         o.category.toLowerCase().includes(finalSearch);
 
     const matchesStatus = activeFilters.status === "All" || o.status === activeFilters.status;
 
-    let matchesPrice = true;
-    if (activeFilters.priceRange === "Under ₹500") matchesPrice = totalPrice < 500;
-    else if (activeFilters.priceRange === "₹500 - ₹2000") matchesPrice = totalPrice >= 500 && totalPrice <= 2000;
-    else if (activeFilters.priceRange === "₹2000 - ₹5000") matchesPrice = totalPrice >= 2000 && totalPrice <= 5000;
-    else if (activeFilters.priceRange === "Above ₹5000") matchesPrice = totalPrice > 5000;
-
-    return matchesSearch && matchesStatus && matchesPrice;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredOrders.slice(indexOfFirstItem, indexOfLastItem);
+  const currentItems = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleOpenDetails = (order) => { setSelectedOrder(order); setView("view-details"); };
+  
   const handleEditDetails = (order) => {
     setPurchaseOrder({
-      id: order.id, vendorName: order.client, itemName: order.category,
-      category: order.category, quantity: order.amount, unitPrice: order.price,
-      warehouse: "Main Warehouse", expectedDate: "", paymentTerms: "Due on Receipt", notes: order.details
+      _id: order._id, vendorName: order.vendorName, itemName: order.itemName,
+      category: order.category, quantity: order.quantity, unitPrice: order.unitPrice,
+      warehouse: order.warehouse, expectedDate: order.expectedDate ? order.expectedDate.split('T')[0] : "", 
+      paymentTerms: order.paymentTerms, notes: order.notes
     });
     setView("add");
   };
 
-  const removeOrder = (id) => {
-    if (!window.confirm("Delete this order record?")) return; 
-    setOrders(orders.filter(o => o.id !== id));
-  };
-  
-  const updateStatus = (id, status) => setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
-
-  const itemsSummary = {
-    totalProducts: orders.length,
-    totalStock: orders.filter(o => o.status === "Pending").length,
-    totalOrders: orders.filter(o => o.status === "Completed").length,
-    totalCancelled: orders.filter(o => o.status === "Cancelled").length,
-    totalRevenue: orders.filter(o => o.status === "Completed").reduce((sum, o) => sum + (o.amount * o.price), 0)
-  };
+  if (loading && orders.length === 0) {
+    return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-indigo-600" size={40} /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
-          <OrderSummaryCard items={itemsSummary} nameSum={'Orders'} />
+          <OrderSummaryCard items={summaryData} nameSum={'Orders'} />
 
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-6 mt-6">
             <div>
               <h1 className="text-3xl font-black text-slate-800 tracking-tight">Orders Inventory</h1>
               <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
@@ -156,10 +173,9 @@ export default function Orders({ searchQuery }) {
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
                 <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer">
-                  <option value={5}>05</option>
                   <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={orders.length}>All</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
                 </select>
               </div>
 
@@ -191,23 +207,13 @@ export default function Orders({ searchQuery }) {
                             <option value="Cancelled">Cancelled</option>
                           </select>
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Price Range</label>
-                          <select value={activeFilters.priceRange} onChange={(e) => { setActiveFilters({ ...activeFilters, priceRange: e.target.value }); setCurrentPage(1); }} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all">
-                            <option value="All">Any Price</option>
-                            <option value="Under ₹500">Under ₹500</option>
-                            <option value="₹500 - ₹2000">₹500 - ₹2000</option>
-                            <option value="₹2000 - ₹5000">₹2000 - ₹5000</option>
-                            <option value="Above ₹5000">Above ₹5000</option>
-                          </select>
-                        </div>
-                        <button onClick={() => setActiveFilters({ status: "All", priceRange: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset</button>
+                        <button onClick={() => setActiveFilters({ status: "All", priceRange: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset Filters</button>
                       </div>
                     </div>
                   )}
                 </div>
 
-                <button onClick={() => { setPurchaseOrder(initialPurchaseForm); setView("add"); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 transition-all active:scale-95">
+                <button onClick={() => { setPurchaseOrder(initialPurchaseForm); setView("add"); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 transition-all active:scale-95 whitespace-nowrap">
                   <Plus size={18} /> New Order
                 </button>
               </div>
@@ -227,64 +233,59 @@ export default function Orders({ searchQuery }) {
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-sm font-bold">
                   {currentItems.map((order) => (
-                    <tr key={order.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="p-6 font-mono text-xs font-black text-indigo-400">#{order.id}</td>
-                      <td className="p-6 text-slate-800 font-black cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleOpenDetails(order)}>{order.client}</td>
+                    <tr key={order._id} className="hover:bg-slate-50/50 transition-colors group">
+                      <td className="p-6 font-mono text-xs font-black text-indigo-400">#{order._id.slice(-6).toUpperCase()}</td>
+                      <td className="p-6 text-slate-800 font-black cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleOpenDetails(order)}>{order.vendorName}</td>
                       <td className="p-6"><span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-slate-400 uppercase text-[9px] font-black shadow-sm">{order.category}</span></td>
-                      <td className="p-6 text-right text-slate-800 font-black">₹{(order.amount * order.price).toLocaleString()}</td>
-                      <td className="p-6 text-center"><StatusBadge status={order.status} onUpdate={(s) => updateStatus(order.id, s)} /></td>
+                      <td className="p-6 text-right text-slate-800 font-black">₹{(order.quantity * order.unitPrice).toLocaleString()}</td>
+                      <td className="p-6 text-center"><StatusBadge status={order.status} onUpdate={(s) => updateStatus(order._id, s)} /></td>
                       <td className="p-6 text-right">
                         <div className="flex justify-end gap-2">
                           <ActionBtn onClick={() => handleOpenDetails(order)} icon={<Eye size={14} />} color="bg-cyan-50 text-cyan-500 hover:bg-cyan-500" />
                           <ActionBtn onClick={() => handleEditDetails(order)} icon={<Edit2 size={14} />} color="bg-slate-50 text-slate-500 hover:bg-slate-800" />
-                          <ActionBtn onClick={() => removeOrder(order.id)} icon={<Trash2 size={14} />} color="bg-rose-50 text-rose-500 hover:bg-rose-500" />
+                          <ActionBtn onClick={() => removeOrder(order._id)} icon={<Trash2 size={14} />} color="bg-rose-50 text-rose-500 hover:bg-rose-500" />
                         </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {filteredOrders.length === 0 && (
-                  <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
-                      No matching orders found.
-                  </div>
-              )}
             </div>
 
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredOrders.length)} / {filteredOrders.length} orders
+                Showing {currentItems.length} of {filteredOrders.length} orders
               </p>
               <div className="flex items-center gap-2">
-                <NavBtn onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1} icon={<ChevronLeft size={18}/>} />
+                <NavBtn onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} icon={<ChevronLeft size={18}/>} />
                 <div className="flex gap-1">
                   {[...Array(totalPages)].map((_, i) => (
-                    <button key={i} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}>{i + 1}</button>
+                    <button key={i+1} onClick={() => setCurrentPage(i+1)} className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i+1 ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}>{i+1}</button>
                   ))}
                 </div>
-                <NavBtn onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} icon={<ChevronRight size={18}/>} />
+                <NavBtn onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} icon={<ChevronRight size={18}/>} />
               </div>
             </div>
           </div>
         </div>
       ) : view === "view-details" && selectedOrder ? (
-        <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20">
+        <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20 mt-10">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-100"><ArrowLeft size={18} /></div> Back
           </button>
           <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
             <span className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block">Purchase Order Information</span>
-            <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedOrder.client}</h1>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">Ref ID: #{selectedOrder.id}</p>
+            <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedOrder.vendorName}</h1>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">System ID: {selectedOrder._id}</p>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><IndianRupee size={12}/> Valuation</p>
-                 <p className="text-2xl font-black text-slate-800">₹{(selectedOrder.price * selectedOrder.amount).toLocaleString()}</p>
+                 <p className="text-2xl font-black text-slate-800">₹{(selectedOrder.unitPrice * selectedOrder.quantity).toLocaleString()}</p>
                </div>
                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Package size={12}/> Volume</p>
-                 <p className="text-2xl font-black text-slate-800">{selectedOrder.amount} Units</p>
+                 <p className="text-2xl font-black text-slate-800">{selectedOrder.quantity} Units</p>
                </div>
                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</p>
@@ -294,14 +295,14 @@ export default function Orders({ searchQuery }) {
 
             <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
               <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Notes & Requirements</div>
-              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedOrder.details}"</p>
+              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedOrder.notes || 'No specific notes recorded for this registry entry.'}"</p>
             </div>
           </div>
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
+        <div className="max-w-5xl mx-auto animate-in fade-in duration-500 mt-10">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back
+              <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back to Ledger
           </button>
           <OrderForm purchaseOrder={purchaseOrder} handleFormChange={handleFormChange} handleSubmit={handleAddPurchaseOrder} onCancel={() => setView("list")} />
         </div>
