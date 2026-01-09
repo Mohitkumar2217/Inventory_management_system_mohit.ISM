@@ -9,6 +9,7 @@ import {
 import ProductForm from "../../components/Forms/ProductForm.jsx"; 
 
 export default function Products({ searchQuery }) {
+  
   const initialProducts = [
     { id: 1, name: "Organic Cream", code: "CREM01", category: "Beauty", price: 250.0, cost: 100.0, stock: 10, brand: "Lakme", img: "🧴", details: "Premium organic skin cream." },
     { id: 2, name: "Rain Umbrella", code: "UM01", category: "Grocery", price: 300.0, cost: 200.0, stock: 15, brand: "Sun", img: "⛱️", details: "Heavy-duty windproof umbrella." },
@@ -45,7 +46,8 @@ export default function Products({ searchQuery }) {
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [activeFilters, setActiveFilters] = useState({ category: "All", stockStatus: "All", priceRange: "All" });
   const filterRef = useRef(null);
-
+  
+  
   const initialFormState = {
     id: null, name: "", code: "", category: "Beauty", price: "", cost: "",
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: "",
@@ -62,19 +64,55 @@ export default function Products({ searchQuery }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  
   // AUTO-RESET PAGINATION ON SEARCH
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, localSearch, activeFilters]);
-
+  
   const handleOpenDetails = (product) => { setView("view-details"); setFormData(product); };
   const handleEditDetails = (product) => { setFormData({ ...product }); setView("edit"); };
   const handleDeleteProduct = (id) => {
     if (!window.confirm("Remove this product?")) return;
     setProducts(products.filter(p => p.id !== id));
   };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
+    try {
+      const response = await axios.post(
+        "http://localhost:4000/api/auth/products",
+        { email, password }
+      );
+
+      if (response.data.success) {
+        const { token, user } = response.data;
+        await login(token, user);
+
+        // Comprehensive Role-Based Redirection
+        const roleRedirects = {
+          admin: "/admin/dashboard",
+          client: "/client/dashboard",
+          staff: "/staff/dashboard",
+          manager: "/manager/dashboard",
+          supplier: "/supplier/dashboard",
+          warehouse: "/warehouse/dashboard",
+          accountant: "/accountant/dashboard",
+        };
+
+        const redirectPath = roleRedirects[user.role] || "/login";
+        navigate(redirectPath);
+      }
+    } catch (err) {
+      const message = err.response?.data?.message || "Internal server error. Please try again.";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));

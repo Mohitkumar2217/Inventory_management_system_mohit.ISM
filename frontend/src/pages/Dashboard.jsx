@@ -5,21 +5,38 @@ import { Outlet } from 'react-router';
 
 function Dashboard() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [globalSearch, setGlobalSearch] = useState(""); // Shared state
+  const [globalSearch, setGlobalSearch] = useState("");
 
   return (
-    <div className="flex">
-      {/* Pass state and setter to Sidebar */}
+    // min-h-screen and bg-slate-50 ensures a consistent professional backdrop
+    <div className="min-h-screen bg-slate-50 flex overflow-x-hidden">
+      
+      {/* SIDEBAR: Pass collapse state to handle width and logo visibility */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
       
-      <div className="flex-1">
-        {/* Pass state to Navbar */}
-        <Navbar isCollapsed={isCollapsed} searchQuery={globalSearch} setSearchQuery={setGlobalSearch} />
+      {/* CONTENT WRAPPER: Handles the dynamic width of the dashboard */}
+      <div className="flex-1 flex flex-col min-w-0">
         
-        {/* Main Content Area */}
-        <main className={`pt-20 p-4 transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
-           <Outlet searchQuery={globalSearch} />
+        {/* NAVBAR: Pass searchQuery for the smart navigation logic we built */}
+        <Navbar 
+          isCollapsed={isCollapsed} 
+          searchQuery={globalSearch} 
+          setSearchQuery={setGlobalSearch} 
+        />
+        
+        
+        <main 
+          className={`
+            flex-1 pt-20 p-6 transition-all duration-300 ease-in-out
+            ${isCollapsed ? 'ml-20' : 'ml-64'}
+          `}
+        >
+           
+          <div className="max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <Outlet context={{ searchQuery: globalSearch }} />
+          </div>
         </main>
+
       </div>
     </div>
   );

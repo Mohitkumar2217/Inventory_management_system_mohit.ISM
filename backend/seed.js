@@ -8,7 +8,7 @@ const register = async () => {
         const hashPasswaord = await bcrypt.hash('admin', 10);
         const newUser = new User({
             name: "admin",
-            email: "admin@gmail.com",
+            email: "admin@mohit.com",
             password: hashPasswaord,
             address: "admin address",
             role:'admin'

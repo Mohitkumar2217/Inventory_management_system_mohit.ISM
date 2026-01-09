@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext"; // Ensure path is correct
 import {
-    Search, Plus, Trash2, Edit2,
-    ArrowLeft, Save, Layers, Tag, Percent, Globe, Eye, Info, Palette, Hash,
-    Calendar, ListOrdered, ShieldAlert, ChevronLeft, ChevronRight
+    Plus, Trash2, Edit2, ArrowLeft, Save, Layers,
+    Percent, Globe, Eye, Info, Palette, Hash,
+    Calendar, ListOrdered, ShieldAlert, ChevronLeft, ChevronRight, Loader2
 } from "lucide-react";
 
 export default function Categories({ searchQuery }) {
+    const { token } = useAuth(); //
     const [categories, setCategories] = useState([]);
     const [view, setView] = useState("list");
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     // Form State
     const [currentId, setCurrentId] = useState(null);
@@ -22,34 +25,53 @@ export default function Categories({ searchQuery }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // API Instance with Auth Header
+    const api = axios.create({
+        baseURL: "http://localhost:4000/api",
+        headers: { Authorization: `Bearer ${token}` }
+    });
+
+    // --- FETCH DATA FROM BACKEND ---
     const fetchCategories = async () => {
-        const dummyData = [
-            { _id: "1", name: "Electronics", code: "ELEC-01", description: "Smartphones, Laptops, and Accessories. Handles all high-voltage and battery-operated consumer goods.", taxRate: 18, slug: "electronics-hub", status: "Active", priority: 1, metaTitle: "Premium Tech Gadgets", isPrivate: false, colorCode: "#3b82f6" },
-            { _id: "2", name: "FMCG", code: "FAST-22", description: "Daily household essentials and groceries with high turnover rates.", taxRate: 5, slug: "daily-essentials", status: "Active", priority: 2, metaTitle: "Everyday Groceries", isPrivate: false, colorCode: "#10b981" },
-            { _id: "3", name: "Beauty & Care", code: "BEAU-09", description: "Skincare, cosmetics and personal hygiene products. Requires climate-controlled storage.", taxRate: 12, slug: "beauty-zone", status: "Active", priority: 3, metaTitle: "Cosmetic Products", isPrivate: false, colorCode: "#ec4899" },
-            { _id: "4", name: "Warehouse Tools", code: "TOOL-WH", description: "Equipment for logistics and maintenance. Internal use only.", taxRate: 18, slug: "industrial-tools", status: "Active", priority: 5, metaTitle: "Heavy Duty Tools", isPrivate: true, colorCode: "#f59e0b" },
-            { _id: "5", name: "Fashion", code: "FASH-ST", description: "Apparel, footwear and seasonal wear. Managed by the lifestyle department.", taxRate: 12, slug: "lifestyle-fashion", status: "Active", priority: 4, metaTitle: "Latest Trends 2025", isPrivate: false, colorCode: "#8b5cf6" },
-            { _id: "6", name: "Home Decor", code: "HOME-DC", description: "Furniture, lighting and interior items. Oversized shipping applies.", taxRate: 18, slug: "interior-design", status: "Inactive", priority: 6, metaTitle: "Modern Home Decor", isPrivate: false, colorCode: "#64748b" },
-            { _id: "7", name: "Beverages", code: "BEV-COLD", description: "Soft drinks, juices and energy drinks. Glass handling protocols required.", taxRate: 28, slug: "refreshments", status: "Active", priority: 7, metaTitle: "Beverage Hub", isPrivate: false, colorCode: "#06b6d4" },
-            { _id: "8", name: "Pharmaceuticals", code: "MED-CORE", description: "Over-the-counter medicines and first aid. Restricted access zone.", taxRate: 12, slug: "healthcare-meds", status: "Active", priority: 1, metaTitle: "Health & Wellness", isPrivate: true, colorCode: "#f43f5e" },
-            { _id: "9", name: "Office Stationery", code: "OFF-SUP", description: "Paper, pens and organizational supplies for corporate clients.", taxRate: 12, slug: "office-essentials", status: "Active", priority: 8, metaTitle: "Workplace Supplies", isPrivate: false, colorCode: "#14b8a6" },
-            { _id: "10", name: "Logistics Spares", code: "LOGI-SP", description: "Spare parts for delivery vehicles and conveyor maintenance.", taxRate: 18, slug: "transport-parts", status: "Active", priority: 9, metaTitle: "Logistics Inventory", isPrivate: true, colorCode: "#78350f" },
-        ];
-        setCategories(dummyData);
+        setLoading(true);
+        try {
+            const res = await api.get("/categories"); //
+            if (res.data.success) {
+                setCategories(res.data.categories);
+            }
+        } catch (err) {
+            console.error("Fetch Error:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() => { fetchCategories(); }, []);
+    useEffect(() => {
+        if (token) fetchCategories();
+    }, [token]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    const handleSubmit = (e) => {
+    // --- SUBMIT (CREATE OR UPDATE) ---
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert(`Category ${currentId ? 'Updated' : 'Added'} Successfully!`);
-        resetForm();
-        setView("list");
+        try {
+            const res = currentId
+                ? await api.put(`/categories/${currentId}`, formData) //
+                : await api.post("/categories", formData); //
+
+            if (res.data.success) {
+                alert(res.data.message);
+                fetchCategories(); // Refresh list
+                resetForm();
+                setView("list");
+            }
+        } catch (err) {
+            alert(err.response?.data?.message || "Operation failed");
+        }
     };
 
     const handleEdit = (cat) => {
@@ -72,10 +94,18 @@ export default function Categories({ searchQuery }) {
         });
     };
 
-    const deleteCategory = (id) => {
-        if (!window.confirm("Delete this category?")) return;
-        setCategories(categories.filter(c => c._id !== id));
-        if (view === "view-details") setView("list");
+    // --- DELETE ---
+    const deleteCategory = async (id) => {
+        if (!window.confirm("Confirm permanent deletion?")) return;
+        try {
+            const res = await api.delete(`/categories/${id}`); //
+            if (res.data.success) {
+                fetchCategories();
+                if (view === "view-details") setView("list");
+            }
+        } catch (err) {
+            alert("Delete failed. Please try again.");
+        }
     };
 
     // --- FILTER & PAGINATION ---
@@ -88,11 +118,19 @@ export default function Categories({ searchQuery }) {
     const activePage = currentPage > totalPages ? 1 : currentPage;
     const currentItems = filteredCategories.slice((activePage - 1) * itemsPerPage, activePage * itemsPerPage);
 
+    // Initial Loading State
+    if (loading && categories.length === 0) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
             {view === "list" ? (
                 <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-700">
-
                     <div className="flex justify-between items-center mb-8 mt-10">
                         <div>
                             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Departmental Groups</h1>
@@ -179,11 +217,11 @@ export default function Categories({ searchQuery }) {
                     </div>
                 </div>
             ) : view === "view-details" ? (
-                /* ================= PREMIUM DETAILS VIEW ================= */
-                <div className="max-w-6xl mx-auto p-6 animate-in slide-in-from-bottom-6 duration-700 pb-20">
-                    <div className="flex items-center justify-between mb-10 mt-4">
+                /* ================= DETAILS VIEW ================= */
+                <div className="max-w-6xl mx-auto p-6 animate-in slide-in-from-bottom-6 duration-700 pb-20 mt-10">
+                    <div className="flex items-center justify-between mb-10">
                         <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-                            <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100"><ArrowLeft size={18} /></div>
+                            <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100"><ArrowLeft size={18} /></div>
                             Back to Registry
                         </button>
                         <div className="flex gap-3">
@@ -197,21 +235,15 @@ export default function Categories({ searchQuery }) {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* LEFT: Identity Card */}
                         <div className="lg:col-span-2 space-y-8">
-                            <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden text-center md:text-left">
-                                <div className="absolute top-0 right-0 p-8">
-                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${selectedCategory.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-rose-50 text-rose-500 border border-rose-100'}`}>
-                                        {selectedCategory.status}
-                                    </span>
-                                </div>
+                            <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden">
                                 <div className="flex flex-col md:flex-row gap-10 items-center md:items-start relative z-10">
                                     <div className="w-48 h-48 rounded-[3.5rem] flex items-center justify-center text-white text-8xl shadow-2xl font-black shrink-0 transition-transform hover:scale-105 duration-500" style={{ backgroundColor: selectedCategory.colorCode }}>
                                         {selectedCategory.name.charAt(0)}
                                     </div>
                                     <div className="pt-4 flex-1">
                                         <h1 className="text-6xl font-black text-slate-800 tracking-tighter mb-2">{selectedCategory.name}</h1>
-                                        <div className="flex flex-wrap justify-center md:justify-start gap-3 mb-10">
+                                        <div className="flex flex-wrap gap-3 mb-10">
                                             <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">{selectedCategory.code}</span>
                                             <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1"><Layers size={10} /> Group Tier A</span>
                                         </div>
@@ -223,7 +255,7 @@ export default function Categories({ searchQuery }) {
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-white p-12 rounded-[3.5rem] border border-slate-50 shadow-sm relative">
+                            <div className="bg-white p-12 rounded-[3.5rem] border border-slate-50 shadow-sm">
                                 <div className="flex items-center gap-3 mb-6">
                                     <Info className="text-blue-500" size={20} />
                                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Group Definition & Scope</h3>
@@ -232,19 +264,18 @@ export default function Categories({ searchQuery }) {
                             </div>
                         </div>
 
-                        {/* RIGHT SIDEBAR */}
                         <div className="space-y-8">
                             <div className="bg-white p-8 rounded-[3rem] border border-slate-50 shadow-lg">
                                 <div className="flex items-center gap-3 mb-6"><Palette className="text-pink-500" size={18} /><h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visual Identity</h3></div>
                                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                    <div className="w-12 h-12 rounded-xl shadow-inner border-2 border-white" style={{ backgroundColor: selectedCategory.colorCode }} />
+                                    <div className="w-12 h-12 rounded-xl border-2 border-white" style={{ backgroundColor: selectedCategory.colorCode }} />
                                     <div><p className="text-[10px] font-black text-slate-400 uppercase">HEX Code</p><p className="font-mono text-sm font-black text-slate-700 uppercase">{selectedCategory.colorCode}</p></div>
                                 </div>
                             </div>
                             <div className="bg-slate-900 p-10 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden">
                                 <div className="relative z-10 space-y-8">
                                     <div className="space-y-1"><p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">URL Key / Slug</p><div className="flex items-center gap-2 text-cyan-400 font-bold"><Globe size={14} /><span>/{selectedCategory.slug}</span></div></div>
-                                    <div className="space-y-1"><p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Audit Registry</p><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center"><Calendar size={18} className="text-slate-400" /></div><div><p className="text-[9px] font-black text-slate-500 uppercase">Registry Date</p><p className="text-xs font-bold text-slate-300">Jan 12, 2025</p></div></div></div>
+                                    <div className="space-y-1"><p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Audit Registry</p><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center"><Calendar size={18} className="text-slate-400" /></div><div><p className="text-[9px] font-black text-slate-500 uppercase">Registry Date</p><p className="text-xs font-bold text-slate-300">{new Date(selectedCategory.createdAt).toLocaleDateString()}</p></div></div></div>
                                 </div>
                                 <Hash className="absolute -right-8 -bottom-8 text-white/5 rotate-12" size={200} />
                             </div>
@@ -253,10 +284,10 @@ export default function Categories({ searchQuery }) {
                 </div>
             ) : (
                 /* ================= FORM VIEW ================= */
-                <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 pb-20">
-                    <div className="flex items-center justify-between mb-10 mt-4">
+                <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 pb-20 mt-10">
+                    <div className="flex items-center justify-between mb-10">
                         <button onClick={() => { resetForm(); setView("list"); }} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-                            <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100"><ArrowLeft size={18} /></div>
+                            <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100"><ArrowLeft size={18} /></div>
                             Cancel
                         </button>
                         <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-[0.2em]">{currentId ? "Update Category" : "New Registration"}</h1>
