@@ -32,7 +32,13 @@ const Login = () => {
       if (response.data.success) {
         const { token, user } = response.data;
         await login(token, user);
-        const roleRedirects = { admin: "/admin/dashboard" };
+        const roleRedirects = {
+          admin: "/admin/dashboard",
+          manager: "/manager/dashboard",
+          staff: "/staff/dashboard",
+          "warehouse admin": "/warehouse/dashboard",
+          accountant: "/accounting/dashboard"
+        };
         navigate(roleRedirects[user.role] || "/login");
       }
     } catch (err) {

@@ -6,20 +6,16 @@ const ProtectedRoute = ({ children, requireRole }) => {
     const { user, loading } = useAuth(); //
     const navigate = useNavigate();
 
-    useEffect(() => {
-        // Wait for the AuthProvider to finish checking localStorage
+    useEffect(() => { 
         if (!loading) {
-            if (!user) {
-                // If no user found, force redirect to login
+            if (!user) { 
                 navigate("/login");
-            } else if (requireRole && !requireRole.includes(user.role)) {
-                // If user exists but role is wrong, go to unauthorized
+            } else if (requireRole && !requireRole.includes(user.role)) { 
                 navigate("/unauthorized");
             }
         }
     }, [user, loading, navigate, requireRole]);
-
-    // Prevent "flashing" of private content while loading
+ 
     if (loading) {
         return (
             <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
@@ -27,8 +23,7 @@ const ProtectedRoute = ({ children, requireRole }) => {
             </div>
         );
     }
-
-    // Only render the children (Dashboard) if user is verified
+ 
     return (user && (!requireRole || requireRole.includes(user.role))) ? children : null;
 };
 
