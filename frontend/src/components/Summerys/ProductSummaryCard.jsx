@@ -22,10 +22,10 @@ const ProductSummaryCard = ({ items = {}, nameSum }) => {
     };
 
     const totalCount = items.totalProducts || 0;
-    const totalRevenue = items.totalRevenue || 0;
+    const totalRevenue = items.totalInventoryValue || 0;
     const stockVolume = items.totalStock || 0;
-    const alertCount = items.totalOrders || 0;
-    const categoryCount = items.totalCancelled || 0;
+    const alertCount = items.lowStockCount || 0;
+    const categoryCount = items.categoriesCount || 0;
 
     const summaryData = [
         { id: 'total', label: isInventory ? "Total Products" : "Total Orders", value: totalCount, stats: '85%', color: "bg-blue-600", bg: "bg-blue-50", icon: isInventory ? "📦" : "📥" },

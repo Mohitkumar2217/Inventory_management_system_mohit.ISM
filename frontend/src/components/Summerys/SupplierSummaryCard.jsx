@@ -11,12 +11,11 @@ const SupplierSummaryCard = ({ items = {}, nameSum }) => {
     }, []);
     
     // Process incoming data with supplier-specific fallbacks
-    const totalPartners = items.totalProducts || 0;
-    const verifiedPartners = items.totalStock || 0;
-    const activePartners = items.totalOrders || 0;
-    const pendingVerification = items.totalCancelled || 0;
-    const totalSkuVolume = items.totalRevenue || 0;
-
+    const totalPartners = items.totalPartners || 0;
+    const verifiedPartners = items.verifiedPartners || 0;
+    const activePartners = items.activePartners || 0;
+    const pendingVerification = items.pendingVerification || 0;
+    const totalSkuVolume = items.totalSkuVolume || 0;
     const summaryData = [
         { label: "Total Partners", value: totalPartners, stats: 'Network', color: "bg-green-600", bg: "bg-green-50", icon: <Globe size={22} className="text-green-600" /> },
         { label: "Verified Status", value: verifiedPartners, stats: 'Secure', color: "bg-blue-600", bg: "bg-blue-50", icon: <ShieldCheck size={22} className="text-blue-600" /> },

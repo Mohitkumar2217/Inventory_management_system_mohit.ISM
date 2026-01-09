@@ -15,6 +15,7 @@ export default function Suppliers({ searchQuery }) {
 
   // --- STATES ---
   const [vendors, setVendors] = useState([]);
+  const [summaryData, setSummaryData] = useState({});
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
@@ -45,6 +46,7 @@ export default function Suppliers({ searchQuery }) {
       const res = await api.get("/suppliers"); 
       if (res.data.success) {
         setVendors(res.data.suppliers);
+        setSummaryData(res.data.summary);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -113,14 +115,6 @@ export default function Suppliers({ searchQuery }) {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredVendors.slice(indexOfFirstItem, indexOfLastItem);
 
-  // --- SUMMARY CALCULATION ---
-  const itemsSummary = {
-    totalProducts: vendors.length,
-    totalStock: vendors.filter(v => v.verification === "Verified").length,
-    totalOrders: vendors.filter(v => v.status === "Active").length, // Active Vendors
-    totalCancelled: vendors.filter(v => v.status === "Inactive").length, // Inactive Vendors
-    totalRevenue: vendors.reduce((sum, v) => sum + (v.suppliesQuantity || 0), 0),
-  };
 
   if (loading && vendors.length === 0) {
     return (
@@ -134,7 +128,7 @@ export default function Suppliers({ searchQuery }) {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
-          <SupplierSummaryCard items={itemsSummary} nameSum="Suppliers" />
+          <SupplierSummaryCard items={summaryData} nameSum="Suppliers" />
 
           <div className="flex justify-between items-center mb-6">
             <div>

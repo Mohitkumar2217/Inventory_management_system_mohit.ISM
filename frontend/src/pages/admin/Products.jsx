@@ -46,8 +46,7 @@ export default function Products({ searchQuery }) {
       const res = await api.get("/products");
       if (res.data.success) {
         setProducts(res.data.products);
-        setSummaryData(res.data.summary);
-        // Take categories from the Category Bar module via backend availableCategories
+        setSummaryData(res.data.summary); 
         setCategoriesList(["All", ...res.data.availableCategories]);
       }
     } catch (err) {

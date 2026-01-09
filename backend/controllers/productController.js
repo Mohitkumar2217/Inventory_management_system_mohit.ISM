@@ -22,7 +22,7 @@ export const getProducts = async (req, res) => {
             success: true, 
             products, 
             summary,
-            availableCategories: categories.map(c => c.name) 
+            availableCategories: categories.map(c => c.name)
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error syncing inventory modules" });
