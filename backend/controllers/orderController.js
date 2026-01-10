@@ -1,50 +1,155 @@
-import Order from "../models/Order.js";
+import Order from "../models/Order.js"; 
 
+// --- 1. HISTORICAL TREND ANALYSIS (For Analysis Modals) ---
+export const getOrderTrends = async (req, res) => {
+    try {
+        const { type } = req.query; // Matches item.label from frontend
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        let groupCalculation;
+
+        // SELECT LOGIC BASED ON CARD CLICKED
+        switch (type) {
+            case "Total Revenue":
+                // Sums (Quantity * Price) only for Completed orders
+                groupCalculation = { 
+                    $cond: [
+                        { $eq: ["$status", "Completed"] }, 
+                        { $multiply: ["$quantity", "$unitPrice"] }, 
+                        0
+                    ] 
+                };
+                break;
+            
+            case "Backorder Volume":
+            case "Pending Orders":
+                // Counts only Pending orders
+                groupCalculation = { 
+                    $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] 
+                };
+                break;
+            
+            case "Completed Orders":
+            case "Order Accuracy":
+                // Counts only Completed orders
+                groupCalculation = { 
+                    $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] 
+                };
+                break;
+            
+            case "Cancelled Orders":
+                // Counts only Cancelled orders
+                groupCalculation = { 
+                    $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0] 
+                };
+                break;
+            
+            case "Average Fulfillment":
+                // Calculates Fulfillment hours per day
+                groupCalculation = {
+                    $cond: [{ $eq: ["$status", "Completed"] },
+                        {
+                            $divide: [
+                                { $subtract: ["$updatedAt", "$createdAt"] },
+                                1000 * 60 * 60 // Convert ms to hours
+                            ]
+                        },
+                        0
+                    ]
+                };
+                break;
+            
+            default:
+                // Default: Count all orders placed
+                groupCalculation = 1;
+                break;
+        }
+
+        const trends = await Order.aggregate([
+            { $match: { createdAt: { $gte: sevenDaysAgo } } },
+            {
+                $group: {
+                    _id: { $dayOfWeek: "$createdAt" },
+                    val: { $sum: groupCalculation }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
+
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const chartData = trends.map(item => ({
+            name: dayNames[item._id - 1],
+            val: Number(item.val.toFixed(type === "Average Fulfillment" ? 1 : 0))
+        }));
+
+        res.status(200).json({ success: true, chartData });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Order trend analysis failed" });
+    }
+};
+
+// --- 2. GET ALL ORDERS & REAL-TIME SUMMARY ---
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
 
         // --- ANALYTICS LOGIC ---
         const totalOrders = orders.length;
-        const completedOrders = orders.filter(o => o.status === "Completed").length;
-        const pendingOrders = orders.filter(o => o.status === "Pending").length;
-        const cancelledOrders = orders.filter(o => o.status === "Cancelled").length;
+        const completedOrdersArray = orders.filter(o => o.status === "Completed");
+        const completedCount = completedOrdersArray.length;
+        const pendingCount = orders.filter(o => o.status === "Pending").length;
+        const cancelledCount = orders.filter(o => o.status === "Cancelled").length;
 
-        // 1. Revenue Calculation (Only from Completed orders)
-        const totalRevenue = orders
-            .filter(o => o.status === "Completed")
-            .reduce((sum, o) => sum + (o.quantity * o.unitPrice), 0);
+        // Revenue Calculation
+        const totalRevenue = completedOrdersArray.reduce((sum, o) => sum + (o.quantity * o.unitPrice), 0);
 
-        // 2. Average Fulfillment Logic (Simulated for this demo)
-        // In a real app, you would subtract 'createdAt' from 'updatedAt' for Completed orders
-        const avgFulfillment = totalOrders > 0 ? "1.4 Days" : "0 Days";
+        // Average Fulfillment Calculation (Literal Time Difference)
+        let avgFulfillment = "0"; 
+        if (completedCount > 0) {
+            const totalDuration = completedOrdersArray.reduce((sum, order) => {
+                const start = new Date(order.createdAt);
+                const end = new Date(order.updatedAt); 
+                return sum + (end - start);
+            }, 0);
 
-        // 3. Accuracy Rate: (Completed / (Completed + Cancelled)) * 100
-        const accuracyRate = (completedOrders + cancelledOrders) > 0 
-            ? ((completedOrders / (completedOrders + cancelledOrders)) * 100).toFixed(1) 
+            // Convert milliseconds to hours
+            avgFulfillment = (totalDuration / completedCount / (1000 * 60 * 60)).toFixed(1);
+        }
+
+        // Accuracy Rate: (Completed / (Completed + Cancelled))
+        const accuracyRate = (completedCount + cancelledCount) > 0 
+            ? ((completedCount / (completedCount + cancelledCount)) * 100).toFixed(1) 
             : 0;
 
-        // 4. Backorder Volume: Count of Pending orders with specific flags or just Pending count
-        const backorderCount = pendingOrders;
-
+        const notices = [];
+        if (pendingCount > 0) {
+            notices.push({ id: 1, text: `${pendingCount} Orders are pending fulfillment.`, type: "urgent" });
+        }
+        if (cancelledCount > 0) {
+            notices.push({ id: 2, text: `${cancelledCount} Orders have been cancelled recently.`, type: "alert" });
+        }
+        
         res.status(200).json({
             success: true,
-            orders, // List for the table
+            orders, 
             summary: {
                 totalRevenue,
-                totalProducts: totalOrders, // Maps to 'Total Orders' in UI
-                totalStock: pendingOrders,   // Maps to 'Total Stock' in UI (items awaiting action)
-                avgFulfillment,
+                totalProducts: totalOrders, 
+                totalStock: pendingCount, // Used for "Total Stock" label
+                avgFulfillment: `${avgFulfillment}h`, 
                 accuracyRate: `${accuracyRate}%`,
-                backorderCount,
-                cancelledCount: cancelledOrders
-            }
+                backorderCount: pendingCount,
+                cancelledCount: cancelledCount
+            },
+            notices
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching order analytics" });
     }
 };
-// Create or Update Order
+
+// --- 3. CRUD OPERATIONS ---
 export const syncOrder = async (req, res) => {
     try {
         const { id } = req.params;
@@ -60,7 +165,6 @@ export const syncOrder = async (req, res) => {
     }
 };
 
-// Update Order Status only
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
@@ -72,7 +176,6 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
-// Delete Order
 export const deleteOrder = async (req, res) => {
     try {
         await Order.findByIdAndDelete(req.params.id);

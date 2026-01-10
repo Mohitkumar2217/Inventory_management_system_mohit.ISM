@@ -1,10 +1,11 @@
 import express from "express";
-import { getOrders, syncOrder, updateOrderStatus, deleteOrder } from "../controllers/orderController.js";
+import { getOrders, syncOrder, updateOrderStatus, deleteOrder, getOrderTrends } from "../controllers/orderController.js";
 import { verifyUser } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.get("/", verifyUser, getOrders);
+router.get("/analysis/trends", verifyUser, getOrderTrends);
 router.post("/", verifyUser, syncOrder);
 router.put("/:id", verifyUser, syncOrder);
 router.patch("/status/:id", verifyUser, updateOrderStatus);

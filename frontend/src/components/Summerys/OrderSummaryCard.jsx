@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Clock, CheckCircle, PackageSearch, TrendingUp } from 'lucide-react';
 import OrderAnalysisModal from '../Charts/OrderAnalysisModel.jsx';
 
-const OrderSummaryCard = ({ items = {}, nameSum }) => {
+const OrderSummaryCard = ({ items = {}, nameSum, notices }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCard, setSelectedCard] = useState(null);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -34,7 +34,7 @@ const OrderSummaryCard = ({ items = {}, nameSum }) => {
         },
         {
             label: "Avg. Fulfillment",
-            value: items.avgFulfillment || "0 Days",
+            value: items.avgFulfillment ? `${items.avgFulfillment} hrs` : 'N/A',
             stats: '-2h',
             color: "bg-indigo-600", bg: "bg-indigo-50",
             icon: <Clock size={22} className="text-indigo-600" />,
@@ -64,10 +64,6 @@ const OrderSummaryCard = ({ items = {}, nameSum }) => {
             color: "bg-cyan-600", bg: "bg-cyan-50", icon: "🏢",
             percent: 40
         },
-    ];
-    const notices = [
-        { id: 1, text: "2 Orders are placed for delivery.", type: "urgent" },
-        { id: 2, text: "You have 4 new orders to process.", type: "promo" },
     ];
     return (
         <div className="bg-[#F9FAFB] p-4 lg:p-6 animate-in fade-in slide-in-from-top-4 duration-700">

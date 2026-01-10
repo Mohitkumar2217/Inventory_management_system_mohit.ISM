@@ -16,6 +16,7 @@ export default function Products({ searchQuery }) {
   // --- STATES ---
   const [products, setProducts] = useState([]);
   const [summaryData, setSummaryData] = useState({});
+  const [liveNotices, setLiveNotices] = useState([]);
   const [categoriesList, setCategoriesList] = useState(["All"]);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
@@ -48,6 +49,7 @@ export default function Products({ searchQuery }) {
         setProducts(res.data.products);
         setSummaryData(res.data.summary); 
         setCategoriesList(["All", ...res.data.availableCategories]);
+        setLiveNotices(res.data.notices); 
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -159,7 +161,7 @@ export default function Products({ searchQuery }) {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
-          <ProductSummaryCard items={summaryData} nameSum="Inventory" />
+          <ProductSummaryCard items={summaryData} nameSum="Inventory" notices={liveNotices} />
 
           <div className="flex justify-between items-center mt-6">
             <div>

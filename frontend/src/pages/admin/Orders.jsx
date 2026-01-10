@@ -18,6 +18,7 @@ export default function Orders({ searchQuery }) {
   const [view, setView] = useState("list");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liveNotices, setLiveNotices] = useState([]);
   const [localSearch, setLocalSearch] = useState(""); 
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const filterRef = useRef(null);
@@ -48,6 +49,7 @@ export default function Orders({ searchQuery }) {
       if (res.data.success) {
         setOrders(res.data.orders);
         setSummaryData(res.data.summary);
+        setLiveNotices(res.data.notices);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -156,7 +158,7 @@ export default function Orders({ searchQuery }) {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-500">
-          <OrderSummaryCard items={summaryData} nameSum={'Orders'} />
+          <OrderSummaryCard items={summaryData} nameSum={'Orders'} notices={liveNotices} />
 
           <div className="flex justify-between items-center mb-6 mt-6">
             <div>
