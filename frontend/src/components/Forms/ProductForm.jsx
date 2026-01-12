@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react"; // Added useRef and useState
-import { 
-  Package, IndianRupee, Truck, Layers, Save, 
-  Camera, FileText, ChevronDown, Warehouse, 
-  ArrowRightLeft, ShoppingCart, AlertCircle, X 
+import {
+  Package, IndianRupee, Truck, Layers, Save,
+  Camera, FileText, ChevronDown, Warehouse,
+  ArrowRightLeft, ShoppingCart, AlertCircle, X
 } from "lucide-react";
 
 export default function ProductForm({ formData, handleInputChange, handleSubmit, onCancel }) {
@@ -41,69 +41,68 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8">
-      
+
       {/* HEADER: SMART PROCUREMENT LOGIC */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-           <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase">
-             {formData.id ? "Edit Product Record" : "New Product Entry"}
-           </h1>
-           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Asset Inventory</p>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase">
+            {formData.id ? "Edit Product Record" : "New Product Entry"}
+          </h1>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Asset Inventory</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-            <div className={`px-5 py-3 rounded-[1.5rem] border flex items-center gap-3 transition-all shadow-sm ${isInWarehouse ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-                {isInWarehouse ? (
-                    <>
-                        <div className="p-2 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-100"><ArrowRightLeft size={16} /></div>
-                        <div className="leading-tight">
-                            <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Available in Stock</p>
-                            <button type="button" className="text-xs font-black text-slate-800 uppercase hover:text-emerald-700 transition-colors">Allocate from Warehouse</button>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        <div className="p-2 bg-rose-500 rounded-xl text-white shadow-lg shadow-rose-100"><ShoppingCart size={16} /></div>
-                        <div className="leading-tight">
-                            <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest">Inventory Depleted</p>
-                            <button type="button" className="text-xs font-black text-slate-800 uppercase hover:text-rose-700 transition-colors">Initiate Purchase Order</button>
-                        </div>
-                    </>
-                )}
-            </div>
+          <div className={`px-5 py-3 rounded-[1.5rem] border flex items-center gap-3 transition-all shadow-sm ${isInWarehouse ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+            {isInWarehouse ? (
+              <>
+                <div className="p-2 bg-emerald-500 rounded-xl text-white shadow-lg shadow-emerald-100"><ArrowRightLeft size={16} /></div>
+                <div className="leading-tight">
+                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Available in Stock</p>
+                  <button type="button" className="text-xs font-black text-slate-800 uppercase hover:text-emerald-700 transition-colors">Allocate from Warehouse</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-2 bg-rose-500 rounded-xl text-white shadow-lg shadow-rose-100"><ShoppingCart size={16} /></div>
+                <div className="leading-tight">
+                  <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest">Inventory Depleted</p>
+                  <button type="button" className="text-xs font-black text-slate-800 uppercase hover:text-rose-700 transition-colors">Initiate Purchase Order</button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-20">
-        
+
         {/* SECTION 1: MEDIA & IDENTITY (Activated Upload) */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
             <div className="p-2 bg-cyan-50 rounded-xl"><Package className="text-cyan-500" size={18} /></div>
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Visuals & Identity</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Product Image</label>
-              
               {/* HIDDEN FILE INPUT */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                accept="image/*" 
-                className="hidden" 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
               />
 
-              <div 
+              <div
                 onClick={handleImageClick}
                 className="w-full h-48 bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center group hover:border-cyan-400 transition-all cursor-pointer shadow-inner relative overflow-hidden"
               >
                 {imagePreview || formData.img ? (
                   <div className="relative w-full h-full p-2">
                     <img src={imagePreview || formData.img} alt="Preview" className="w-full h-full object-cover rounded-[2rem]" />
-                    <button 
+                    <button
                       onClick={removeImage}
                       className="absolute top-4 right-4 p-1.5 bg-rose-500 text-white rounded-xl shadow-lg hover:bg-rose-600 transition-colors"
                     >
@@ -118,7 +117,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
                 )}
               </div>
             </div>
-            
+
             <div className="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormInput label="Product Name" name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Organic Cream" required />
               <FormInput label="SKU / Product Code" name="code" value={formData.code} onChange={handleInputChange} placeholder="CREM01" required />
@@ -144,17 +143,17 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
           </div>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <SelectField label="Select Target Warehouse" name="warehouse" value={formData.warehouse} onChange={handleInputChange} options={["Main Hub - Delhi", "North Wing - Jaipur", "South Warehouse - Bangalore"]} />
-                <FormInput label="Storage Zone / Bin ID" name="zone" value={formData.zone || ""} onChange={handleInputChange} placeholder="e.g. Zone A-12" />
+              <SelectField label="Select Target Warehouse" name="warehouse" value={formData.warehouse} onChange={handleInputChange} options={["Main Hub - Delhi", "North Wing - Jaipur", "South Warehouse - Bangalore"]} />
+              <FormInput label="Storage Zone / Bin ID" name="zone" value={formData.zone || ""} onChange={handleInputChange} placeholder="e.g. Zone A-12" />
             </div>
             <div className="md:col-span-4">
-                <div className="p-6 bg-orange-50 rounded-[2rem] border border-orange-100 h-full flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-2">
-                        <AlertCircle size={14} className="text-orange-500" />
-                        <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Logistics Tip</p>
-                    </div>
-                    <p className="text-[11px] font-bold text-slate-600 leading-tight">Assigning a specific zone helps in faster order picking and optimized warehouse layout.</p>
+              <div className="p-6 bg-orange-50 rounded-[2rem] border border-orange-100 h-full flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle size={14} className="text-orange-500" />
+                  <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Logistics Tip</p>
                 </div>
+                <p className="text-[11px] font-bold text-slate-600 leading-tight">Assigning a specific zone helps in faster order picking and optimized warehouse layout.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -168,11 +167,11 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
           <div className="space-y-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Full Description</label>
-              <textarea 
-                name="details" 
-                value={formData.details} 
-                onChange={handleInputChange} 
-                rows={3} 
+              <textarea
+                name="details"
+                value={formData.details}
+                onChange={handleInputChange}
+                rows={3}
                 placeholder="Provide details..."
                 className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] outline-none focus:ring-4 focus:ring-indigo-50 transition-all text-sm font-medium text-slate-600 shadow-inner resize-none"
               />
@@ -211,11 +210,11 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
           </div>
 
           <div className="bg-slate-900 rounded-[2rem] p-6 flex items-center justify-between group overflow-hidden relative shadow-2xl">
-              <div className="z-10">
-                  <p className="text-cyan-400 text-[10px] font-black uppercase tracking-widest mb-1">Live Asset Valuation</p>
-                  <h3 className="text-white text-2xl font-black">₹ {stockValuation}</h3>
-              </div>
-              <Layers className="text-white/10 absolute -right-4 -bottom-4 rotate-12" size={100} />
+            <div className="z-10">
+              <p className="text-cyan-400 text-[10px] font-black uppercase tracking-widest mb-1">Live Asset Valuation</p>
+              <h3 className="text-white text-2xl font-black">₹ {stockValuation}</h3>
+            </div>
+            <Layers className="text-white/10 absolute -right-4 -bottom-4 rotate-12" size={100} />
           </div>
         </div>
 

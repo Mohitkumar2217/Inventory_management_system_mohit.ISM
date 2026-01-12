@@ -2,17 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import ProductSummaryCard from "../../components/Summerys/ProductSummaryCard.jsx";
-import ProductForm from "../../components/Forms/ProductForm.jsx"; 
+import ProductForm from "../../components/Forms/ProductForm.jsx";
 
 import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
   ArrowLeft, IndianRupee, ChevronLeft, ChevronRight,
-  Layers, Loader2
+  Layers, Loader2, Truck, Activity, Hash
 } from "lucide-react";
 
 export default function Products({ searchQuery }) {
   const { token } = useAuth();
-  
+
   // --- STATES ---
   const [products, setProducts] = useState([]);
   const [summaryData, setSummaryData] = useState({});
@@ -20,13 +20,13 @@ export default function Products({ searchQuery }) {
   const [categoriesList, setCategoriesList] = useState(["All"]);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
-  const [localSearch, setLocalSearch] = useState(""); 
+  const [localSearch, setLocalSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [activeFilters, setActiveFilters] = useState({ category: "All", stockStatus: "All", priceRange: "All" });
   const filterRef = useRef(null);
-  
+
   const initialFormState = {
     _id: null, name: "", code: "", category: "", price: "", cost: "",
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: 20,
@@ -40,16 +40,15 @@ export default function Products({ searchQuery }) {
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  // --- 1. FETCH DATA FROM BACKEND ---
   const fetchInventory = async () => {
     setLoading(true);
     try {
       const res = await api.get("/products");
       if (res.data.success) {
         setProducts(res.data.products);
-        setSummaryData(res.data.summary); 
+        setSummaryData(res.data.summary);
         setCategoriesList(["All", ...res.data.availableCategories]);
-        setLiveNotices(res.data.notices); 
+        setLiveNotices(res.data.notices);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -58,11 +57,10 @@ export default function Products({ searchQuery }) {
     }
   };
 
-  useEffect(() => { 
-    if (token) fetchInventory(); 
+  useEffect(() => {
+    if (token) fetchInventory();
   }, [token]);
 
-  // Click outside filter logic
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -72,33 +70,31 @@ export default function Products({ searchQuery }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
-  // AUTO-RESET PAGINATION ON SEARCH
+
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, localSearch, activeFilters]);
-  
+
   // --- HANDLERS ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleOpenDetails = (product) => { 
+  const handleOpenDetails = (product) => {
     setFormData(product);
-    setView("view-details"); 
-  };
-  
-  const handleEditDetails = (product) => { 
-    setFormData({ ...product }); 
-    setView("add"); // Redirect to form view for editing
+    setView("view-details");
   };
 
-  // --- 2. ADD OR UPDATE PRODUCT ---
+  const handleEditDetails = (product) => {
+    setFormData({ ...product });
+    setView("add");
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      const res = formData._id 
+      const res = formData._id
         ? await api.put(`/products/${formData._id}`, formData)
         : await api.post("/products", formData);
 
@@ -113,7 +109,6 @@ export default function Products({ searchQuery }) {
     }
   };
 
-  // --- 3. DELETE PRODUCT ---
   const handleDeleteProduct = async (id) => {
     if (!window.confirm("Remove this product from live inventory?")) return;
     try {
@@ -126,23 +121,20 @@ export default function Products({ searchQuery }) {
     }
   };
 
-  // --- FILTER & SEARCH LOGIC ---
   const filteredProducts = products.filter((p) => {
     const finalSearch = (searchQuery || localSearch).toLowerCase();
-    
-    const matchesSearch = 
-        p.name.toLowerCase().includes(finalSearch) || 
-        p.code.toLowerCase().includes(finalSearch) ||
-        p.brand?.toLowerCase().includes(finalSearch);
+    const matchesSearch =
+      p.name.toLowerCase().includes(finalSearch) ||
+      p.code.toLowerCase().includes(finalSearch) ||
+      p.brand?.toLowerCase().includes(finalSearch);
 
     const matchesCategory = activeFilters.category === "All" || p.category === activeFilters.category;
-    const matchesStock = activeFilters.stockStatus === "All" || 
-        (activeFilters.stockStatus === "Low Stock" ? p.stock < (p.minStock || 20) : p.stock >= (p.minStock || 20));
-    
+    const matchesStock = activeFilters.stockStatus === "All" ||
+      (activeFilters.stockStatus === "Low Stock" ? p.stock < (p.minStock || 20) : p.stock >= (p.minStock || 20));
+
     return matchesSearch && matchesCategory && matchesStock;
   });
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const activePage = currentPage > totalPages ? 1 : currentPage;
   const indexOfLastItem = activePage * itemsPerPage;
@@ -186,12 +178,12 @@ export default function Products({ searchQuery }) {
               <div className="flex flex-1 gap-3 w-full md:max-w-2xl justify-end">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-cyan-400 transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Search inside results..." 
-                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all placeholder:text-slate-300" 
-                    value={localSearch} 
-                    onChange={(e) => setLocalSearch(e.target.value)} 
+                  <input
+                    type="text"
+                    placeholder="Search inside results..."
+                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-cyan-50/50 transition-all placeholder:text-slate-300"
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
 
@@ -240,7 +232,7 @@ export default function Products({ searchQuery }) {
                       </td>
                       <td className="p-6 text-slate-500 font-mono text-xs">{item.code}</td>
                       <td className="p-6"><span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-slate-400 uppercase text-[9px] font-black shadow-sm">{item.category}</span></td>
-                      <td className="p-6 text-slate-800 font-black flex items-center gap-1 mt-3"><IndianRupee size={12} />{item.price.toFixed(2)}</td>
+                      <td className="p-6 text-slate-800 font-black flex items-center gap-1"><IndianRupee size={12} />{item.price.toFixed(2)}</td>
                       <td className="p-6">
                         <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black ${item.stock < (item.minStock || 20) ? 'bg-rose-50 text-rose-500 border border-rose-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
                           <div className={`w-1.5 h-1.5 rounded-full ${item.stock < (item.minStock || 20) ? 'bg-rose-500' : 'bg-emerald-500'}`} />
@@ -282,27 +274,116 @@ export default function Products({ searchQuery }) {
           </div>
         </div>
       ) : view === "view-details" ? (
-        <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500 mt-10">
-          <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-            <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back
-          </button>
-          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
-            <div className="flex flex-col md:flex-row gap-12 items-center md:items-start text-center md:text-left">
-              <div className="w-48 h-48 bg-slate-50 rounded-[3rem] flex items-center justify-center text-8xl shadow-inner border border-slate-100">{formData.img}</div>
-              <div className="flex-1">
-                <span className="text-cyan-500 font-black text-xs uppercase tracking-[0.3em] mb-2 block">{formData.brand}</span>
-                <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-6">{formData.name}</h1>
-                <div className="grid grid-cols-2 gap-8 max-w-sm mx-auto md:mx-0">
+        <div className="max-w-6xl mx-auto animate-in slide-in-from-bottom-6 duration-700 pb-20 mt-10">
+          {/* TOP NAVIGATION & ACTIONS */}
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={() => setView("list")}
+              className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all group"
+            >
+              <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm group-hover:bg-slate-50 transition-all">
+                <ArrowLeft size={18} />
+              </div>
+              Back
+            </button>
+
+            {/* NEW ACTION BUTTONS */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleDeleteProduct(formData._id)}
+                className="p-3 bg-white border border-rose-100 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm group"
+                title="Delete Product"
+              >
+                <Trash2 size={20} />
+              </button>
+              <button
+                onClick={() => handleEditDetails(formData)}
+                className="bg-slate-900 text-white px-8 py-3 rounded-2xl font-black flex items-center gap-2 shadow-xl active:scale-95 transition-all text-xs uppercase tracking-widest"
+              >
+                <Edit2 size={16} /> Edit Asset Details
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-8 md:p-14 rounded-[4rem] shadow-2xl border border-slate-50 relative overflow-hidden">
+            {/* HEADER SECTION: Identity & Visuals */}
+            <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start relative z-10">
+              <div className="w-56 h-56 bg-slate-50 rounded-[3.5rem] flex items-center justify-center text-9xl shadow-inner border border-slate-100 shrink-0">
+                {formData.img || "📦"}
+              </div>
+
+              <div className="flex-1 text-center lg:text-left">
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 mb-4">
+                  <span className="bg-cyan-50 text-cyan-600 font-black text-[10px] px-4 py-1.5 rounded-full uppercase tracking-[0.2em]">
+                    {formData.brand || "Unbranded"}
+                  </span>
+                  <span className="bg-slate-900 text-white font-black text-[10px] px-4 py-1.5 rounded-full uppercase tracking-[0.2em]">
+                    SKU: {formData.sku || "N/A"}
+                  </span>
+                  {/* Status Badge */}
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${formData.stock <= formData.minStock ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    {formData.stock <= formData.minStock ? 'Critical Stock' : 'Optimal Levels'}
+                  </span>
+                </div>
+
+                <h1 className="text-6xl font-black text-slate-800 tracking-tighter mb-8">
+                  {formData.name}
+                </h1>
+
+                {/* FINANCIALS & PRIMARY DATA GRID */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                   <DetailBox label="Identifier" val={formData.code} />
-                  <DetailBox label="Retail Price" val={`₹${formData.price}`} highlight />
-                  <DetailBox label="Stock Level" val={`${formData.stock} Units`} />
-                  <DetailBox label="Department" val={formData.category} />
+                  <DetailBox label="Sale Price" val={`₹${formData.price}`} highlight />
+                  <DetailBox label="Unit Cost" val={`₹${formData.cost}`} />
+                  <DetailBox label="Current Stock" val={`${formData.stock} Units`} alert={formData.stock <= formData.minStock} />
                 </div>
               </div>
             </div>
-            <div className="mt-16 bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
-              <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Product Description</div>
-              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{formData.details || 'No additional details provided for this asset.'}"</p>
+
+            {/* SECONDARY INFO: Logistics & Specifications */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+              {/* TECHNICAL SPECIFICATIONS */}
+              <div className="bg-slate-50/50 p-10 rounded-[3rem] border border-slate-100">
+                <div className="flex items-center gap-2 mb-6 text-slate-400 uppercase font-black text-[10px] tracking-widest">
+                  <Activity size={14} className="text-indigo-500" /> Physical Specifications
+                </div>
+                <div className="grid grid-cols-2 gap-y-6">
+                  <DetailItem label="Weight" value={formData.weight || "Not Specified"} />
+                  <DetailItem label="Dimensions" value={formData.dimensions || "N/A"} />
+                  <DetailItem label="Primary Color" value={formData.color || "None"} />
+                  <DetailItem label="Min Safety Stock" value={`${formData.minStock} Units`} />
+                </div>
+              </div>
+
+              {/* SUPPLIER & LOGISTICS */}
+              <div className="bg-slate-900 p-10 rounded-[3rem] text-white shadow-xl relative overflow-hidden">
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-6 text-slate-500 uppercase font-black text-[10px] tracking-widest">
+                    <Truck size={14} className="text-cyan-400" /> Procurement Source
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Strategic Supplier</p>
+                      <p className="text-2xl font-black text-white">{formData.supplier || "Internal Sourcing"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Category Department</p>
+                      <p className="text-lg font-bold text-cyan-400">{formData.category}</p>
+                    </div>
+                  </div>
+                </div>
+                <Hash className="absolute -right-8 -bottom-8 text-white/5 rotate-12" size={180} />
+              </div>
+            </div>
+
+            {/* LOGISTICAL DIRECTIVES */}
+            <div className="mt-8 bg-slate-50 p-10 rounded-[3rem] border border-slate-100 relative">
+              <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">
+                Logistical Directives
+              </div>
+              <p className="text-slate-600 font-bold leading-relaxed italic text-xl opacity-80">
+                "{formData.details || 'No additional details provided for this asset.'}"
+              </p>
             </div>
           </div>
         </div>
@@ -314,12 +395,12 @@ export default function Products({ searchQuery }) {
             </button>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-[0.2em]">{formData._id ? "Update Product" : "New Registration"}</h1>
           </div>
-          <ProductForm 
-            formData={formData} 
-            handleInputChange={handleInputChange} 
-            handleSubmit={handleAddProduct} 
-            onCancel={() => setView("list")} 
-            categories={categoriesList.filter(c => c !== "All")} 
+          <ProductForm
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleAddProduct}
+            onCancel={() => setView("list")}
+            categories={categoriesList.filter(c => c !== "All")}
           />
         </div>
       )}
@@ -345,9 +426,22 @@ const NavBtn = ({ onClick, disabled, icon }) => (
   <button onClick={onClick} disabled={disabled} className="p-2.5 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 transition-all active:scale-95">{icon}</button>
 );
 
-const DetailBox = ({ label, val, highlight }) => (
-  <div className="space-y-1">
-    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{label}</p>
-    <p className={`text-xl font-black ${highlight ? 'text-indigo-600' : 'text-slate-700'}`}>{val}</p>
-  </div>
-);
+function DetailItem({ label, value }) {
+  return (
+    <div>
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+      <p className="text-sm font-bold text-slate-700">{value}</p>
+    </div>
+  );
+}
+
+function DetailBox({ label, val, highlight = false, alert = false }) {
+  return (
+    <div className={`p-4 rounded-2xl border ${alert ? 'bg-rose-50 border-rose-100' : 'bg-white border-slate-100'}`}>
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+      <p className={`text-lg font-black tracking-tight ${highlight ? 'text-cyan-600' : alert ? 'text-rose-600' : 'text-slate-800'}`}>
+        {val}
+      </p>
+    </div>
+  );
+}

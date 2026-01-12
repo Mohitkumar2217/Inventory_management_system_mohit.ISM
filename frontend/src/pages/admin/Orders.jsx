@@ -11,7 +11,7 @@ import {
 
 export default function Orders({ searchQuery }) {
   const { token } = useAuth();
-  
+
   // --- STATES ---
   const [orders, setOrders] = useState([]);
   const [summaryData, setSummaryData] = useState({});
@@ -19,7 +19,7 @@ export default function Orders({ searchQuery }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveNotices, setLiveNotices] = useState([]);
-  const [localSearch, setLocalSearch] = useState(""); 
+  const [localSearch, setLocalSearch] = useState("");
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const filterRef = useRef(null);
 
@@ -58,8 +58,8 @@ export default function Orders({ searchQuery }) {
     }
   };
 
-  useEffect(() => { 
-    if (token) fetchOrders(); 
+  useEffect(() => {
+    if (token) fetchOrders();
   }, [token]);
 
   // Click outside filter logic
@@ -85,7 +85,7 @@ export default function Orders({ searchQuery }) {
   const handleAddPurchaseOrder = async (e) => {
     if (e) e.preventDefault();
     try {
-      const res = purchaseOrder._id 
+      const res = purchaseOrder._id
         ? await api.put(`/orders/${purchaseOrder._id}`, purchaseOrder)
         : await api.post("/orders", purchaseOrder);
 
@@ -112,7 +112,7 @@ export default function Orders({ searchQuery }) {
 
   // --- 4. DELETE ORDER ---
   const removeOrder = async (id) => {
-    if (!window.confirm("Delete this order record permanently?")) return; 
+    if (!window.confirm("Delete this order record permanently?")) return;
     try {
       const res = await api.delete(`/orders/${id}`);
       if (res.data.success) fetchOrders();
@@ -124,11 +124,11 @@ export default function Orders({ searchQuery }) {
   // --- FILTER & SEARCH LOGIC ---
   const filteredOrders = orders.filter((o) => {
     const finalSearch = (searchQuery || localSearch).toLowerCase();
-    
-    const matchesSearch = 
-        o.vendorName.toLowerCase().includes(finalSearch) || 
-        o._id.toLowerCase().includes(finalSearch) ||
-        o.category.toLowerCase().includes(finalSearch);
+
+    const matchesSearch =
+      o.vendorName.toLowerCase().includes(finalSearch) ||
+      o._id.toLowerCase().includes(finalSearch) ||
+      o.category.toLowerCase().includes(finalSearch);
 
     const matchesStatus = activeFilters.status === "All" || o.status === activeFilters.status;
 
@@ -139,12 +139,12 @@ export default function Orders({ searchQuery }) {
   const currentItems = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleOpenDetails = (order) => { setSelectedOrder(order); setView("view-details"); };
-  
+
   const handleEditDetails = (order) => {
     setPurchaseOrder({
       _id: order._id, vendorName: order.vendorName, itemName: order.itemName,
       category: order.category, quantity: order.quantity, unitPrice: order.unitPrice,
-      warehouse: order.warehouse, expectedDate: order.expectedDate ? order.expectedDate.split('T')[0] : "", 
+      warehouse: order.warehouse, expectedDate: order.expectedDate ? order.expectedDate.split('T')[0] : "",
       paymentTerms: order.paymentTerms, notes: order.notes
     });
     setView("add");
@@ -171,7 +171,7 @@ export default function Orders({ searchQuery }) {
 
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-4">
-              
+
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
                 <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer">
@@ -184,15 +184,15 @@ export default function Orders({ searchQuery }) {
               <div className="flex flex-1 gap-3 w-full lg:max-w-3xl justify-end">
                 <div className="relative flex-1 group">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Quick search Client, ID or Category..." 
-                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all placeholder:text-slate-300" 
-                    value={localSearch} 
-                    onChange={(e) => setLocalSearch(e.target.value)} 
+                  <input
+                    type="text"
+                    placeholder="Quick search Client, ID or Category..."
+                    className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all placeholder:text-slate-300"
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
-                
+
                 <div className="relative" ref={filterRef}>
                   <button onClick={() => setShowFilterPopup(!showFilterPopup)} className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border ${showFilterPopup ? 'bg-slate-900 text-white border-slate-900 shadow-xl' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 shadow-sm'}`}>
                     <Filter size={16} /> Filter
@@ -259,13 +259,13 @@ export default function Orders({ searchQuery }) {
                 Showing {currentItems.length} of {filteredOrders.length} orders
               </p>
               <div className="flex items-center gap-2">
-                <NavBtn onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} icon={<ChevronLeft size={18}/>} />
+                <NavBtn onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1} icon={<ChevronLeft size={18} />} />
                 <div className="flex gap-1">
                   {[...Array(totalPages)].map((_, i) => (
-                    <button key={i+1} onClick={() => setCurrentPage(i+1)} className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i+1 ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}>{i+1}</button>
+                    <button key={i + 1} onClick={() => setCurrentPage(i + 1)} className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}>{i + 1}</button>
                   ))}
                 </div>
-                <NavBtn onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} icon={<ChevronRight size={18}/>} />
+                <NavBtn onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages || totalPages === 0} icon={<ChevronRight size={18} />} />
               </div>
             </div>
           </div>
@@ -279,20 +279,20 @@ export default function Orders({ searchQuery }) {
             <span className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block">Purchase Order Information</span>
             <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedOrder.vendorName}</h1>
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">System ID: {selectedOrder._id}</p>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><IndianRupee size={12}/> Valuation</p>
-                 <p className="text-2xl font-black text-slate-800">₹{(selectedOrder.unitPrice * selectedOrder.quantity).toLocaleString()}</p>
-               </div>
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Package size={12}/> Volume</p>
-                 <p className="text-2xl font-black text-slate-800">{selectedOrder.quantity} Units</p>
-               </div>
-               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</p>
-                 <p className="text-2xl font-black text-slate-800">{selectedOrder.category}</p>
-               </div>
+              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><IndianRupee size={12} /> Valuation</p>
+                <p className="text-2xl font-black text-slate-800">₹{(selectedOrder.unitPrice * selectedOrder.quantity).toLocaleString()}</p>
+              </div>
+              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Package size={12} /> Volume</p>
+                <p className="text-2xl font-black text-slate-800">{selectedOrder.quantity} Units</p>
+              </div>
+              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</p>
+                <p className="text-2xl font-black text-slate-800">{selectedOrder.category}</p>
+              </div>
             </div>
 
             <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
@@ -304,7 +304,7 @@ export default function Orders({ searchQuery }) {
       ) : (
         <div className="max-w-5xl mx-auto animate-in fade-in duration-500 mt-10">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-              <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back to Ledger
+            <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back to Ledger
           </button>
           <OrderForm purchaseOrder={purchaseOrder} handleFormChange={handleFormChange} handleSubmit={handleAddPurchaseOrder} onCancel={() => setView("list")} />
         </div>
@@ -316,9 +316,9 @@ export default function Orders({ searchQuery }) {
 // --- SUB-COMPONENTS ---
 function StatusBadge({ status, onUpdate }) {
   const configs = {
-    Completed: { bg: "bg-emerald-50 text-emerald-600 border-emerald-100", icon: <CheckCircle size={10}/> },
-    Pending: { bg: "bg-amber-50 text-amber-600 border-amber-100", icon: <Clock size={10}/> },
-    Cancelled: { bg: "bg-rose-50 text-rose-600 border-rose-100", icon: <XCircle size={10}/> },
+    Completed: { bg: "bg-emerald-50 text-emerald-600 border-emerald-100", icon: <CheckCircle size={10} /> },
+    Pending: { bg: "bg-amber-50 text-amber-600 border-amber-100", icon: <Clock size={10} /> },
+    Cancelled: { bg: "bg-rose-50 text-rose-600 border-rose-100", icon: <XCircle size={10} /> },
   };
   const current = configs[status];
   return (

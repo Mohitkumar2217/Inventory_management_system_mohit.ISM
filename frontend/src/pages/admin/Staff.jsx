@@ -10,8 +10,7 @@ import {
 } from "lucide-react";
 
 export default function Staff({ searchQuery }) {
-  const { token } = useAuth(); //
-
+  const { token } = useAuth();
   // --- STATES ---
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -23,7 +22,6 @@ export default function Staff({ searchQuery }) {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-
   const initialFormState = { name: "", works: "", role: "staff", status: "Active", email: "", password: "" };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -47,7 +45,6 @@ export default function Staff({ searchQuery }) {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     if (token) fetchStaff();
   }, [token]);
@@ -57,7 +54,7 @@ export default function Staff({ searchQuery }) {
     setCurrentPage(1);
   }, [searchQuery, localSearch, roleFilter]);
 
-  // --- HANDLERS ---
+  // --- 1. HANDLERS ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -68,9 +65,8 @@ export default function Staff({ searchQuery }) {
     e.preventDefault();
     try {
       const res = formData._id
-        ? await api.put(`/staffs/${formData._id}`, formData) 
-        : await api.post("/staffs", formData); 
-
+        ? await api.put(`/staffs/${formData._id}`, formData)
+        : await api.post("/staffs", formData);
       if (res.data.success) {
         alert(res.data.message);
         fetchStaff();
@@ -91,7 +87,7 @@ export default function Staff({ searchQuery }) {
   const handleDeleteStaff = async (id) => {
     if (!window.confirm("Delete this staff member permanently?")) return;
     try {
-      const res = await api.delete(`/staffs/${id}`); 
+      const res = await api.delete(`/staffs/${id}`);
       if (res.data.success) {
         fetchStaff();
       }
@@ -139,7 +135,6 @@ export default function Staff({ searchQuery }) {
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
           <StaffSummaryCard items={itemsSummary} nameSum="Team" />
-
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
@@ -148,7 +143,6 @@ export default function Staff({ searchQuery }) {
               </p>
             </div>
           </div>
-
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm mt-8 overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
@@ -176,7 +170,6 @@ export default function Staff({ searchQuery }) {
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
-
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center gap-2">
                   <Filter size={16} className="text-slate-400" />
                   <select
@@ -190,7 +183,6 @@ export default function Staff({ searchQuery }) {
                     <option value="staff">Staff</option>
                   </select>
                 </div>
-
                 <button
                   onClick={() => { setFormData(initialFormState); setView("add"); }}
                   className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 active:scale-95 transition-all whitespace-nowrap"
@@ -285,7 +277,7 @@ export default function Staff({ searchQuery }) {
         <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700">
           <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all mt-10">
             <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={20} /></div>
-            Back to Directory
+            Back
           </button>
 
           <div className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-100 relative overflow-hidden mt-8">
@@ -323,7 +315,7 @@ export default function Staff({ searchQuery }) {
           <div className="flex items-center justify-between mb-8">
             <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
               <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={20} /></div>
-              Back to Directory
+              Back
             </button>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">{formData._id ? "Edit Employee Profile" : "Register New Member"}</h1>
           </div>

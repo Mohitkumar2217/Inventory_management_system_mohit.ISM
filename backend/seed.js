@@ -4,7 +4,7 @@ import Supplier from './models/Supplier.js';
 import Warehouse from './models/Warehouse.js';
 import Product from './models/Product.js';
 import Order from './models/Order.js';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import User from "./models/User.js";
@@ -97,7 +97,12 @@ const seedDB = async () => {
             status: i % 6 === 0 ? 'Out of Stock' : 'In Stock',
             details: "Temperature controlled storage. High security area."
         }));
-        await Warehouse.insertMany(warehouseZones);
+        const updatedData = warehouseZones.map(item => ({
+            ...item,
+            warehouseName: item.warehouseName || "Default Warehouse",
+            capacity: item.capacity || 500
+        }));
+        await Warehouse.insertMany(updatedData);
 
         // 5. SEED PRODUCTS (15 Products)
         const productNames = ["Smart Watch", "Organic Serum", "Coffee Arabica", "Wireless Mouse", "Yoga Mat", "LED Desk Lamp", "Bluetooth Speaker", "Face Wash", "Running Shoes", "Dark Chocolate", "Power Bank", "Water Bottle", "Hand Sanitizer", "Electric Kettle", "Laptop Stand"];

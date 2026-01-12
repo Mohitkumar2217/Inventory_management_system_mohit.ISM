@@ -11,7 +11,6 @@ import {
 
 export default function Warehouse({ searchQuery = "" }) {
   const { token } = useAuth();
-
   // --- STATES ---
   const [stockList, setStockList] = useState([]);
   const [view, setView] = useState("list");
@@ -275,7 +274,7 @@ export default function Warehouse({ searchQuery = "" }) {
           <div className="flex items-center justify-between mb-10">
             <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
               <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100"><ArrowLeft size={18} /></div>
-              Back to Registry
+              Back
             </button>
             <div className="flex gap-3">
               <button onClick={() => handleDeleteStock(selectedStock._id)} className="p-3 bg-white border border-rose-100 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm">
@@ -351,7 +350,7 @@ export default function Warehouse({ searchQuery = "" }) {
           <div className="flex items-center justify-between mb-8">
             <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
               <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ArrowLeft size={18} /></div>
-              Back to Ledger
+              Back
             </button>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-widest">{formData._id ? "Update Deployment" : "New Inventory Log"}</h1>
           </div>
