@@ -3,23 +3,23 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext"; //
 import StaffSummaryCard from "../../components/Summerys/StaffSummaryCard.jsx";
 import StaffForm from "../../components/Forms/StaffForm.jsx";
-import { 
-  Search, Plus, Trash2, Eye, ArrowLeft, Edit2, 
-  UserCog, Mail, Briefcase, 
+import {
+  Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
+  UserCog, Mail, Briefcase,
   Calendar, Info, ChevronLeft, ChevronRight, Filter, Loader2
 } from "lucide-react";
 
 export default function Staff({ searchQuery }) {
   const { token } = useAuth(); //
-  
+
   // --- STATES ---
   const [staffList, setStaffList] = useState([]);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
-  const [localSearch, setLocalSearch] = useState(""); 
+  const [localSearch, setLocalSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
-  
+
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -48,8 +48,8 @@ export default function Staff({ searchQuery }) {
     }
   };
 
-  useEffect(() => { 
-    if (token) fetchStaff(); 
+  useEffect(() => {
+    if (token) fetchStaff();
   }, [token]);
 
   // AUTO-RESET PAGINATION ON SEARCH
@@ -67,13 +67,13 @@ export default function Staff({ searchQuery }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = formData._id 
+      const res = formData._id
         ? await api.put(`/staffs/${formData._id}`, formData) //
         : await api.post("/staffs", formData); //
 
       if (res.data.success) {
         alert(res.data.message);
-        fetchStaff(); 
+        fetchStaff();
         setView("list");
         setFormData(initialFormState);
       }
@@ -86,7 +86,7 @@ export default function Staff({ searchQuery }) {
     setSelectedStaff(staff);
     setView("view-details");
   };
-  
+
   // --- 3. DELETE STAFF ---
   const handleDeleteStaff = async (id) => {
     if (!window.confirm("Delete this staff member permanently?")) return;
@@ -111,10 +111,10 @@ export default function Staff({ searchQuery }) {
   // --- FILTER LOGIC ---
   const filteredStaff = staffList.filter(s => {
     const finalSearch = (searchQuery || localSearch).toLowerCase();
-    const matchesSearch = 
-        s.name.toLowerCase().includes(finalSearch) || 
-        s.email.toLowerCase().includes(finalSearch) ||
-        s.role.toLowerCase().includes(finalSearch);
+    const matchesSearch =
+      s.name.toLowerCase().includes(finalSearch) ||
+      s.email.toLowerCase().includes(finalSearch) ||
+      s.role.toLowerCase().includes(finalSearch);
     const matchesRole = roleFilter === "All" || s.role.toLowerCase() === roleFilter.toLowerCase();
     return matchesSearch && matchesRole;
   });
@@ -141,21 +141,21 @@ export default function Staff({ searchQuery }) {
           <StaffSummaryCard items={itemsSummary} nameSum="Team" />
 
           <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
-                <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
-                    <UserCog size={14} className="text-indigo-500" /> {filteredStaff.length} Members Matching
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>
+              <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
+                <UserCog size={14} className="text-indigo-500" /> {filteredStaff.length} Members Matching
+              </p>
+            </div>
           </div>
 
-          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
-            <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-4 bg-white">
+          <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm mt-8 overflow-visible">
+            <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
-                <select 
-                  value={itemsPerPage} 
-                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} 
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                   className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer"
                 >
                   <option value={5}>05</option>
@@ -168,9 +168,9 @@ export default function Staff({ searchQuery }) {
               <div className="flex flex-1 items-center gap-3 w-full lg:max-w-3xl justify-end">
                 <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5 flex items-center gap-2 group focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
                   <Search className="text-slate-300 group-focus-within:text-indigo-400" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="Quick search name, email or role..." 
+                  <input
+                    type="text"
+                    placeholder="Quick search name, email or role..."
                     className="bg-transparent outline-none font-bold text-sm w-full placeholder:text-slate-300"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
@@ -179,10 +179,10 @@ export default function Staff({ searchQuery }) {
 
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center gap-2">
                   <Filter size={16} className="text-slate-400" />
-                  <select 
+                  <select
                     className="bg-transparent outline-none font-bold text-xs text-slate-600 cursor-pointer"
                     value={roleFilter}
-                    onChange={(e) => {setRoleFilter(e.target.value); setCurrentPage(1);}}
+                    onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}
                   >
                     <option value="All">All Roles</option>
                     <option value="admin">Admin</option>
@@ -191,8 +191,8 @@ export default function Staff({ searchQuery }) {
                   </select>
                 </div>
 
-                <button 
-                  onClick={() => { setFormData(initialFormState); setView("add"); }} 
+                <button
+                  onClick={() => { setFormData(initialFormState); setView("add"); }}
                   className="bg-indigo-600 text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-indigo-100 active:scale-95 transition-all whitespace-nowrap"
                 >
                   <Plus size={18} /> Add Staff
@@ -216,12 +216,12 @@ export default function Staff({ searchQuery }) {
                       <td className="p-5 flex items-center gap-3">
                         <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-black shadow-inner">{staff.name.charAt(0)}</div>
                         <div>
-                            <p className="text-slate-700">{staff.name}</p>
-                            <p className="text-[10px] text-slate-400 uppercase font-black">{staff.email}</p>
+                          <p className="text-slate-700">{staff.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase font-black">{staff.email}</p>
                         </div>
                       </td>
                       <td className="p-5">
-                         <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] uppercase font-black text-slate-500">{staff.role}</span>
+                        <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] uppercase font-black text-slate-500">{staff.role}</span>
                       </td>
                       <td className="p-5">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${staff.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}>{staff.status}</span>
@@ -238,9 +238,9 @@ export default function Staff({ searchQuery }) {
                 </tbody>
               </table>
               {filteredStaff.length === 0 && (
-                  <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
-                      No matching team members found.
-                  </div>
+                <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
+                  No matching team members found.
+                </div>
               )}
             </div>
 
@@ -248,19 +248,19 @@ export default function Staff({ searchQuery }) {
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                 Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredStaff.length)} / {filteredStaff.length} members
               </p>
-              
+
               <div className="flex items-center gap-2">
-                <button 
+                <button
                   disabled={activePage === 1}
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
                 >
                   <ChevronLeft size={18} />
                 </button>
-                
+
                 <div className="flex gap-1">
                   {[...Array(totalPages)].map((_, i) => (
-                    <button 
+                    <button
                       key={i + 1}
                       onClick={() => setCurrentPage(i + 1)}
                       className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${activePage === i + 1 ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100" : "text-slate-400 hover:bg-slate-50"}`}
@@ -270,7 +270,7 @@ export default function Staff({ searchQuery }) {
                   ))}
                 </div>
 
-                <button 
+                <button
                   disabled={activePage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   className="p-2 rounded-xl border border-slate-100 text-slate-400 hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition-all active:scale-95"
@@ -296,11 +296,11 @@ export default function Staff({ searchQuery }) {
               <div className="flex-1">
                 <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-2">{selectedStaff.name}</h1>
                 <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em] mb-8">{selectedStaff.role} • Security Level {selectedStaff.role === 'admin' ? '01' : '02'}</p>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <DetailItem icon={<Mail size={14}/>} label="Work Email" value={selectedStaff.email} />
-                  <DetailItem icon={<Briefcase size={14}/>} label="Department" value="Logistics Hub" />
-                  <DetailItem icon={<Calendar size={14}/>} label="Joined Date" value={new Date(selectedStaff.createdAt).toLocaleDateString()} />
+                  <DetailItem icon={<Mail size={14} />} label="Work Email" value={selectedStaff.email} />
+                  <DetailItem icon={<Briefcase size={14} />} label="Department" value="Logistics Hub" />
+                  <DetailItem icon={<Calendar size={14} />} label="Joined Date" value={new Date(selectedStaff.createdAt).toLocaleDateString()} />
                 </div>
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function Staff({ searchQuery }) {
             <div className="mt-12 bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-1.5 bg-white rounded-lg shadow-sm text-indigo-500">
-                   <Info size={16} />
+                  <Info size={16} />
                 </div>
                 <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Work Responsibilities & Bio</h3>
               </div>

@@ -2,29 +2,29 @@ import Warehouse from "../models/Warehouse.js";
 
 export const getStockList = async (req, res) => {
     try {
-        const stocks = await Warehouse.find().sort({ createdAt: -1 });
+        const warehouse = await Warehouse.find().sort({ createdAt: -1 });
 
         // --- CALCULATION LOGIC ---
-        const totalProducts = stocks.length;
-        const totalQuantity = stocks.reduce((sum, s) => sum + s.quantity, 0);
-        const inStockCount = stocks.filter(s => s.status === "In Stock").length;
-        const outOfStockCount = stocks.filter(s => s.status === "Out of Stock").length;
+        const totalWarehouses = warehouse.length;
+        const totalQuantity = warehouse.reduce((sum, w) => sum + w.quantity, 0);
+        const inStockCount = warehouse.filter(w => w.status === "In Stock").length;
+        const outOfStockCount = warehouse.filter(w => w.status === "Out of Stock").length;
 
         // 1. Availability Rate: (In Stock / Total SKUs) * 100
-        const availabilityRate = totalProducts > 0 
-            ? ((inStockCount / totalProducts) * 100).toFixed(1) 
+        const availabilityRate = totalWarehouses > 0 
+            ? ((inStockCount / totalWarehouses) * 100).toFixed(1) 
             : 0;
-
+        
         // 2. Active Zones: Count unique zones where quantity > 0
         const activeZonesCount = [...new Set(
-            stocks.filter(s => s.quantity > 0).map(s => s.zone)
+            warehouse.filter(s => s.quantity > 0).map(s => s.zone)
         )].length;
 
         res.status(200).json({ 
             success: true, 
-            stocks,
+            stocks: warehouse,
             summary: {
-                totalProducts,
+                totalWarehouses,
                 totalQuantity,
                 inStockCount,
                 outOfStockCount,

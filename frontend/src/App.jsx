@@ -12,7 +12,8 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx"; 
+import CustomForm from "./components/Form.jsx";
 
 // Inside your <Routes>
 
@@ -28,6 +29,7 @@ function App() {
           path="/"
           element={
             <ProtectedRoute requireRole={["admin", "manager", "staff", "supplier", "warehouse", "accountant"]}>
+              {/* <CustomForm /> */}
               <Dashboard />
             </ProtectedRoute>
           }
