@@ -30,14 +30,14 @@ export default function Staff({ searchQuery }) {
   // --- API CONFIGURATION ---
   const api = axios.create({
     baseURL: "http://localhost:4000/api",
-    headers: { Authorization: `Bearer ${token}` } //
+    headers: { Authorization: `Bearer ${token}` }
   });
 
   // --- 1. FETCH DATA FROM BACKEND ---
   const fetchStaff = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/staffs"); //
+      const res = await api.get("/staffs");
       if (res.data.success) {
         setStaffList(res.data.staff);
       }
@@ -68,8 +68,8 @@ export default function Staff({ searchQuery }) {
     e.preventDefault();
     try {
       const res = formData._id
-        ? await api.put(`/staffs/${formData._id}`, formData) //
-        : await api.post("/staffs", formData); //
+        ? await api.put(`/staffs/${formData._id}`, formData) 
+        : await api.post("/staffs", formData); 
 
       if (res.data.success) {
         alert(res.data.message);
@@ -91,7 +91,7 @@ export default function Staff({ searchQuery }) {
   const handleDeleteStaff = async (id) => {
     if (!window.confirm("Delete this staff member permanently?")) return;
     try {
-      const res = await api.delete(`/staffs/${id}`); //
+      const res = await api.delete(`/staffs/${id}`); 
       if (res.data.success) {
         fetchStaff();
       }
