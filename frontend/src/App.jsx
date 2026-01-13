@@ -12,8 +12,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx"; 
-import CustomForm from "./components/Form.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";  
 
 // Inside your <Routes>
 
