@@ -14,7 +14,6 @@ dotenv.config();
 connectDB();
 const app = express();
 
-
 const allowedOrigins = [
     "https://inventory-management-system-mohit-i-three.vercel.app",
     "http://localhost:5173", 
@@ -23,15 +22,24 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl)
+        // 1. Allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
+
+        // 2. Check if origin is in our explicit list
+        const isAllowed = allowedOrigins.indexOf(origin) !== -1;
+
+        // 3. Check if it's a Vercel preview/deployment URL using Regex
+        const isVercelPreview = /\.vercel\.app$/.test(origin);
+
+        if (isAllowed || isVercelPreview) {
             callback(null, true);
         } else {
+            console.log("CORS Blocked Origin:", origin); // Helpful for debugging
             callback(new Error("Not allowed by CORS"));
         }
     },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
 
