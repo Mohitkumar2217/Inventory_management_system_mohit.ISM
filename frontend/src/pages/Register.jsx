@@ -16,8 +16,8 @@ const Register = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const API = useMemo(() => axios.create({
-    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api/auth", // NO SLASH AT END
-    withCredentials: true
+    baseURL: "http://localhost:4000/api/auth", // NO SLASH AT END
+    // withCredentials: true
   }), []);
 
   // Password Strength Logic
