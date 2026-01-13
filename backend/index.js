@@ -21,16 +21,10 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-    origin: function (origin, callback) {
-        // 1. Allow requests with no origin (like mobile apps or curl)
+    origin: function (origin, callback) { 
         if (!origin) return callback(null, true);
-
-        // 2. Check if origin is in our explicit list
         const isAllowed = allowedOrigins.indexOf(origin) !== -1;
-
-        // 3. Check if it's a Vercel preview/deployment URL using Regex
         const isVercelPreview = /\.vercel\.app$/.test(origin);
-
         if (isAllowed || isVercelPreview) {
             callback(null, true);
         } else {
@@ -42,6 +36,7 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
 }));
+
 
 app.use(express.json());
 

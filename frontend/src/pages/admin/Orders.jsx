@@ -37,7 +37,7 @@ export default function Orders({ searchQuery }) {
 
   // API Instance Config
   const api = axios.create({
-    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api",
+    baseURL: "http://localhost:4000/api",
     headers: { Authorization: `Bearer ${token}` }
   });
 
