@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, ShieldCheck, ArrowLeft, Send } from "lucide-react";
@@ -7,16 +7,20 @@ import { Mail, Lock, Loader2, ShieldCheck, ArrowLeft, Send } from "lucide-react"
 const Login = () => {
   // View states
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  
+
   // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null); // Success message for reset
   const [loading, setLoading] = useState(false);
-  
+
   const navigate = useNavigate();
   const { login } = useAuth();
+  const API = useMemo(() => axios.create({
+    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api/auth", // NO SLASH AT END
+    withCredentials: true
+  }), []);
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -28,7 +32,7 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/login", { email, password });
+    const response = await API.post("/login", { email, password });
       if (response.data.success) {
         const { token, user } = response.data;
         await login(token, user);
@@ -111,8 +115,8 @@ const Login = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center ml-1">
                     <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Password</label>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => { setIsForgotPassword(true); setError(null); }}
                       className="text-[11px] font-black text-emerald-600 uppercase hover:underline"
                     >
@@ -143,13 +147,13 @@ const Login = () => {
           ) : (
             /* --- FORGOT PASSWORD VIEW --- */
             <div className="animate-in slide-in-from-left-8 duration-300">
-              <button 
+              <button
                 onClick={() => { setIsForgotPassword(false); setError(null); setMessage(null); }}
                 className="flex items-center text-slate-400 hover:text-emerald-600 transition-colors mb-6 text-xs font-bold uppercase tracking-widest"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" /> Back to Login
               </button>
-              
+
               <h2 className="text-xl font-bold text-slate-800 mb-2">Reset Password</h2>
               <p className="text-slate-500 text-sm mb-8 font-medium">Enter your email and we'll send you a reset link.</p>
 
@@ -158,7 +162,7 @@ const Login = () => {
                   {error}
                 </div>
               )}
-              
+
               {message && (
                 <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-4 py-3 rounded-2xl text-sm font-bold mb-6">
                   {message}

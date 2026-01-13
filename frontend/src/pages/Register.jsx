@@ -15,6 +15,10 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const API = useMemo(() => axios.create({
+    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api/auth", // NO SLASH AT END
+    withCredentials: true
+  }), []);
 
   // Password Strength Logic
   const passwordStrength = useMemo(() => {
@@ -46,7 +50,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/register", formData);
+      const response = await API.post("/register", formData);
       if (response.data.success) {
         navigate("/login");
       }
@@ -124,9 +128,9 @@ const Register = () => {
               <div className="flex justify-between items-center ml-1">
                 <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">Security Key</label>
                 {formData.password && (
-                   <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${passwordStrength.color.replace('bg-', 'text-')} bg-opacity-10 transition-all`}>
-                     {passwordStrength.label}
-                   </span>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${passwordStrength.color.replace('bg-', 'text-')} bg-opacity-10 transition-all`}>
+                    {passwordStrength.label}
+                  </span>
                 )}
               </div>
               <div className="relative group">
@@ -139,7 +143,7 @@ const Register = () => {
                   className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm"
                   placeholder="••••••••"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-600 transition-colors"
@@ -161,21 +165,21 @@ const Register = () => {
             <div className="space-y-2">
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">System Role</label>
               <div className="relative group">
-                 <select 
-                   name="role" 
-                   onChange={handleChange} 
-                   value={formData.role} 
-                   className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm appearance-none cursor-pointer"
-                 >
-                   <option value="staff">Staff</option>
-                   <option value="manager">Manager</option>
-                   <option value="warehouse">Warehouse Admin</option>
-                   <option value="accountant">Accountant</option>
-                   <option value="admin">Admin</option>
-                 </select>
-                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                   <UserPlus size={18} />
-                 </div>
+                <select
+                  name="role"
+                  onChange={handleChange}
+                  value={formData.role}
+                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm appearance-none cursor-pointer"
+                >
+                  <option value="staff">Staff</option>
+                  <option value="manager">Manager</option>
+                  <option value="warehouse">Warehouse Admin</option>
+                  <option value="accountant">Accountant</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                  <UserPlus size={18} />
+                </div>
               </div>
             </div>
 
@@ -184,11 +188,11 @@ const Register = () => {
               <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">Location Address</label>
               <div className="relative group">
                 <MapPin className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                <textarea 
-                  name="address" 
-                  rows="2" 
-                  onChange={handleChange} 
-                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm resize-none" 
+                <textarea
+                  name="address"
+                  rows="2"
+                  onChange={handleChange}
+                  className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm resize-none"
                   placeholder="Primary Business Office..."
                 />
               </div>

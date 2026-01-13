@@ -9,12 +9,16 @@ const ResetPassword = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const API = useMemo(() => axios.create({
+    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api/auth", // NO SLASH AT END
+    withCredentials: true
+  }), []);
 
   const handleReset = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`https://inventory-management-system-mohit-ism.onrender.com/api/auth/reset-password/${token}`, { password });
+      await API.post(`/reset-password/${token}`, { password });
       alert("Password updated successfully!");
       navigate("/login");
     } catch (err) {
