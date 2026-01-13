@@ -16,8 +16,6 @@ const app = express();
 
 const allowedOrigins = [
     "https://inventory-management-system-mohit-i-three.vercel.app",
-    "http://localhost:5173", 
-    "http://localhost:5174"   
 ];
 
 app.use(cors({
