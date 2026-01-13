@@ -3,6 +3,7 @@ import Category from "../models/Category.js";
 import Warehouse from "../models/Warehouse.js"; 
 import Order from "../models/Order.js";
 
+// --- 1. GET ANALYTICS TRENDS (7-Day Analysis) ---
 export const getProductTrends = async (req, res) => {
     try {
         const { type } = req.query;
@@ -11,34 +12,22 @@ export const getProductTrends = async (req, res) => {
 
         let groupCalculation;
 
-        // --- SELECT LOGIC BASED ON CARD CLICKED ---
+        // Optimized Select Logic based on UI selection
         switch (type) {
             case "Inventory Value":
                 groupCalculation = { $multiply: ["$price", "$stock"] };
                 break;
-            case "Total Revenue":
-                groupCalculation = { $multiply: ["$price", "$stock"] };
-                break;
-            case "Low Stock Alerts":
-                groupCalculation = {
-                    $cond: [{ $lt: ["$stock", "$minStock"] }, 1, 0]
-                };
-                break;
-            case "Categories":
-                groupCalculation = 1;
+            case "Profit Margin": // Added new trend for the cost field
+                groupCalculation = { $subtract: ["$price", "$cost"] };
                 break;
             case "Available Units":
                 groupCalculation = "$stock";
                 break;
             case "Low Stock Alerts":
-                groupCalculation = {
-                    $cond: [{ $lt: ["$stock", "$minStock"] }, 1, 0]
-                };
+                groupCalculation = { $cond: [{ $lt: ["$stock", "$minStock"] }, 1, 0] };
                 break;
             case "Total Products":
-                groupCalculation = {
-                    $cond: [{ $gt: ["$stock", 0] }, 1, 0]
-                };
+                groupCalculation = 1;
                 break;
             default:
                 groupCalculation = 1;
@@ -46,11 +35,7 @@ export const getProductTrends = async (req, res) => {
         }
 
         const trends = await Product.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: sevenDaysAgo }
-                }
-            },
+            { $match: { createdAt: { $gte: sevenDaysAgo } } },
             {
                 $group: {
                     _id: { $dayOfWeek: "$createdAt" },
@@ -61,12 +46,12 @@ export const getProductTrends = async (req, res) => {
         ]);
 
         const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-        // Map data to ensure all days are represented even if 0
-        const chartData = trends.map(item => ({
-            name: dayNames[item._id - 1],
-            val: item.val
-        }));
+        
+        // Fill in missing days with 0 to prevent "broken" charts
+        const chartData = dayNames.map((name, index) => {
+            const dayData = trends.find(t => t._id === index + 1);
+            return { name, val: dayData ? dayData.val : 0 };
+        });
 
         res.status(200).json({ success: true, chartData });
     } catch (error) {
@@ -74,54 +59,36 @@ export const getProductTrends = async (req, res) => {
     }
 };
 
-// --- GET ALL PRODUCTS & MODULE ANALYTICS ---
+// --- 2. GET ALL PRODUCTS & MODULE ANALYTICS ---
 export const getProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
         const categories = await Category.find({ status: "Active" });
         const warehouseRecords = await Warehouse.find();
 
+        // Calculate advanced metrics
         const summary = {
             totalProducts: products.length,
-            totalStock: products.reduce((sum, p) => sum + p.stock, 0),
+            totalStock: products.reduce((sum, p) => sum + (p.stock || 0), 0),
             lowStockCount: products.filter(p => p.stock < (p.minStock || 20)).length,
             categoriesCount: categories.length,
-            totalInventoryValue: products.reduce((sum, p) => sum + (p.price * p.stock), 0),
+            totalInventoryValue: products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0),
             activeZones: [...new Set(warehouseRecords.map(w => w.zone))].length
         };
 
+        // Notices logic (Alerts for the UI notice bar)
         const notices = [];
-
-        // 1. Check for Low Stock Alerts
-        const lowStockItems = await Product.find({ 
-            $expr: { $lt: ["$stock", "$minStock"] } 
-        });
-
-        if (lowStockItems.length > 0) {
-            notices.push({
-                id: 1,
-                text: `${lowStockItems.length} items reaching low stock levels.`,
-                type: "urgent"
-            });
+        if (summary.lowStockCount > 0) {
+            notices.push({ id: 1, text: `${summary.lowStockCount} items reaching critical low levels.`, type: "urgent" });
         }
 
-        // 2. Check for Pending Orders
         const pendingCount = await Order.countDocuments({ status: "Pending" });
         if (pendingCount > 0) {
-            notices.push({
-                id: 2,
-                text: `You have ${pendingCount} new orders to process.`,
-                type: "standard"
-            });
+            notices.push({ id: 2, text: `Deployment Queue: ${pendingCount} pending orders.`, type: "standard" });
         }
 
-        // 3. Fallback (If no alerts)
         if (notices.length === 0) {
-            notices.push({
-                id: 3,
-                text: "All systems operational. No pending alerts.",
-                type: "standard"
-            });
+            notices.push({ id: 3, text: "All logistics modules operational.", type: "standard" });
         } 
 
         res.status(200).json({
@@ -129,48 +96,79 @@ export const getProducts = async (req, res) => {
             products,
             summary,
             availableCategories: categories.map(c => c.name),
-            notices
+            availableWarehouses: warehouseRecords.map(w => w.warehouseName),
+            notices,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error syncing inventory modules" });
     }
-};
+}; 
 
-// --- ADD OR UPDATE PRODUCT ---
+// --- 3. UPDATED SYNC PRODUCT (Handling Dynamic Variants) ---
 export const syncProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const productData = req.body;
 
+        // --- NEW LOGIC: AUTO-CALCULATE DATA FROM VARIANTS ---
+        if (productData.variants && productData.variants.length > 0) {
+            // Sum up total stock from all variants
+            productData.stock = productData.variants.reduce(
+                (acc, curr) => acc + Number(curr.stock || 0), 
+                0
+            );
+            
+            // Default global price to the first variant if main price is not set
+            if (!productData.price) {
+                productData.price = productData.variants[0].price;
+            }
+        }
+
         if (id) {
-            // Update existing
-            const updatedProduct = await Product.findByIdAndUpdate(id, productData, { new: true });
+            const updatedProduct = await Product.findByIdAndUpdate(
+                id, 
+                productData, 
+                { new: true, runValidators: true }
+            );
             return res.status(200).json({
                 success: true,
-                message: "Product Registry Updated",
+                message: "Product Registry Synchronized (Variants Updated)",
                 product: updatedProduct
             });
         }
 
-        // Check if code exists
+        // Logic to prevent duplicate code identifiers
         const existing = await Product.findOne({ code: productData.code });
-        if (existing) return res.status(400).json({ success: false, message: "Product Code already exists" });
+        if (existing) return res.status(400).json({ 
+            success: false, 
+            message: "Product Identifier code already in use." 
+        });
 
-        // Add new
         const newProduct = new Product(productData);
         await newProduct.save();
-        res.status(201).json({ success: true, message: "New Product Successfully Registered" });
+        res.status(201).json({ 
+            success: true, 
+            message: "New Asset & Variants Successfully Registered" 
+        });
 
     } catch (error) {
+        // Special handling for MongoDB SKU unique constraint inside variants
+        if (error.code === 11000) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Identifier error: SKU or Code already exists." 
+            });
+        }
         res.status(400).json({ success: false, message: error.message });
     }
 };
 
-// --- DELETE PRODUCT ---
+
+// --- 4. DELETE PRODUCT ---
 export const deleteProduct = async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);
-        res.status(200).json({ success: true, message: "Product removed from ledger" });
+        res.status(200).json({ success: true, message: "Asset removed from registry" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Delete operation failed" });
     }

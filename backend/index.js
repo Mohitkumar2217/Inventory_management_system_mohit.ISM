@@ -11,6 +11,7 @@ import productRoutes from "./routes/product.js";
 import orderRoutes from "./routes/order.js";
 
 dotenv.config();
+connectDB();
 const app = express();
 
 
@@ -25,7 +26,6 @@ app.use("/api/warehouse", warehouseRoutes);
 app.use("/api/products", productRoutes); 
 app.use("/api/orders", orderRoutes);
 
-connectDB();
 app.listen(process.env.PORT || 4000, () => {
     console.log('Sever is running on http://localhost:4000');
 });
