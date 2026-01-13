@@ -8,7 +8,7 @@ import VisualBarCode from "../../components/Lists/VisualBarCode.jsx";
 import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
   ArrowLeft, IndianRupee, ChevronLeft, ChevronRight,
-  Layers, Loader2, Truck, Activity, Hash, MapPin, Calendar, Percent
+  Layers, Loader2, Truck, Activity, Hash, MapPin, Calendar, Percent, Tag, Box
 } from "lucide-react";
 
 export default function Products({ searchQuery = "" }) {
@@ -36,7 +36,8 @@ export default function Products({ searchQuery = "" }) {
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: 20,
     weight: "", dimensions: "", color: "", img: "📦",
     warehouseLocation: "", barcode: "", unit: "pcs", taxPercentage: 18,
-    status: "Active", condition: "New", expiryDate: "", totalSold: 0
+    status: "Active", condition: "New", expiryDate: "", totalSold: 0,
+    variants: [] // Added for dynamic variants support
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -106,23 +107,21 @@ export default function Products({ searchQuery = "" }) {
     setIsSubmitting(true); // Disable button
 
     try {
-      // Use formData._id to decide between PUT (update) or POST (create)
       const res = formData._id
         ? await api.put(`/products/${formData._id}`, formData)
         : await api.post("/products", formData);
 
       if (res.data.success) {
-        // Optional: Use a toast notification instead of alert() for better UX
         alert(res.data.message);
-        await fetchInventory(); // Refresh list
-        setView("list");        // Switch back to table view
-        setFormData(initialFormState); // Reset form fields
+        await fetchInventory();
+        setView("list");
+        setFormData(initialFormState);
       }
     } catch (err) {
       const errorMsg = err.response?.data?.message || "Sync failed. Please try again.";
       alert(errorMsg);
     } finally {
-      setIsSubmitting(false); // Re-enable button
+      setIsSubmitting(false);
     }
   };
 
@@ -319,6 +318,7 @@ export default function Products({ searchQuery = "" }) {
               </div>
             </div>
 
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
               <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100">
                 <div className="flex items-center gap-2 mb-6 text-slate-400 uppercase font-black text-[10px] tracking-widest"><MapPin size={14} className="text-indigo-500" /> Logistics</div>
@@ -364,6 +364,37 @@ export default function Products({ searchQuery = "" }) {
               <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Logistical Directives</div>
               <p className="text-slate-600 font-bold leading-relaxed italic text-xl opacity-80">"{formData.details || 'No additional directives provided.'}"</p>
             </div>
+            {/* --- NEW SECTION: PRODUCT VARIANTS DISPLAY --- */}
+            {formData.variants && formData.variants.length > 0 && (
+              <div className="mt-12 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="flex items-center gap-2 mb-6 text-slate-400 uppercase font-black text-[10px] tracking-widest">
+                  <Layers size={14} className="text-indigo-500" /> Asset Variants ({formData.variants.length})
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {formData.variants.map((v, idx) => (
+                    <div key={idx} className="bg-slate-50/50 border border-slate-100 p-5 rounded-[2rem] hover:bg-white hover:shadow-lg transition-all group">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="p-2 bg-white rounded-xl border border-slate-100 group-hover:scale-110 transition-transform">
+                          <Tag size={14} className="text-indigo-500" />
+                        </div>
+                        <span className="text-[10px] font-black text-slate-300 uppercase">SKU: {v.sku || 'N/A'}</span>
+                      </div>
+                      <h4 className="font-black text-slate-800 text-lg mb-1">{v.name}</h4>
+                      <div className="flex justify-between items-center mt-4">
+                        <div className="flex flex-col">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Price</span>
+                          <span className="text-sm font-black text-slate-900">₹{v.price || formData.price}</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                          <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Stock</span>
+                          <span className={`text-sm font-black ${v.stock < 5 ? 'text-rose-500' : 'text-emerald-600'}`}>{v.stock} {formData.unit}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       ) : (
