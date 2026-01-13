@@ -4,6 +4,11 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, ShieldCheck, ArrowLeft, Send } from "lucide-react";
 
+const API = axios.create({
+  baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api",
+  withCredentials: true // Important for sending/receiving cookies and headers across origins
+});
+
 const Login = () => {
   // View states
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -28,7 +33,7 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/login", { email, password });
+      const response = await API.post("/auth/login", { email, password });
       if (response.data.success) {
         const { token, user } = response.data;
         await login(token, user);

@@ -3,6 +3,11 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { User, Mail, Lock, MapPin, Loader2, UserPlus, Eye, EyeOff, ShieldCheck } from "lucide-react";
 
+const API = axios.create({
+  baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api",
+  withCredentials: true // Important for sending/receiving cookies and headers across origins
+});
+
 const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -46,7 +51,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/register", formData);
+      const response = await API.post("/auth/register", formData);
       if (response.data.success) {
         navigate("/login");
       }
