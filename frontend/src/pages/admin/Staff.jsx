@@ -27,7 +27,7 @@ export default function Staff({ searchQuery }) {
 
   // --- API CONFIGURATION ---
   const api = axios.create({
-    baseURL: "http://localhost:4000/api",
+    baseURL: "https://inventory-management-system-mohit-ism.onrender.com/api",
     headers: { Authorization: `Bearer ${token}` }
   });
 

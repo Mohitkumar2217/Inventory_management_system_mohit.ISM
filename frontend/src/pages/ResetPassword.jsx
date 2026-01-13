@@ -14,7 +14,7 @@ const ResetPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post(`http://localhost:4000/api/auth/reset-password/${token}`, { password });
+      await axios.post(`https://inventory-management-system-mohit-ism.onrender.com/api/auth/reset-password/${token}`, { password });
       alert("Password updated successfully!");
       navigate("/login");
     } catch (err) {

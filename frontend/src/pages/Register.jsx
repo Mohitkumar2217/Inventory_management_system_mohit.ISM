@@ -46,7 +46,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("http://localhost:4000/api/auth/register", formData);
+      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/register", formData);
       if (response.data.success) {
         navigate("/login");
       }

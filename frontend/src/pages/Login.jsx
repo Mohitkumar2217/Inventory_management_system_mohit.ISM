@@ -28,7 +28,7 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post("http://localhost:4000/api/auth/login", { email, password });
+      const response = await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/login", { email, password });
       if (response.data.success) {
         const { token, user } = response.data;
         await login(token, user);
@@ -55,7 +55,7 @@ const Login = () => {
     setMessage(null);
     try {
       // Replace with your actual forgot-password endpoint
-      await axios.post("http://localhost:4000/api/auth/forgot-password", { email });
+      await axios.post("https://inventory-management-system-mohit-ism.onrender.com/api/auth/forgot-password", { email });
       setMessage("Reset link sent! Please check your email inbox.");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset link.");
