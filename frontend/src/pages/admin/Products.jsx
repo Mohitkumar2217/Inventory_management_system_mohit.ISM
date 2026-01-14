@@ -9,7 +9,7 @@ import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
   ArrowLeft, IndianRupee, ChevronLeft, ChevronRight,
   Layers, Loader2, Truck, Activity, Hash, MapPin, Calendar, Percent, Tag, Box
-} from "lucide-react";
+} from "lucide-react"; 
 
 export default function Products({ searchQuery = "" }) {
   const { token } = useAuth();
@@ -20,6 +20,8 @@ export default function Products({ searchQuery = "" }) {
   const [liveNotices, setLiveNotices] = useState([]);
   const [categoriesList, setCategoriesList] = useState(["All"]);
   const [warehousesList, setWarehousesList] = useState(["All"]);
+  const [zonesList, setZonesList] = useState(["All"]);
+  const [suppliersList, setSuppliersList] = useState(["All"]);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
   const [localSearch, setLocalSearch] = useState("");
@@ -35,7 +37,7 @@ export default function Products({ searchQuery = "" }) {
     _id: null, name: "", code: "", category: "", price: "", cost: "",
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: 20,
     weight: "", dimensions: "", color: "", img: "📦",
-    warehouseLocation: "", barcode: "", unit: "pcs", taxPercentage: 18,
+    warehouse: "", barcode: "", unit: "pcs", taxPercentage: 18,
     status: "Active", condition: "New", expiryDate: "", totalSold: 0,
     variants: [] // Added for dynamic variants support
   };
@@ -56,6 +58,8 @@ export default function Products({ searchQuery = "" }) {
         setSummaryData(res.data.summary || {});
         setCategoriesList(["All", ...(res.data.availableCategories || [])]);
         setWarehousesList(["All", ...(res.data.availableWarehouses || [])]);
+        setZonesList(["All", ...(res.data.availableZones || [])]);
+        setSuppliersList(["All", ...(res.data.availableSuppliers || [])]);
         setLiveNotices(res.data.notices || []);
       }
     } catch (err) {
@@ -323,7 +327,7 @@ export default function Products({ searchQuery = "" }) {
               <div className="bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100">
                 <div className="flex items-center gap-2 mb-6 text-slate-400 uppercase font-black text-[10px] tracking-widest"><MapPin size={14} className="text-indigo-500" /> Logistics</div>
                 <div className="space-y-4">
-                  <DetailItem label="Warehouse Location" value={formData.warehouseLocation || "Not Assigned"} />
+                  <DetailItem label="Warehouse Location" value={formData.warehouse || "Not Assigned"} />
                   <div className="group border-b border-slate-50 pb-3">
                     <DetailItem
                       label="Barcode (EAN/UPC)"
@@ -413,6 +417,8 @@ export default function Products({ searchQuery = "" }) {
               onCancel={() => setView("list")}
               categories={categoriesList.filter(c => c !== "All")}
               warehouses={warehousesList.filter(w => w !== "All")}
+              zones={zonesList.filter(w => w !== "All")}
+              suppliers={suppliersList.filter(w => w !== "All")}
             />
           </div>
         </div>

@@ -9,13 +9,9 @@ import {
 } from "lucide-react";
 
 
-export default function ProductForm({ formData, handleInputChange, handleSubmit, onCancel, categories = [], warehouses = [] }) {
+export default function ProductForm({ formData, handleInputChange, handleSubmit, onCancel, categories = [], warehouses = [], zones = [], suppliers = [] }) {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
-
-  // --- STATE FOR SUPPLIERS --- 
-  const [suppliers, setSuppliers] = useState([]);
-  const [isLoadingSuppliers, setIsLoadingSuppliers] = useState(false);
 
   // --- DYNAMIC VARIANT LOGIC ---
   const variants = formData?.variants || [];
@@ -32,7 +28,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             lineColor: "#0f172a",
             width: 2,
             height: 40,
-            displayValue: false, 
+            displayValue: false,
             background: "transparent"
           });
         } catch (e) { }
@@ -46,24 +42,6 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
     );
   };
 
-  // --- DEPENDENT SUPPLIER LOGIC ---
-  useEffect(() => {
-    if (!formData?.warehouseId) {
-      setSuppliers([]);
-      return;
-    }
-    const fetchSuppliers = async () => {
-      setIsLoadingSuppliers(true);
-      // Mocking logic based on warehouse selection
-      // This will trigger whenever the warehouseId in formData changes
-      const mockSuppliers = formData.warehouseId === "wh-01"
-        ? [{ id: "s-01", name: "Alpha Global Trading" }, { id: "s-02", name: "Primary Steel Co" }]
-        : [{ id: "s-03", name: "Northern Electronics" }, { id: "s-04", name: "Rapid Logistics Ltd" }];
-      setSuppliers(mockSuppliers);
-      setIsLoadingSuppliers(false);
-    };
-    fetchSuppliers();
-  }, [formData?.warehouseId]);
 
   // --- HANDLERS ---
   const addVariant = () => {
@@ -206,20 +184,29 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Logistics & Localization</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-20 gap-6 items-start">
             {/* Warehouse Dropdown */}
             <div className="md:col-span-4 space-y-2">
-              <SelectField 
-                label="Warehouse Location *" 
-                name="warehouseId" 
-                value={formData?.warehouseId} 
-                onChange={handleInputChange} 
-                options={warehouses} 
+              <SelectField
+                label="Warehouse Location *"
+                name="warehouse"
+                value={formData?.warehouse}
+                onChange={handleInputChange}
+                options={warehouses}
+              />
+            </div>
+            <div className="md:col-span-4 space-y-2">
+              <SelectField
+                label="Warehouse zone *"
+                name="zone"
+                value={formData?.zone}
+                onChange={handleInputChange}
+                options={zones}
               />
             </div>
 
             {/* Barcode Section */}
-            <div className="md:col-span-5 space-y-2 group">
+            <div className="md:col-span-8 space-y-2 group">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
                 <span>EAN / UPC Barcode</span>
                 <span className="text-orange-500 flex items-center gap-1 font-black uppercase text-[8px]"><Barcode size={10} /> Auto-Gen Active</span>
@@ -235,7 +222,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             </div>
 
             {/* UOM Select */}
-            <div className="md:col-span-3">
+            <div className="md:col-span-4 space-y-2">
               <SelectField label="Stocking Unit (UOM)" name="unit" value={formData?.unit} onChange={handleInputChange} options={["Pieces (pcs)", "Kilograms (kg)", "Box (Units)", "Liters (L)"]} />
             </div>
           </div>
@@ -305,25 +292,13 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <FormInput label="SEO Slug (URL Key)" name="slug" value={formData?.slug} onChange={handleInputChange} placeholder="product-url-slug" />
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Strategic Supplier *</label>
-              <div className="relative">
-                <select
-                  name="supplierId"
-                  value={formData?.supplierId || ""}
-                  onChange={handleInputChange}
-                  disabled={!formData?.warehouseId}
-                  className={`w-full p-4 border rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer transition-all ${!formData?.warehouseId ? 'bg-slate-100 border-slate-200 cursor-not-allowed text-slate-400' : 'bg-slate-50 border-slate-100 focus:ring-4 focus:ring-rose-50'}`}
-                >
-                  <option value="">
-                    {!formData?.warehouseId ? "Select warehouse first" : (isLoadingSuppliers ? "Loading Suppliers..." : "Select Supplier")}
-                  </option>
-                  {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              </div>
-            </div>
+            <SelectField
+              label="Primary Supplier *"
+              name="supplier"
+              value={formData?.supplier}
+              onChange={handleInputChange}
+              options={suppliers}
+            />
           </div>
           <textarea name="metaDescription" value={formData?.metaDescription} onChange={handleInputChange} rows={2} placeholder="Meta description for search..." className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[2rem] outline-none text-sm font-medium text-slate-600 shadow-inner resize-none" />
         </div>
@@ -353,8 +328,8 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             Discard Changes
           </button>
         </div>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 }
 
@@ -385,22 +360,22 @@ function SelectField({ label, name, value, onChange, options = [] }) {
     <div className="space-y-2 w-full">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
       <div className="relative">
-        <select 
-          name={name} 
-          value={value || ""} 
-          onChange={onChange} 
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
           className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none shadow-inner cursor-pointer focus:ring-4 focus:ring-cyan-50/50 transition-all"
         >
           <option value="">Select Option</option>
           {options.map((opt, index) => {
             // 1. Identify if it's an object or string
             const isObject = typeof opt === 'object' && opt !== null;
-            
+
             // 2. Extract Value: Prioritize unique ID to prevent the "Duplicate Key" error
             const val = isObject ? (opt._id || opt.id || index) : opt;
-            
+
             // 3. Extract Label for display
-            const lbl = isObject ? (opt.name || opt.warehouselocation) : opt;
+            const lbl = isObject ? (opt.name || opt.warehouse) : opt;
 
             // 4. Use the unique ID (val) as the key
             return (

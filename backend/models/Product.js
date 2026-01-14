@@ -20,7 +20,7 @@ const productSchema = new mongoose.Schema({
     details: { type: String },
     img: { type: String, default: "📦" },
     sku: { type: String },
-    supplier: { type: String },
+    supplier: { type: String, required: true },
     weight: { type: String },
     dimensions: { type: String },
     color: { type: String },
@@ -29,7 +29,7 @@ const productSchema = new mongoose.Schema({
     variants: [VariantSchema],
     
     // --- NEW LOGISTICS & WAREHOUSING ---
-    warehouselocation: { type: String },      // e.g., "Aisle 4, Shelf B"
+    warehouse: { type: String, required: true },      // e.g., "Aisle 4, Shelf B"
     barcode: {
         type: String,
         unique: true, // Prevents duplicate barcodes

@@ -64,7 +64,7 @@ export const getProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
         const categories = await Category.find({ status: "Active" });
-        const warehouseRecords = await Warehouse.find();
+        const warehouses = await Warehouse.find();
 
         // Calculate advanced metrics
         const summary = {
@@ -73,7 +73,7 @@ export const getProducts = async (req, res) => {
             lowStockCount: products.filter(p => p.stock < (p.minStock || 20)).length,
             categoriesCount: categories.length,
             totalInventoryValue: products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0),
-            activeZones: [...new Set(warehouseRecords.map(w => w.zone))].length
+            activeZones: [...new Set(warehouses.map(w => w.zone))].length
         };
 
         // Notices logic (Alerts for the UI notice bar)
@@ -96,7 +96,9 @@ export const getProducts = async (req, res) => {
             products,
             summary,
             availableCategories: categories.map(c => c.name),
-            availableWarehouses: warehouseRecords.map(w => w.warehouseName),
+            availableWarehouses: warehouses.map(w => w.warehouseName),
+            availableZones: [...new Set(warehouses .map(w => w.zone))],
+            availableSuppliers: [...new Set(products.map(p => p.supplier))],
             notices,
         });
     } catch (error) {
