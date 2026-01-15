@@ -32,14 +32,17 @@ export default function Products({ searchQuery = "" }) {
   const filterRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Carousel State for Detail View
+  const [currentImgIndex, setCurrentImgIndex] = useState(0);
+
   // Schema-aligned initial state
   const initialFormState = {
     _id: null, name: "", code: "", category: "", price: "", cost: "",
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: 20,
-    weight: "", dimensions: "", color: "", img: "📦",
+    weight: "", dimensions: "", color: "", images: [], // Array for multiple images
     warehouse: "", barcode: "", unit: "pcs", taxPercentage: 18,
     status: "Active", condition: "New", expiryDate: "", totalSold: 0,
-    variants: [] // Added for dynamic variants support
+    variants: [] 
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -87,6 +90,19 @@ export default function Products({ searchQuery = "" }) {
     setCurrentPage(1);
   }, [searchQuery, localSearch, activeFilters]);
 
+  // --- IMAGE NAVIGATION HANDLERS ---
+  const handleNextImg = () => {
+    if (formData.images?.length > 0) {
+      setCurrentImgIndex((prev) => (prev + 1) % formData.images.length);
+    }
+  };
+
+  const handlePrevImg = () => {
+    if (formData.images?.length > 0) {
+      setCurrentImgIndex((prev) => (prev - 1 + formData.images.length) % formData.images.length);
+    }
+  };
+
   // --- HANDLERS ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -96,6 +112,7 @@ export default function Products({ searchQuery = "" }) {
   const handleOpenDetails = (product) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setFormData(product);
+    setCurrentImgIndex(0); // Reset carousel
     setView("view-details");
   };
 
@@ -108,7 +125,7 @@ export default function Products({ searchQuery = "" }) {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); // Disable button
+    setIsSubmitting(true); 
 
     try {
       const res = formData._id
@@ -246,7 +263,11 @@ export default function Products({ searchQuery = "" }) {
                   {currentItems.map((item) => (
                     <tr key={item._id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="p-6 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-slate-100">{item.img}</div>
+                        <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-inner border border-slate-100 overflow-hidden">
+                          {item.images?.length > 0 ? (
+                            <img src={item.images[0]} className="w-full h-full object-cover" alt="thumb" />
+                          ) : "📦"}
+                        </div>
                         <div className="flex flex-col">
                           <span className="text-slate-800 font-black">{item.name}</span>
                           <span className="text-[10px] text-slate-400 uppercase tracking-widest">{item.brand}</span>
@@ -299,8 +320,40 @@ export default function Products({ searchQuery = "" }) {
 
           <div className="bg-white p-8 md:p-14 rounded-[4rem] shadow-2xl border border-slate-50 relative overflow-hidden">
             <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start relative z-10 border-b border-slate-50 pb-12">
-              <div className="w-64 h-64 bg-slate-50 rounded-[4rem] flex items-center justify-center text-[10rem] shadow-inner border border-slate-100 shrink-0">
-                {formData.img || "📦"}
+              
+              {/* --- IMAGE SLIDER SECTION --- */}
+              <div className="w-full lg:w-[450px] shrink-0">
+                <div className="relative group aspect-square bg-slate-50 rounded-[3rem] overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center">
+                  {formData.images && formData.images.length > 0 ? (
+                    <>
+                      <img 
+                        src={formData.images[currentImgIndex]} 
+                        alt="Product" 
+                        className="w-full h-full object-contain p-8 animate-in fade-in zoom-in-95 duration-300" 
+                      />
+                      {formData.images.length > 1 && (
+                        <>
+                          <button onClick={handlePrevImg} className="absolute left-4 p-3 bg-white/80 backdrop-blur rounded-2xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white active:scale-90"><ChevronLeft size={24} /></button>
+                          <button onClick={handleNextImg} className="absolute right-4 p-3 bg-white/80 backdrop-blur rounded-2xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-white active:scale-90"><ChevronRight size={24} /></button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <Box size={80} className="text-slate-200" />
+                  )}
+                </div>
+                {/* Thumbnails */}
+                <div className="flex justify-center gap-3 mt-6">
+                  {formData.images?.map((img, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setCurrentImgIndex(idx)} 
+                      className={`w-16 h-16 rounded-2xl border-2 transition-all overflow-hidden bg-white ${currentImgIndex === idx ? 'border-cyan-500 scale-110 shadow-lg' : 'border-slate-100 opacity-50 hover:opacity-100'}`}
+                    >
+                      <img src={img} className="w-full h-full object-cover" alt="thumb" />
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex-1 text-center lg:text-left">
@@ -368,7 +421,8 @@ export default function Products({ searchQuery = "" }) {
               <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Logistical Directives</div>
               <p className="text-slate-600 font-bold leading-relaxed italic text-xl opacity-80">"{formData.details || 'No additional directives provided.'}"</p>
             </div>
-            {/* --- NEW SECTION: PRODUCT VARIANTS DISPLAY --- */}
+            
+            {/* --- VARIANTS DISPLAY --- */}
             {formData.variants && formData.variants.length > 0 && (
               <div className="mt-12 animate-in fade-in slide-in-from-top-4 duration-700">
                 <div className="flex items-center gap-2 mb-6 text-slate-400 uppercase font-black text-[10px] tracking-widest">

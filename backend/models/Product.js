@@ -18,7 +18,12 @@ const productSchema = new mongoose.Schema({
     stock: { type: Number, required: true, default: 0 },
     minStock: { type: Number, default: 20 },
     details: { type: String },
-    img: { type: String, default: "📦" },
+    images: {
+        type: [String], // Array of URLs
+        validate: [arrayLimit, '{PATH} exceeds the limit of 4'],
+        required: true,
+        default: "📦"
+    },
     sku: { type: String },
     supplier: { type: String, required: true },
     weight: { type: String },
@@ -91,5 +96,9 @@ const productSchema = new mongoose.Schema({
 //     }
 //     next(); // Make sure this is called
 // });
+
+function arrayLimit(val) {
+    return val.length <= 4;
+}
 
 export default mongoose.model("Product", productSchema);
