@@ -19,6 +19,7 @@ export default function Orders({ searchQuery }) {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [liveNotices, setLiveNotices] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [localSearch, setLocalSearch] = useState("");
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [supplierList, setSupplierList] = useState(["All"]);
@@ -43,14 +44,14 @@ export default function Orders({ searchQuery }) {
     itemName: "",
     sku: "",
     category: "",
-    variants:[],
+    variants: [],
     quantity: 1,
     unitPrice: "",
     taxRate: 0,
     shippingCharges: 0,
     discount: 0,
     warehouse: "",
-    zone:"",
+    zone: "",
     whContact: "",
     shippingMethod: "",
     deliveryAddress: "",
@@ -78,6 +79,7 @@ export default function Orders({ searchQuery }) {
         setZoneList(["All", ...(res.data.availableZones || [])]);
         setSupplierList(["All", ...(res.data.availableSuppliers || [])]);
         setLiveNotices(res.data.notices || []);
+        setAllProducts(res.data.products);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -364,6 +366,7 @@ export default function Orders({ searchQuery }) {
             zones={zoneList}
             categories={categoryList}
             warehouses={warehouseList}
+            allProducts={allProducts}
           />
         </div>
       )}

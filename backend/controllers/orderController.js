@@ -1,6 +1,7 @@
 import Category from "../models/Category.js";
 import Order from "../models/Order.js";  
 import Warehouse from "../models/Warehouse.js";
+import Products from "../models/Product.js";
 
 // --- 1. HISTORICAL TREND ANALYSIS ---
 export const getOrderTrends = async (req, res) => {
@@ -82,15 +83,14 @@ export const getOrderTrends = async (req, res) => {
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
+        const products = await Products.find().sort({ createdAt: -1 });
         const categories = await Category.find(); 
         const warehouses = await Warehouse.find();
-
-        // --- ENHANCED ANALYTICS ---
+ 
         const totalOrders = orders.length;
         const completedOrders = orders.filter(o => o.status === "Completed");
 
-        const totalRevenue = completedOrders.reduce((sum, o) => {
-            // If you have the virtual/calculated field in DB, use it:
+        const totalRevenue = completedOrders.reduce((sum, o) => { 
             return sum + (o.totalOrderValue || (o.quantity * o.unitPrice));
         }, 0);
 
@@ -135,7 +135,8 @@ export const getOrders = async (req, res) => {
             availableWarehouses: warehouses.map(w => w.warehouseName),
             availableZones: [...new Set(warehouses .map(w => w.zone))],
             availableSuppliers: [...new Set(orders.map(o => o.venderName))],
-            notices
+            notices,
+            products
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching order analytics" });

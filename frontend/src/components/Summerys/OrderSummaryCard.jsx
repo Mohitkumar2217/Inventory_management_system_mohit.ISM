@@ -91,14 +91,14 @@ const OrderSummaryCard = ({ items = {}, nameSum, notices = [] }) => {
                         {notices && notices.length > 0 ? notices.map((notice) => (
                             <div
                                 key={notice.id}
-                                className={`p-4 rounded-[1.5rem] border shadow-sm transition-all hover:shadow-md ${notice.type === 'urgent' || notice.type === 'alert'
+                                className={`p-4 rounded-[1.5rem] border shadow-sm transition-all hover:shadow-md ${notice.type === 'urgent'
                                     ? 'bg-white border-rose-100 text-rose-700'
                                     : 'bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-blue-100'
                                     }`}
                             >
                                 <div className="flex items-start gap-3">
-                                    <div className={`p-1.5 rounded-lg ${notice.type === 'urgent' || notice.type === 'alert' ? 'bg-rose-50' : 'bg-white/20'}`}>
-                                        {notice.type === 'urgent' || notice.type === 'alert' ? '⚠️' : '📢'}
+                                    <div className={`p-1.5 rounded-lg ${notice.type === 'urgent' ? 'bg-rose-50' : 'bg-white/20'}`}>
+                                        {notice.type === 'urgent' ? '⚠️' : '📢'}
                                     </div>
                                     <p className="text-xs font-bold leading-relaxed">{notice.text}</p>
                                 </div>
