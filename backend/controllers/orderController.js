@@ -1,67 +1,56 @@
-import Order from "../models/Order.js"; 
+import Category from "../models/Category.js";
+import Order from "../models/Order.js";  
+import Warehouse from "../models/Warehouse.js";
 
-// --- 1. HISTORICAL TREND ANALYSIS (For Analysis Modals) ---
+// --- 1. HISTORICAL TREND ANALYSIS ---
 export const getOrderTrends = async (req, res) => {
     try {
-        const { type } = req.query; // Matches item.label from frontend
+        const { type } = req.query;
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         let groupCalculation;
 
-        // SELECT LOGIC BASED ON CARD CLICKED
         switch (type) {
             case "Total Revenue":
-                // Sums (Quantity * Price) only for Completed orders
-                groupCalculation = { 
-                    $cond: [
-                        { $eq: ["$status", "Completed"] }, 
-                        { $multiply: ["$quantity", "$unitPrice"] }, 
-                        0
-                    ] 
-                };
-                break;
-            
-            case "Backorder Volume":
-            case "Pending Orders":
-                // Counts only Pending orders
-                groupCalculation = { 
-                    $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] 
-                };
-                break;
-            
-            case "Completed Orders":
-            case "Order Accuracy":
-                // Counts only Completed orders
-                groupCalculation = { 
-                    $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] 
-                };
-                break;
-            
-            case "Cancelled Orders":
-                // Counts only Cancelled orders
-                groupCalculation = { 
-                    $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0] 
-                };
-                break;
-            
-            case "Average Fulfillment":
-                // Calculates Fulfillment hours per day
+                // Use the totalOrderValue field calculated by our Mongoose middleware
                 groupCalculation = {
-                    $cond: [{ $eq: ["$status", "Completed"] },
-                        {
-                            $divide: [
-                                { $subtract: ["$updatedAt", "$createdAt"] },
-                                1000 * 60 * 60 // Convert ms to hours
-                            ]
-                        },
+                    $cond: [
+                        { $eq: ["$status", "Completed"] },
+                        "$totalOrderValue",
                         0
                     ]
                 };
                 break;
-            
+
+            case "Backorder Volume":
+            case "Pending Orders":
+                groupCalculation = { $cond: [{ $eq: ["$status", "Pending"] }, 1, 0] };
+                break;
+
+            case "Completed Orders":
+                groupCalculation = { $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] };
+                break;
+
+            case "Cancelled Orders":
+                groupCalculation = { $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0] };
+                break;
+
+            case "Average Fulfillment":
+                groupCalculation = {
+                    $cond: [{ $eq: ["$status", "Completed"] },
+                    {
+                        $divide: [
+                            { $subtract: ["$updatedAt", "$createdAt"] },
+                            1000 * 60 * 60 // ms to hours
+                        ]
+                    },
+                        0
+                    ]
+                };
+                break;
+
             default:
-                // Default: Count all orders placed
                 groupCalculation = 1;
                 break;
         }
@@ -85,7 +74,7 @@ export const getOrderTrends = async (req, res) => {
 
         res.status(200).json({ success: true, chartData });
     } catch (error) {
-        res.status(500).json({ success: false, message: "Order trend analysis failed" });
+        res.status(500).json({ success: false, message: "Trend analysis failed" });
     }
 };
 
@@ -93,55 +82,59 @@ export const getOrderTrends = async (req, res) => {
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
+        const categories = await Category.find(); 
+        const warehouses = await Warehouse.find();
 
-        // --- ANALYTICS LOGIC ---
+        // --- ENHANCED ANALYTICS ---
         const totalOrders = orders.length;
-        const completedOrdersArray = orders.filter(o => o.status === "Completed");
-        const completedCount = completedOrdersArray.length;
+        const completedOrders = orders.filter(o => o.status === "Completed");
+
+        const totalRevenue = completedOrders.reduce((sum, o) => {
+            // If you have the virtual/calculated field in DB, use it:
+            return sum + (o.totalOrderValue || (o.quantity * o.unitPrice));
+        }, 0);
+
         const pendingCount = orders.filter(o => o.status === "Pending").length;
         const cancelledCount = orders.filter(o => o.status === "Cancelled").length;
+        const urgentCount = orders.filter(o => o.priority === "urgent" || o.priority === "critical").length;
 
-        // Revenue Calculation
-        const totalRevenue = completedOrdersArray.reduce((sum, o) => sum + (o.quantity * o.unitPrice), 0);
-
-        // Average Fulfillment Calculation (Literal Time Difference)
-        let avgFulfillment = "0"; 
-        if (completedCount > 0) {
-            const totalDuration = completedOrdersArray.reduce((sum, order) => {
-                const start = new Date(order.createdAt);
-                const end = new Date(order.updatedAt); 
-                return sum + (end - start);
+        // Fulfillment Calculation
+        let avgFulfillment = "0";
+        if (completedOrders.length > 0) {
+            const totalDuration = completedOrders.reduce((sum, order) => {
+                return sum + (new Date(order.updatedAt) - new Date(order.createdAt));
             }, 0);
-
-            // Convert milliseconds to hours
-            avgFulfillment = (totalDuration / completedCount / (1000 * 60 * 60)).toFixed(1);
+            avgFulfillment = (totalDuration / completedOrders.length / (1000 * 60 * 60)).toFixed(1);
         }
 
-        // Accuracy Rate: (Completed / (Completed + Cancelled))
-        const accuracyRate = (completedCount + cancelledCount) > 0 
-            ? ((completedCount / (completedCount + cancelledCount)) * 100).toFixed(1) 
+        const accuracyRate = (completedOrders.length + cancelledCount) > 0
+            ? ((completedOrders.length / (completedOrders.length + cancelledCount)) * 100).toFixed(1)
             : 0;
 
         const notices = [];
-        if (pendingCount > 0) {
-            notices.push({ id: 1, text: `${pendingCount} Orders are pending fulfillment.`, type: "urgent" });
+        if (urgentCount > 0) {
+            notices.push({ id: 1, text: `${urgentCount} High-Priority orders require attention.`, type: "urgent" });
         }
-        if (cancelledCount > 0) {
-            notices.push({ id: 2, text: `${cancelledCount} Orders have been cancelled recently.`, type: "alert" });
+        if (pendingCount > 5) {
+            notices.push({ id: 2, text: `Heavy backlog: ${pendingCount} orders pending.`, type: "alert" });
         }
-        
+
         res.status(200).json({
             success: true,
-            orders, 
+            orders,
             summary: {
-                totalRevenue,
-                totalProducts: totalOrders, 
-                totalStock: pendingCount, // Used for "Total Stock" label
-                avgFulfillment: `${avgFulfillment}h`, 
+                totalRevenue: totalRevenue,
+                totalProducts: totalOrders,
+                avgFulfillment: `${avgFulfillment}h`,
                 accuracyRate: `${accuracyRate}%`,
                 backorderCount: pendingCount,
-                cancelledCount: cancelledCount
+                cancelledCount: cancelledCount,
+                urgentCount: urgentCount,
             },
+            availableCategories: categories.map(c => c.name),
+            availableWarehouses: warehouses.map(w => w.warehouseName),
+            availableZones: [...new Set(warehouses .map(w => w.zone))],
+            availableSuppliers: [...new Set(orders.map(o => o.venderName))],
             notices
         });
     } catch (error) {
@@ -153,13 +146,22 @@ export const getOrders = async (req, res) => {
 export const syncOrder = async (req, res) => {
     try {
         const { id } = req.params;
+
         if (id) {
-            const updatedOrder = await Order.findByIdAndUpdate(id, req.body, { new: true });
+            // Update logic: ensures middleware runs to recalculate totals
+            const updatedOrder = await Order.findById(id);
+            if (!updatedOrder) return res.status(404).json({ success: false, message: "Not found" });
+
+            Object.assign(updatedOrder, req.body);
+            await updatedOrder.save();
+
             return res.status(200).json({ success: true, message: "Order updated", order: updatedOrder });
         }
+
+        // Create logic
         const newOrder = new Order(req.body);
         await newOrder.save();
-        res.status(201).json({ success: true, message: "Order created successfully" });
+        res.status(201).json({ success: true, message: "Order created successfully", order: newOrder });
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
@@ -169,7 +171,11 @@ export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        await Order.findByIdAndUpdate(id, { status });
+        // findById and save() is used instead of findByIdAndUpdate to trigger Mongoose timestamps/middleware if needed
+        const order = await Order.findById(id);
+        order.status = status;
+        await order.save();
+
         res.status(200).json({ success: true, message: `Order status set to ${status}` });
     } catch (error) {
         res.status(500).json({ success: false, message: "Status update failed" });

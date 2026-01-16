@@ -6,7 +6,7 @@ import OrderForm from "../../components/Forms/OrderForm.jsx";
 import {
   Search, Filter, Plus, Trash2,
   Eye, ArrowLeft, IndianRupee, Package,
-  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, Layers, Loader2
+  Edit2, ChevronLeft, ChevronRight, CheckCircle, Clock, XCircle, Layers, Loader2, AlertCircle, Truck
 } from "lucide-react";
 
 export default function Orders({ searchQuery }) {
@@ -21,27 +21,51 @@ export default function Orders({ searchQuery }) {
   const [liveNotices, setLiveNotices] = useState([]);
   const [localSearch, setLocalSearch] = useState("");
   const [showFilterPopup, setShowFilterPopup] = useState(false);
+  const [supplierList, setSupplierList] = useState(["All"]);
+  const [warehouseList, setWarehouseList] = useState(["All"]);
+  const [zoneList, setZoneList] = useState(["All"]);
+  const [categoryList, setCategoryList] = useState(["All"]);
   const filterRef = useRef(null);
 
   // PAGINATION & FILTER STATE
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeFilters, setActiveFilters] = useState({ status: "All", priceRange: "All" });
+  const [activeFilters, setActiveFilters] = useState({ status: "All", priority: "All" });
 
+  // INITIAL FORM STATE (15+ Fields)
   const initialPurchaseForm = {
-    _id: null, vendorName: "", itemName: "", category: "Electronics",
-    quantity: 1, unitPrice: "", warehouse: "Main Warehouse",
-    expectedDate: "", paymentTerms: "Due on Receipt", notes: ""
+    _id: null,
+    poNumber: "",
+    refId: "",
+    priority: "standard",
+    vendorName: "",
+    vendorEmail: "",
+    itemName: "",
+    sku: "",
+    category: "",
+    variants:[],
+    quantity: 1,
+    unitPrice: "",
+    taxRate: 0,
+    shippingCharges: 0,
+    discount: 0,
+    warehouse: "",
+    zone:"",
+    whContact: "",
+    shippingMethod: "",
+    deliveryAddress: "",
+    expectedDate: "",
+    paymentTerms: "Due on Receipt",
+    notes: ""
   };
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
 
-  // API Instance Config
+  // API Instance
   const api = axios.create({
     baseURL: "http://localhost:4000/api",
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  // --- 1. FETCH DATA FROM BACKEND ---
   const fetchOrders = async () => {
     setLoading(true);
     try {
@@ -49,7 +73,11 @@ export default function Orders({ searchQuery }) {
       if (res.data.success) {
         setOrders(res.data.orders);
         setSummaryData(res.data.summary);
-        setLiveNotices(res.data.notices);
+        setCategoryList(["All", ...(res.data.availableCategories || [])]);
+        setWarehouseList(["All", ...(res.data.availableWarehouses || [])]);
+        setZoneList(["All", ...(res.data.availableZones || [])]);
+        setSupplierList(["All", ...(res.data.availableSuppliers || [])]);
+        setLiveNotices(res.data.notices || []);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -62,7 +90,6 @@ export default function Orders({ searchQuery }) {
     if (token) fetchOrders();
   }, [token]);
 
-  // Click outside filter logic
   useEffect(() => {
     function handleClickOutside(event) {
       if (filterRef.current && !filterRef.current.contains(event.target)) setShowFilterPopup(false);
@@ -71,7 +98,6 @@ export default function Orders({ searchQuery }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // RESET TO PAGE 1 WHEN SEARCHING
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, localSearch]);
@@ -81,7 +107,6 @@ export default function Orders({ searchQuery }) {
     setPurchaseOrder(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- 2. ADD OR UPDATE ORDER ---
   const handleAddPurchaseOrder = async (e) => {
     if (e) e.preventDefault();
     try {
@@ -100,7 +125,6 @@ export default function Orders({ searchQuery }) {
     }
   };
 
-  // --- 3. QUICK STATUS UPDATE ---
   const updateStatus = async (id, status) => {
     try {
       const res = await api.patch(`/orders/status/${id}`, { status });
@@ -110,7 +134,6 @@ export default function Orders({ searchQuery }) {
     }
   };
 
-  // --- 4. DELETE ORDER ---
   const removeOrder = async (id) => {
     if (!window.confirm("Delete this order record permanently?")) return;
     try {
@@ -121,18 +144,19 @@ export default function Orders({ searchQuery }) {
     }
   };
 
-  // --- FILTER & SEARCH LOGIC ---
   const filteredOrders = orders.filter((o) => {
     const finalSearch = (searchQuery || localSearch).toLowerCase();
-
     const matchesSearch =
       o.vendorName.toLowerCase().includes(finalSearch) ||
+      o.poNumber?.toLowerCase().includes(finalSearch) ||
       o._id.toLowerCase().includes(finalSearch) ||
+      o.itemName?.toLowerCase().includes(finalSearch) ||
       o.category.toLowerCase().includes(finalSearch);
 
     const matchesStatus = activeFilters.status === "All" || o.status === activeFilters.status;
+    const matchesPriority = activeFilters.priority === "All" || o.priority === activeFilters.priority;
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesPriority;
   });
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
@@ -142,10 +166,8 @@ export default function Orders({ searchQuery }) {
 
   const handleEditDetails = (order) => {
     setPurchaseOrder({
-      _id: order._id, vendorName: order.vendorName, itemName: order.itemName,
-      category: order.category, quantity: order.quantity, unitPrice: order.unitPrice,
-      warehouse: order.warehouse, expectedDate: order.expectedDate ? order.expectedDate.split('T')[0] : "",
-      paymentTerms: order.paymentTerms, notes: order.notes
+      ...order,
+      expectedDate: order.expectedDate ? order.expectedDate.split('T')[0] : ""
     });
     setView("add");
   };
@@ -162,7 +184,7 @@ export default function Orders({ searchQuery }) {
 
           <div className="flex justify-between items-center mb-6 mt-6">
             <div>
-              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Orders Inventory</h1>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">Inventory Procurement</h1>
               <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
                 <Layers size={14} className="text-indigo-500" /> {filteredOrders.length} Results Found
               </p>
@@ -171,13 +193,10 @@ export default function Orders({ searchQuery }) {
 
           <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible">
             <div className="p-6 border-b border-slate-50 flex flex-col lg:flex-row justify-between items-center gap-4">
-
               <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
                 <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer">
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
+                  <option value={10}>10</option><option value={25}>25</option><option value={50}>50</option>
                 </select>
               </div>
 
@@ -186,7 +205,7 @@ export default function Orders({ searchQuery }) {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-400 transition-colors" size={18} />
                   <input
                     type="text"
-                    placeholder="Quick search Client, ID or Category..."
+                    placeholder="Search Vendor, PO#, or SKU..."
                     className="w-full pl-12 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all placeholder:text-slate-300"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
@@ -203,13 +222,16 @@ export default function Orders({ searchQuery }) {
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Order Status</label>
                           <select value={activeFilters.status} onChange={(e) => { setActiveFilters({ ...activeFilters, status: e.target.value }); setCurrentPage(1); }} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all">
-                            <option value="All">All Status</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="All">All Status</option><option value="Completed">Completed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option>
                           </select>
                         </div>
-                        <button onClick={() => setActiveFilters({ status: "All", priceRange: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset Filters</button>
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Priority</label>
+                          <select value={activeFilters.priority} onChange={(e) => { setActiveFilters({ ...activeFilters, priority: e.target.value }); setCurrentPage(1); }} className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all">
+                            <option value="All">All Priorities</option><option value="standard">Standard</option><option value="urgent">Urgent</option><option value="critical">Critical</option>
+                          </select>
+                        </div>
+                        <button onClick={() => setActiveFilters({ status: "All", priority: "All" })} className="w-full py-2.5 mt-2 bg-rose-50 text-rose-500 rounded-xl font-black text-[10px] uppercase tracking-widest transition-colors hover:bg-rose-100">Reset Filters</button>
                       </div>
                     </div>
                   )}
@@ -225,10 +247,10 @@ export default function Orders({ searchQuery }) {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-widest font-black border-b border-slate-50">
-                    <th className="p-6">Order Reference</th>
-                    <th className="p-6">Vendor / Client</th>
-                    <th className="p-6">Category</th>
-                    <th className="p-6 text-right">Total Amount</th>
+                    <th className="p-6">PO Number</th>
+                    <th className="p-6">OrderSKU / Vender</th>
+                    <th className="p-6">Priority</th>
+                    <th className="p-6 text-right">Grand Total</th>
                     <th className="p-6 text-center">Status</th>
                     <th className="p-6 text-right">Actions</th>
                   </tr>
@@ -236,10 +258,19 @@ export default function Orders({ searchQuery }) {
                 <tbody className="divide-y divide-slate-50 text-sm font-bold">
                   {currentItems.map((order) => (
                     <tr key={order._id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="p-6 font-mono text-xs font-black text-indigo-400">#{order._id.slice(-6).toUpperCase()}</td>
-                      <td className="p-6 text-slate-800 font-black cursor-pointer hover:text-indigo-600 transition-colors" onClick={() => handleOpenDetails(order)}>{order.vendorName}</td>
-                      <td className="p-6"><span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-slate-400 uppercase text-[9px] font-black shadow-sm">{order.category}</span></td>
-                      <td className="p-6 text-right text-slate-800 font-black">₹{(order.quantity * order.unitPrice).toLocaleString()}</td>
+                      <td className="p-6 font-mono text-xs font-black text-indigo-400">
+                        {order.poNumber || `#${order._id.slice(-6).toUpperCase()}`}
+                      </td>
+                      <td className="p-6">
+                        <div className="flex flex-col cursor-pointer" onClick={() => handleOpenDetails(order)}>
+                          <span className="text-slate-800 font-black group-hover:text-indigo-600 transition-colors">{order.itemName}</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">{order.vendorName}</span>
+                        </div>
+                      </td>
+                      <td className="p-6"><PriorityBadge priority={order.priority} /></td>
+                      <td className="p-6 text-right text-slate-800 font-black">
+                        ₹{(order.totalOrderValue || (order.quantity * order.unitPrice)).toLocaleString()}
+                      </td>
                       <td className="p-6 text-center"><StatusBadge status={order.status} onUpdate={(s) => updateStatus(order._id, s)} /></td>
                       <td className="p-6 text-right">
                         <div className="flex justify-end gap-2">
@@ -271,33 +302,51 @@ export default function Orders({ searchQuery }) {
           </div>
         </div>
       ) : view === "view-details" && selectedOrder ? (
-        <div className="max-w-4xl mx-auto animate-in slide-in-from-bottom-4 duration-500 pb-20 mt-10">
+        <div className="max-w-5xl mx-auto animate-in fade-in duration-700 pb-20 mt-10">
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-100"><ArrowLeft size={18} /></div> Back
           </button>
-          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
-            <span className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block">Purchase Order Information</span>
-            <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedOrder.vendorName}</h1>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-10">System ID: {selectedOrder._id}</p>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8 mb-12">
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><IndianRupee size={12} /> Valuation</p>
-                <p className="text-2xl font-black text-slate-800">₹{(selectedOrder.unitPrice * selectedOrder.quantity).toLocaleString()}</p>
+          <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
+            <div className="flex justify-between items-start mb-10">
+              <div>
+                <span className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block tracking-widest">Procurement Summary</span>
+                <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedOrder.vendorName}</h1>
+                <div className="flex items-center gap-3">
+                  <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">PO Ref: {selectedOrder.poNumber || selectedOrder._id}</p>
+                  <PriorityBadge priority={selectedOrder.priority} />
+                </div>
               </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><Package size={12} /> Volume</p>
-                <p className="text-2xl font-black text-slate-800">{selectedOrder.quantity} Units</p>
-              </div>
-              <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</p>
-                <p className="text-2xl font-black text-slate-800">{selectedOrder.category}</p>
+              <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white text-right shadow-xl">
+                <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Total Order Value</p>
+                <p className="text-4xl font-black tracking-tighter">₹{(selectedOrder.totalOrderValue || (selectedOrder.quantity * selectedOrder.unitPrice)).toLocaleString()}</p>
               </div>
             </div>
 
-            <div className="bg-slate-50 p-10 rounded-[2.5rem] border border-slate-100 relative">
-              <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Notes & Requirements</div>
-              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedOrder.notes || 'No specific notes recorded for this registry entry.'}"</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2"><Truck size={16} className="text-indigo-500" /> Logistics & Source</h3>
+                <div className="space-y-4">
+                  <DetailRow label="Warehouse" value={selectedOrder.warehouse} />
+                  <DetailRow label="Shipping Method" value={selectedOrder.shippingMethod} />
+                  <DetailRow label="Delivery Address" value={selectedOrder.deliveryAddress} />
+                  <DetailRow label="Expected ETA" value={selectedOrder.expectedDate ? new Date(selectedOrder.expectedDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : "N/A"} />
+                </div>
+              </div>
+              <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+                <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2"><IndianRupee size={16} className="text-amber-500" /> Financial Breakdown</h3>
+                <div className="space-y-4">
+                  <DetailRow label="Unit Cost" value={`₹${selectedOrder.unitPrice}`} />
+                  <DetailRow label="Quantity" value={selectedOrder.quantity} />
+                  <DetailRow label="Tax Rate" value={`${selectedOrder.taxRate || 0}%`} />
+                  <DetailRow label="Discount Applied" value={`₹${selectedOrder.discount || 0}`} />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50/50 p-10 rounded-[2.5rem] border border-indigo-100/50 relative">
+              <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Internal Notes</div>
+              <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{selectedOrder.notes || 'No specific notes recorded.'}"</p>
             </div>
           </div>
         </div>
@@ -306,7 +355,16 @@ export default function Orders({ searchQuery }) {
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm"><ArrowLeft size={18} /></div> Back to Ledger
           </button>
-          <OrderForm purchaseOrder={purchaseOrder} handleFormChange={handleFormChange} handleSubmit={handleAddPurchaseOrder} onCancel={() => setView("list")} />
+          <OrderForm
+            purchaseOrder={purchaseOrder}
+            handleFormChange={handleFormChange}
+            handleSubmit={handleAddPurchaseOrder}
+            onCancel={() => setView("list")}
+            suppliers={supplierList}
+            zones={zoneList}
+            categories={categoryList}
+            warehouses={warehouseList}
+          />
         </div>
       )}
     </div>
@@ -314,19 +372,88 @@ export default function Orders({ searchQuery }) {
 }
 
 // --- SUB-COMPONENTS ---
+function OrderDetailsView({ order, onBack }) {
+  return (
+    <div className="max-w-5xl mx-auto animate-in fade-in duration-700 pb-20 mt-10">
+      <button onClick={onBack} className="mb-8 flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
+        <div className="p-2.5 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-100"><ArrowLeft size={18} /></div> Back
+      </button>
+
+      <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50">
+        <div className="flex justify-between items-start mb-10">
+          <div>
+            <span className="text-indigo-500 font-black text-[10px] uppercase tracking-[0.3em] mb-2 block tracking-widest">Procurement Summary</span>
+            <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{order.vendorName}</h1>
+            <div className="flex items-center gap-3">
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">PO Ref: {order.poNumber || order._id}</p>
+              <PriorityBadge priority={order.priority} />
+            </div>
+          </div>
+          <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white text-right shadow-xl">
+            <p className="text-[10px] font-black opacity-40 uppercase tracking-widest mb-1">Total Order Value</p>
+            <p className="text-4xl font-black tracking-tighter">₹{(order.totalOrderValue || (order.quantity * order.unitPrice)).toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+            <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2"><Truck size={16} className="text-indigo-500" /> Logistics & Source</h3>
+            <div className="space-y-4">
+              <DetailRow label="Warehouse" value={order.warehouse} />
+              <DetailRow label="Shipping Method" value={order.shippingMethod} />
+              <DetailRow label="Delivery Address" value={order.deliveryAddress} />
+              <DetailRow label="Expected ETA" value={order.expectedDate ? new Date(order.expectedDate).toLocaleDateString('en-IN', { dateStyle: 'long' }) : "N/A"} />
+            </div>
+          </div>
+          <div className="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100">
+            <h3 className="text-xs font-black uppercase tracking-widest mb-6 flex items-center gap-2"><IndianRupee size={16} className="text-amber-500" /> Financial Breakdown</h3>
+            <div className="space-y-4">
+              <DetailRow label="Unit Cost" value={`₹${order.unitPrice}`} />
+              <DetailRow label="Quantity" value={order.quantity} />
+              <DetailRow label="Tax Rate" value={`${order.taxRate || 0}%`} />
+              <DetailRow label="Discount Applied" value={`₹${order.discount || 0}`} />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-indigo-50/50 p-10 rounded-[2.5rem] border border-indigo-100/50 relative">
+          <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Internal Notes</div>
+          <p className="text-slate-600 font-bold leading-relaxed italic text-lg opacity-80">"{order.notes || 'No specific notes recorded.'}"</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PriorityBadge({ priority }) {
+  const styles = {
+    standard: "bg-slate-100 text-slate-500",
+    urgent: "bg-orange-50 text-orange-600 border-orange-100",
+    critical: "bg-rose-50 text-rose-600 border-rose-100 animate-pulse"
+  };
+  return <span className={`${styles[priority || 'standard']} border px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm`}>{priority || 'standard'}</span>;
+}
+
+function DetailRow({ label, value }) {
+  return (
+    <div className="flex justify-between items-center border-b border-slate-200/50 pb-2">
+      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</span>
+      <span className="text-sm font-black text-slate-800">{value || "N/A"}</span>
+    </div>
+  );
+}
+
 function StatusBadge({ status, onUpdate }) {
   const configs = {
     Completed: { bg: "bg-emerald-50 text-emerald-600 border-emerald-100", icon: <CheckCircle size={10} /> },
     Pending: { bg: "bg-amber-50 text-amber-600 border-amber-100", icon: <Clock size={10} /> },
     Cancelled: { bg: "bg-rose-50 text-rose-600 border-rose-100", icon: <XCircle size={10} /> },
   };
-  const current = configs[status];
+  const current = configs[status] || configs['Pending'];
   return (
     <div onClick={(e) => e.stopPropagation()} className="relative">
       <select value={status} onChange={(e) => onUpdate(e.target.value)} className={`${current.bg} border appearance-none px-8 py-1.5 rounded-xl text-[10px] font-black uppercase cursor-pointer outline-none text-center transition-all hover:shadow-sm`}>
-        <option value="Completed">Completed</option>
-        <option value="Pending">Pending</option>
-        <option value="Cancelled">Cancelled</option>
+        <option value="Completed">Completed</option><option value="Pending">Pending</option><option value="Cancelled">Cancelled</option>
       </select>
       <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-60">{current.icon}</div>
     </div>

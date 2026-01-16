@@ -29,6 +29,14 @@ body {
   scrollbar-width: none;     /* Firefox */
 }
 
+.select-style {
+  @apply w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold appearance-none shadow-inner outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all cursor-pointer;
+}
+
+.select-icon {
+  @apply absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none;
+}
+
 
         /* Scrollbar styling */
 /* 

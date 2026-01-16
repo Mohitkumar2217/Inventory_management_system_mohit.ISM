@@ -1,124 +1,197 @@
 import React from "react";
-import { 
-  Store, Truck, IndianRupee, Save, FileText, 
+import {
+  Store, Truck, IndianRupee, Save, FileText, Layers, Plus,
   Package, ChevronDown, Calendar, CreditCard,
-  Hash, Tag
+  Hash, Tag, ShieldCheck, MapPin, Percent, Phone, Trash2
 } from "lucide-react";
 
-export default function OrderForm({ purchaseOrder, handleFormChange, handleSubmit, onCancel }) {
-  // Real-time calculation for Order Value preview
-  const totalOrderValue = (parseFloat(purchaseOrder.unitPrice || 0) * parseInt(purchaseOrder.quantity || 0)).toLocaleString('en-IN');
+export default function OrderForm({ 
+  purchaseOrder, 
+  handleFormChange, 
+  handleSubmit, 
+  onCancel, 
+  suppliers = [], 
+  zones = [], 
+  categories = [], 
+  warehouses = [] 
+}) {
+
+  // Advanced Math for Order Summary
+  const qty = parseInt(purchaseOrder.quantity || 0);
+  const price = parseFloat(purchaseOrder.unitPrice || 0);
+  const taxRate = parseFloat(purchaseOrder.taxRate || 0);
+  const shipping = parseFloat(purchaseOrder.shippingCharges || 0);
+  const discount = parseFloat(purchaseOrder.discount || 0);
+
+  const subtotal = qty * price;
+  const taxAmount = (subtotal * taxRate) / 100;
+  const grandTotal = (subtotal + taxAmount + shipping - discount).toLocaleString('en-IN');
+
+  // --- VARIANT HANDLERS ---
+  const variants = purchaseOrder?.variants || [];
+  
+  const addVariant = () => {
+    const newVariant = { id: Date.now(), name: "", sku: "", price: "", stock: "" };
+    handleFormChange({ target: { name: "variants", value: [...variants, newVariant] } });
+  };
+
+  const removeVariant = (id) => {
+    handleFormChange({ target: { name: "variants", value: variants.filter(v => v.id !== id) } });
+  };
+
+  const updateVariant = (id, field, value) => {
+    const updated = variants.map(v => v.id === id ? { ...v, [field]: value } : v);
+    handleFormChange({ target: { name: "variants", value: updated } });
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <form onSubmit={handleSubmit} className="space-y-8 pb-20 mt-8">
-        
-        {/* SECTION 1: PROCUREMENT IDENTITY */}
+
+        {/* SECTION 1: CORE IDENTITY & IDENTIFICATION */}
         <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-            <div className="p-2 bg-indigo-50 rounded-xl">
-              <Store size={20} className="text-indigo-500" />
+          <SectionHeader icon={<Hash className="text-blue-500" />} title="Order Identification" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <FormInput label="Purchase Order #" name="poNumber" value={purchaseOrder.poNumber} onChange={handleFormChange} placeholder="PO-2024-001" required />
+            <FormInput label="Reference / Quote ID" name="refId" value={purchaseOrder.refId} onChange={handleFormChange} placeholder="REF-9921" />
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Order Priority</label>
+              <div className="relative">
+                <select 
+                  name="priority" 
+                  value={purchaseOrder.priority ?? "standard"} 
+                  onChange={handleFormChange} 
+                  className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-indigo-50/50 transition-all"
+                >
+                  <option value="standard">Standard</option>
+                  <option value="urgent">Urgent / Restock</option>
+                  <option value="critical">Critical (Stock Out)</option>
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+              </div>
             </div>
-            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Procurement Identity</h2>
           </div>
-          
+        </div>
+
+        {/* SECTION 2: VENDOR & PRODUCT DETAILS */}
+        <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
+          <SectionHeader icon={<Store className="text-indigo-500" />} title="Source Supplier" />
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <div className="md:col-span-4">
-              <FormInput label="Vendor / Supplier Name" name="vendorName" value={purchaseOrder.vendorName} onChange={handleFormChange} placeholder="Search or enter vendor..." required />
+            <div className="md:col-span-6">
+              {/* Correct implementation of suppliers prop using SelectField */}
+              <SelectField label="Vendor / Supplier Name *" name="vendorName" value={purchaseOrder?.vendorName} onChange={handleFormChange} options={suppliers} />
+            </div>
+            <div className="md:col-span-6">
+              <FormInput label="Vendor Contact Email" name="vendorEmail" type="email" value={purchaseOrder.vendorEmail} onChange={handleFormChange} placeholder="orders@supplier.com" required />
             </div>
             <div className="md:col-span-4">
-              <FormInput label="Item Specification" name="itemName" value={purchaseOrder.itemName} onChange={handleFormChange} placeholder="Product name or SKU..." required />
+              <FormInput label="Item Specification" name="itemName" value={purchaseOrder.itemName} onChange={handleFormChange} placeholder="Product name..." required />
             </div>
             <div className="md:col-span-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                  <Tag size={10}/> Category Group
-                </label>
+              <FormInput label="SKU / Batch Code" name="sku" value={purchaseOrder.sku} onChange={handleFormChange} placeholder="SKU-88-B" required />
+            </div>
+            <div className="md:col-span-4">
+               <SelectField label="Category Group *" name="category" value={purchaseOrder?.category} onChange={handleFormChange} options={categories} />
+            </div>
+          </div>
+        </div>
+
+        {/* PRODUCT VARIANTS SECTION */}
+        <div className="bg-slate-50/50 p-8 rounded-[3rem] border-2 border-dashed border-slate-200">
+           <div className="flex justify-between items-center mb-8 px-2">
+             <div className="flex items-center gap-3">
+               <div className="p-2 bg-indigo-50 rounded-xl"><Layers className="text-indigo-500" size={18} /></div>
+               <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Product Variants</h2>
+             </div>
+             <button type="button" onClick={addVariant} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 shadow-indigo-100">
+               <Plus size={14} /> Add Variant
+             </button>
+           </div>
+           <div className="space-y-4">
+             {variants.length === 0 && <p className="text-center text-xs font-bold text-slate-400 py-4 uppercase tracking-widest">No variants added.</p>}
+             {variants.map((v) => (
+               <div key={v.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end relative group">
+                 <FormInput label="Variant Name" value={v.name} onChange={(e) => updateVariant(v.id, "name", e.target.value)} placeholder="Red / XL" />
+                 <FormInput label="Variant SKU" value={v.sku} onChange={(e) => updateVariant(v.id, "sku", e.target.value)} placeholder="SKU-001" />
+                 <FormInput label="Price Override" type="number" value={v.price} onChange={(e) => updateVariant(v.id, "price", e.target.value)} placeholder="₹" />
+                 <FormInput label="Stock" type="number" value={v.stock} onChange={(e) => updateVariant(v.id, "stock", e.target.value)} placeholder="Qty" />
+                 <button type="button" onClick={() => removeVariant(v.id)} className="mb-2 p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all w-fit"><Trash2 size={18} /></button>
+               </div>
+             ))}
+           </div>
+        </div>
+
+        {/* SECTION 3: LOGISTICS & WAREHOUSING */}
+        <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
+          <SectionHeader icon={<Truck className="text-emerald-500" />} title="Logistics & Destination" />
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="md:col-span-2">
+              <SelectField label="Destination Warehouse *" name="warehouse" value={purchaseOrder?.warehouse} onChange={handleFormChange} options={warehouses} /> 
+            </div>
+            <FormInput label="Ship Via (Method)" name="shippingMethod" value={purchaseOrder.shippingMethod} onChange={handleFormChange} placeholder="e.g. Air Freight" required />
+            <FormInput label="ETA Date" name="expectedDate" value={purchaseOrder.expectedDate} onChange={handleFormChange} type="date" required />
+            <FormInput label="Warehouse Contact #" name="whContact" value={purchaseOrder.whContact} onChange={handleFormChange} placeholder="+91..." required />
+            <div className="md:col-span-1">
+                <SelectField label="Warehouse Zone *" name="zone" value={purchaseOrder?.zone} onChange={handleFormChange} options={zones} /> 
+            </div>
+            <div className="md:col-span-3">
+              <FormInput label="Full Delivery Address" name="deliveryAddress" value={purchaseOrder.deliveryAddress} onChange={handleFormChange} placeholder="Street, Building, Area..." required />
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: FINANCIAL VALUATION */}
+        <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
+          <SectionHeader icon={<IndianRupee className="text-amber-500" />} title="Financials & Tax" />
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            <FormInput label="Quantity" name="quantity" value={purchaseOrder.quantity} onChange={handleFormChange} type="number" required />
+            <FormInput label="Unit Cost (₹)" name="unitPrice" value={purchaseOrder.unitPrice} onChange={handleFormChange} type="number" required />
+            <FormInput label="Tax Rate (%)" name="taxRate" value={purchaseOrder.taxRate} onChange={handleFormChange} type="number" />
+            <FormInput label="Shipping Fees (₹)" name="shippingCharges" value={purchaseOrder.shippingCharges} onChange={handleFormChange} type="number" />
+            <FormInput label="Discount (₹)" name="discount" value={purchaseOrder.discount} onChange={handleFormChange} type="number" />
+            <div className="md:col-span-2">
+               <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Payment Terms</label>
                 <div className="relative">
-                  <select name="category" value={purchaseOrder.category} onChange={handleFormChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all text-sm font-bold appearance-none shadow-inner cursor-pointer">
-                    <option>Electronics</option><option>Beauty</option><option>Home</option><option>Grocery</option><option>Food</option>
+                  <select 
+                    name="paymentTerms" 
+                    value={purchaseOrder.paymentTerms ?? "Due on Receipt"} 
+                    onChange={handleFormChange} 
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-indigo-50/50 transition-all"
+                  >
+                    <option value="Due on Receipt">Due on Receipt</option>
+                    <option value="Net 30">Net 30</option>
+                    <option value="Advance 50%">Advance 50%</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* SECTION 2: LOGISTICS & TIMELINE */}
-        <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-            <div className="p-2 bg-emerald-50 rounded-xl">
-              <Truck size={20} className="text-emerald-500" />
-            </div>
-            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Logistics & Timeline</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Destination Warehouse</label>
-              <div className="relative">
-                <select name="warehouse" value={purchaseOrder.warehouse} onChange={handleFormChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold appearance-none shadow-inner outline-none focus:ring-4 focus:ring-emerald-50/50 transition-all cursor-pointer">
-                  <option>Main Hub - New Delhi</option><option>North Dock - Jaipur</option><option>South Unit - Mumbai</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              </div>
-            </div>
-            <FormInput label="ETA / Expected Arrival" name="expectedDate" value={purchaseOrder.expectedDate} onChange={handleFormChange} type="date" required />
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1.5">
-                <CreditCard size={10}/> Payment Terms
-              </label>
-              <div className="relative">
-                <select name="paymentTerms" value={purchaseOrder.paymentTerms} onChange={handleFormChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold appearance-none shadow-inner outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all cursor-pointer">
-                  <option>Due on Receipt</option><option>Net 15</option><option>Net 30</option><option>Advance 50%</option>
-                </select>
-                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SECTION 3: COSTING & FINANCIALS */}
-        <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100 relative">
-          <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
-            <div className="p-2 bg-amber-50 rounded-xl">
-              <IndianRupee size={20} className="text-amber-500" />
-            </div>
-            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Financial Valuation</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-            <FormInput label="Order Quantity" name="quantity" value={purchaseOrder.quantity} onChange={handleFormChange} type="number" placeholder="0" required />
-            <FormInput label="Unit Cost (₹)" name="unitPrice" value={purchaseOrder.unitPrice} onChange={handleFormChange} type="number" placeholder="0.00" required />
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Contextual Notes</label>
-               <textarea 
-                name="notes" 
-                value={purchaseOrder.notes} 
-                onChange={handleFormChange} 
-                rows={1} 
-                placeholder="Quality checks, etc..."
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-amber-50/50 transition-all text-sm font-medium text-slate-600 shadow-inner resize-none"
-              />
-            </div>
+            <FormInput label="Target Stock Level" name="minStock" value={purchaseOrder.minStock} onChange={handleFormChange} type="number" placeholder="Reorder point" />
           </div>
 
-          {/* Dynamic Order Value Card */}
+          {/* TOTAL SUMMARY CARD */}
           <div className="bg-slate-900 rounded-[2.5rem] p-8 flex items-center justify-between group overflow-hidden relative shadow-2xl">
             <div className="z-10">
-              <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Total Transaction Value</p>
-              <h3 className="text-white text-4xl font-black tracking-tighter">₹ {totalOrderValue}</h3>
-              <p className="text-white/40 text-[9px] font-bold mt-2 uppercase tracking-widest italic">* Including standard system tax calculations</p>
+              <p className="text-indigo-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">Grand Total Amount</p>
+              <h3 className="text-white text-4xl font-black tracking-tighter">₹ {grandTotal}</h3>
+              <div className="flex gap-4 mt-2">
+                <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest italic">Sub: ₹{subtotal}</span>
+                <span className="text-white/40 text-[9px] font-bold uppercase tracking-widest italic">Tax: ₹{taxAmount}</span>
+              </div>
             </div>
             <Package className="text-white/5 absolute -right-6 -bottom-6 rotate-12 group-hover:scale-110 group-hover:text-white/10 transition-all duration-1000" size={180} />
           </div>
         </div>
 
-        {/* FORM ACTIONS */}
+        {/* ACTIONS */}
         <div className="flex flex-col sm:flex-row gap-4">
           <button type="submit" className="flex-[2] bg-slate-900 text-white py-6 rounded-[2.5rem] font-black shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-[0.2em]">
-            <Save size={20} /> {purchaseOrder.id ? 'Commit Updates' : 'Generate Order'}
+            <Save size={20} /> {purchaseOrder._id ? 'Commit Updates' : 'Generate Order'}
           </button>
           <button type="button" onClick={onCancel} className="flex-1 bg-white border border-slate-100 text-slate-400 py-6 rounded-[2.5rem] font-black hover:bg-slate-50 transition-all uppercase text-xs tracking-[0.2em]">
             Abort Entry
@@ -129,21 +202,56 @@ export default function OrderForm({ purchaseOrder, handleFormChange, handleSubmi
   );
 }
 
+function SectionHeader({ icon, title }) {
+  return (
+    <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
+      <div className="p-2 bg-slate-50 rounded-xl">{icon}</div>
+      <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">{title}</h2>
+    </div>
+  );
+}
+
 function FormInput({ label, name, value, onChange, type = "text", required = false, placeholder = "" }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">
-        {label} {required && <span className="text-rose-500">*</span>}
+      <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest flex items-center gap-1">
+        {label} {required && <span className="text-rose-500 text-xs">*</span>}
       </label>
-      <input 
-        required={required} 
-        name={name} 
-        value={value} 
-        onChange={onChange} 
-        type={type} 
+      <input
+        required={required}
+        name={name}
+        // FIXED: Using nullish coalescing to prevent uncontrolled input warning
+        value={value ?? ""}
+        onChange={onChange}
+        type={type}
         placeholder={placeholder}
-        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all shadow-inner placeholder:text-slate-300" 
+        className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-indigo-50/50 transition-all shadow-inner placeholder:text-slate-300"
       />
+    </div>
+  );
+}
+
+function SelectField({ label, name, value, onChange, options = [] }) {
+  return (
+    <div className="space-y-2 w-full text-left">
+      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
+      <div className="relative">
+        <select
+          name={name}
+          // FIXED: Using nullish coalescing to prevent uncontrolled input warning
+          value={value ?? ""}
+          onChange={onChange}
+          className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-indigo-50/50 transition-all"
+        >
+          <option value="">Select Option</option>
+          {options && options.filter(opt => opt !== null).map((opt, index) => {
+            const val = typeof opt === 'object' ? (opt._id || opt.id || opt.name || index) : opt;
+            const lbl = typeof opt === 'object' ? (opt.name || opt.warehouse || opt.zone) : opt;
+            return <option key={index} value={val}>{lbl}</option>;
+          })}
+        </select>
+        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+      </div>
     </div>
   );
 }
