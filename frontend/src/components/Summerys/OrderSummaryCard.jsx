@@ -35,7 +35,7 @@ const OrderSummaryCard = ({ items = {}, nameSum, notices = [] }) => {
             percent: 85
         },
         {
-            label: "Avg. Fulfillment",
+            label: "Avg. Fulfillment Time",
             value: items.avgFulfillment || 'N/A',
             stats: '-2h',
             color: "bg-indigo-600", bg: "bg-indigo-50",
@@ -51,7 +51,7 @@ const OrderSummaryCard = ({ items = {}, nameSum, notices = [] }) => {
             percent: parseFloat(items.accuracyRate) || 0
         },
         {
-            label: "Pending Action",
+            label: "Pending Orders",
             value: items.backorderCount || 0,
             stats: items.backorderCount > 10 ? 'High' : 'Stable',
             color: "bg-orange-600", bg: "bg-orange-50",

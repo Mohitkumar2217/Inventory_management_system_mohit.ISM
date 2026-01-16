@@ -148,8 +148,7 @@ export const syncOrder = async (req, res) => {
     try {
         const { id } = req.params;
 
-        if (id) {
-            // Update logic: ensures middleware runs to recalculate totals
+        if (id) { 
             const updatedOrder = await Order.findById(id);
             if (!updatedOrder) return res.status(404).json({ success: false, message: "Not found" });
 
@@ -157,9 +156,7 @@ export const syncOrder = async (req, res) => {
             await updatedOrder.save();
 
             return res.status(200).json({ success: true, message: "Order updated", order: updatedOrder });
-        }
-
-        // Create logic
+        } 
         const newOrder = new Order(req.body);
         await newOrder.save();
         res.status(201).json({ success: true, message: "Order created successfully", order: newOrder });
@@ -171,12 +168,10 @@ export const syncOrder = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
-        // findById and save() is used instead of findByIdAndUpdate to trigger Mongoose timestamps/middleware if needed
+        const { status } = req.body; 
         const order = await Order.findById(id);
         order.status = status;
         await order.save();
-
         res.status(200).json({ success: true, message: `Order status set to ${status}` });
     } catch (error) {
         res.status(500).json({ success: false, message: "Status update failed" });
