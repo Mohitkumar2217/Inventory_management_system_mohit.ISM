@@ -9,7 +9,7 @@ import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
   ArrowLeft, IndianRupee, ChevronLeft, ChevronRight,
   Layers, Loader2, Truck, Activity, Hash, MapPin, Calendar, Percent, Tag, Box
-} from "lucide-react"; 
+} from "lucide-react";
 
 export default function Products({ searchQuery = "" }) {
   const { token } = useAuth();
@@ -42,7 +42,7 @@ export default function Products({ searchQuery = "" }) {
     weight: "", dimensions: "", color: "", images: [], // Array for multiple images
     warehouse: "", barcode: "", unit: "pcs", taxPercentage: 18,
     status: "Active", condition: "New", expiryDate: "", totalSold: 0,
-    variants: [] 
+    variants: []
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -125,7 +125,7 @@ export default function Products({ searchQuery = "" }) {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true); 
+    setIsSubmitting(true);
 
     try {
       const res = formData._id
@@ -295,13 +295,43 @@ export default function Products({ searchQuery = "" }) {
               </table>
             </div>
 
-            <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
+            <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem] gap-4">
+              {/* Left: Info Text */}
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredProducts.length)} / {filteredProducts.length} entries
+                Showing {currentItems.length} of {filteredProducts.length} items
               </p>
+
+              {/* Middle: Pagination Controls */}
               <div className="flex items-center gap-2">
-                <NavBtn onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={activePage === 1} icon={<ChevronLeft size={18} />} />
-                <NavBtn onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={activePage === totalPages || totalPages === 0} icon={<ChevronRight size={18} />} />
+                {/* Previous Arrow */}
+                <NavBtn
+                  onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                  disabled={currentPage === 1}
+                  icon={<ChevronLeft size={18} />}
+                />
+
+                {/* Page Numbers */}
+                <div className="flex gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${currentPage === i + 1
+                        ? 'bg-cyan-400 text-white shadow-lg shadow-cyan-100'
+                        : 'text-slate-400 hover:bg-slate-50 hover:text-cyan-500'
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Next Arrow */}
+                <NavBtn
+                  onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  icon={<ChevronRight size={18} />}
+                />
               </div>
             </div>
           </div>
@@ -320,16 +350,16 @@ export default function Products({ searchQuery = "" }) {
 
           <div className="bg-white p-8 md:p-14 rounded-[4rem] shadow-2xl border border-slate-50 relative overflow-hidden">
             <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start relative z-10 border-b border-slate-50 pb-12">
-              
+
               {/* --- IMAGE SLIDER SECTION --- */}
               <div className="w-full lg:w-[450px] shrink-0">
                 <div className="relative group aspect-square bg-slate-50 rounded-[3rem] overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center">
                   {formData.images && formData.images.length > 0 ? (
                     <>
-                      <img 
-                        src={formData.images[currentImgIndex]} 
-                        alt="Product" 
-                        className="w-full h-full object-contain p-8 animate-in fade-in zoom-in-95 duration-300" 
+                      <img
+                        src={formData.images[currentImgIndex]}
+                        alt="Product"
+                        className="w-full h-full object-contain p-8 animate-in fade-in zoom-in-95 duration-300"
                       />
                       {formData.images.length > 1 && (
                         <>
@@ -345,9 +375,9 @@ export default function Products({ searchQuery = "" }) {
                 {/* Thumbnails */}
                 <div className="flex justify-center gap-3 mt-6">
                   {formData.images?.map((img, idx) => (
-                    <button 
-                      key={idx} 
-                      onClick={() => setCurrentImgIndex(idx)} 
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentImgIndex(idx)}
                       className={`w-16 h-16 rounded-2xl border-2 transition-all overflow-hidden bg-white ${currentImgIndex === idx ? 'border-cyan-500 scale-110 shadow-lg' : 'border-slate-100 opacity-50 hover:opacity-100'}`}
                     >
                       <img src={img} className="w-full h-full object-cover" alt="thumb" />
@@ -421,7 +451,7 @@ export default function Products({ searchQuery = "" }) {
               <div className="absolute -top-3 left-10 bg-indigo-500 text-white text-[9px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Logistical Directives</div>
               <p className="text-slate-600 font-bold leading-relaxed italic text-xl opacity-80">"{formData.details || 'No additional directives provided.'}"</p>
             </div>
-            
+
             {/* --- VARIANTS DISPLAY --- */}
             {formData.variants && formData.variants.length > 0 && (
               <div className="mt-12 animate-in fade-in slide-in-from-top-4 duration-700">
