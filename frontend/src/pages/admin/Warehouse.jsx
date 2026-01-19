@@ -27,7 +27,7 @@ export default function Warehouse({ searchQuery = "" }) {
     quantity: 0,
     status: "In Stock",
     details: "",
-    zone: "",
+    zone: [], 
     sku: "",
     priority: "Standard",
     subZone: "",
@@ -38,7 +38,6 @@ export default function Warehouse({ searchQuery = "" }) {
 
   const [formData, setFormData] = useState(initialFormState);
 
-  // --- API CONFIGURATION ---
   const api = axios.create({
     baseURL: "http://localhost:4000/api",
     headers: { Authorization: `Bearer ${token}` }
@@ -109,11 +108,17 @@ export default function Warehouse({ searchQuery = "" }) {
 
   const filteredStock = (stockList || []).filter(s => {
     const finalQuery = (searchQuery || localSearch || "").toLowerCase();
+    // Updated search logic to check zone object names
+    const zoneString = Array.isArray(s.zone) 
+      ? s.zone.map(z => typeof z === 'object' ? z.name : z).join(" ") 
+      : "";
+      
     const matchesSearch =
       (s.product || "").toLowerCase().includes(finalQuery) ||
       (s.warehouseName || "").toLowerCase().includes(finalQuery) ||
       (s.details || "").toLowerCase().includes(finalQuery) ||
-      (s.zone || "").toLowerCase().includes(finalQuery);
+      zoneString.toLowerCase().includes(finalQuery);
+      
     const matchesStatus = statusFilter === "All" || s.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -166,7 +171,6 @@ export default function Warehouse({ searchQuery = "" }) {
                   <option value={5}>05</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
-                  <option value={stockList.length || 100}>All</option>
                 </select>
               </div>
 
@@ -221,17 +225,22 @@ export default function Warehouse({ searchQuery = "" }) {
                   {currentItems.map((stock) => (
                     <tr key={stock._id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="p-5 font-bold text-slate-400 text-xs">#{stock._id?.slice(-6).toUpperCase() || "NEW"}</td>
-                      <td className="p-5 font-bold text-slate-700">{stock.warehouseName || stock.product || "N/A"}</td>
+                      <td className="p-5 font-bold text-slate-700">{stock.warehouseName || "N/A"}</td>
                       <td className="p-5 text-slate-500">
-                        <span className="bg-white border border-slate-100 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm group-hover:border-orange-200 transition-all">{stock.zone || "N/A"}</span>
+                        <div className="flex flex-wrap gap-1">
+                          {/* FIX: Access .name of zone object */}
+                          {Array.isArray(stock.zone) && stock.zone.map((z, i) => (
+                            <span key={z.id || i} className="bg-white border border-slate-100 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm">
+                                {typeof z === 'object' ? z.name : z}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       <td className="p-5 text-slate-700 font-black">{stock.quantity} Units</td>
                       <td className="p-5">
                         <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${stock.status === "In Stock" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-rose-50 text-rose-600 border border-rose-100"}`}>{stock.status}</span>
                       </td>
-                      <td className="p-5">
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${stock.capacity >= 500 ? "bg-slate-50 text-slate-700 border border-slate-100" : "bg-rose-50 text-rose-400 border border-slate-100"}`}>{stock.capacity || "N/A"}</span>
-                      </td>
+                      <td className="p-5 text-slate-700">{stock.capacity}</td>
                       <td className="p-5 text-center">
                         <div className="flex justify-center gap-2">
                           <button onClick={() => handleOpenDetails(stock)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
@@ -290,21 +299,32 @@ export default function Warehouse({ searchQuery = "" }) {
             <div className="lg:col-span-2 space-y-8">
               <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden">
                 <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
-                  <div className="w-48 h-48 rounded-[3.5rem] bg-orange-50 flex items-center justify-center text-7xl shadow-2xl shrink-0">📦</div>
+                  <div className="w-48 h-48 rounded-[3.5rem] bg-orange-50 flex items-center justify-center text-7xl shadow-2xl shrink-0">🏢</div>
                   <div className="pt-4 flex-1">
-                    <h1 className="text-6xl font-black text-slate-800 tracking-tighter mb-2">{selectedStock.warehouseName || selectedStock.product}</h1>
+                    <h1 className="text-6xl font-black text-slate-800 tracking-tighter mb-2">{selectedStock.warehouseName}</h1>
                     <div className="flex flex-wrap gap-3 mb-10">
                       <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">ID: #{selectedStock._id?.slice(-6).toUpperCase()}</span>
-                      <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1"><Layers size={10} /> {selectedStock.zone}</span>
+                      <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                        <Layers size={10} /> 
+                        {/* FIX: Join zone names */}
+                        {Array.isArray(selectedStock.zone) 
+                          ? selectedStock.zone.map(z => typeof z === 'object' ? z.name : z).join(", ") 
+                          : "No Zones"}
+                      </span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 border-t border-slate-50 pt-8">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={12} className="text-orange-500" /> Zone Allocation</p>
-                        <p className="text-2xl font-black text-slate-800">{selectedStock.zone}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={12} className="text-orange-500" /> All Zones</p>
+                        <p className="text-xl font-black text-slate-800">
+                          {/* FIX: Handle zone objects for rendering */}
+                          {Array.isArray(selectedStock.zone) 
+                            ? selectedStock.zone.map(z => typeof z === 'object' ? z.name : z).join(", ") 
+                            : "N/A"}
+                        </p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Hash size={12} className="text-orange-500" /> On-Hand Supply</p>
-                        <p className="text-2xl font-black text-slate-800">{selectedStock.quantity} Units</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Hash size={12} className="text-orange-500" /> Capacity</p>
+                        <p className="text-2xl font-black text-slate-800">{selectedStock.capacity}</p>
                       </div>
                     </div>
                   </div>
@@ -321,10 +341,10 @@ export default function Warehouse({ searchQuery = "" }) {
 
             <div className="space-y-8">
               <div className="bg-white p-8 rounded-[3rem] border border-slate-50 shadow-lg">
-                <div className="flex items-center gap-3 mb-6"><Palette className="text-pink-500" size={18} /><h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Visual Identity</h3></div>
+                <div className="flex items-center gap-3 mb-6"><Palette className="text-pink-500" size={18} /><h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Current Status</h3></div>
                 <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <div className="w-12 h-12 rounded-xl border-2 border-white bg-orange-500" />
-                  <div><p className="text-[10px] font-black text-slate-400 uppercase">Status</p><p className="text-sm font-black text-slate-700 uppercase">{selectedStock.status}</p></div>
+                  <div className={`w-12 h-12 rounded-xl border-2 border-white ${selectedStock.status === 'In Stock' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  <div><p className="text-[10px] font-black text-slate-400 uppercase">Availability</p><p className="text-sm font-black text-slate-700 uppercase">{selectedStock.status}</p></div>
                 </div>
               </div>
               <div className="bg-slate-900 p-10 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden">

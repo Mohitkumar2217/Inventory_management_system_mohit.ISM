@@ -42,7 +42,7 @@ export default function Products({ searchQuery = "" }) {
     weight: "", dimensions: "", color: "", images: [], // Array for multiple images
     warehouse: "", barcode: "", unit: "pcs", taxPercentage: 18,
     status: "Active", condition: "New", expiryDate: "", totalSold: 0,
-    variants: []
+    variants: [], manufacturingDate:"",
   };
   const [formData, setFormData] = useState(initialFormState);
 

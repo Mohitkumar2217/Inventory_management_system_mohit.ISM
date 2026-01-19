@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+const zoneSchema = new mongoose.Schema({
+    id: { type: String, required: true, unique: true },
+    name: { type: String, required: true },  
+})
 const warehouseSchema = new mongoose.Schema({
     warehouseName: { type: String, required: true, trim: true },
     capacity: { type: Number, required: true },
@@ -9,7 +13,7 @@ const warehouseSchema = new mongoose.Schema({
         enum: ['In Stock', 'Out of Stock'], 
         default: 'In Stock' 
     },
-    zone: { type: String, required: true },  
+    zone: [zoneSchema],  
     details: { type: String },  
 }, { timestamps: true });
 

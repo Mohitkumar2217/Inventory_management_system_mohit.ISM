@@ -59,12 +59,20 @@ export const getProductTrends = async (req, res) => {
     }
 };
 
-// --- 2. GET ALL PRODUCTS & MODULE ANALYTICS ---
+// --- 2. GET ALL PRODUCTS & MODULE ANALYTICS (CORRECTED) ---
 export const getProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
         const categories = await Category.find({ status: "Active" });
         const warehouses = await Warehouse.find();
+
+        // 1. Flatten all zones from all warehouses and extract names
+        const allZoneNames = warehouses.flatMap(w => 
+            (w.zone || []).map(z => typeof z === 'object' ? z.name : z)
+        );
+
+        // 2. Create a unique list of zone names
+        const uniqueZones = [...new Set(allZoneNames)];
 
         // Calculate advanced metrics
         const summary = {
@@ -73,10 +81,10 @@ export const getProducts = async (req, res) => {
             lowStockCount: products.filter(p => p.stock < (p.minStock || 20)).length,
             categoriesCount: categories.length,
             totalInventoryValue: products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0),
-            activeZones: [...new Set(warehouses.map(w => w.zone))].length
+            activeZones: uniqueZones.length // Using unique count
         };
 
-        // Notices logic (Alerts for the UI notice bar)
+        // Notices logic
         const notices = [];
         if (summary.lowStockCount > 0) {
             notices.push({ id: 1, text: `${summary.lowStockCount} items reaching critical low levels.`, type: "urgent" });
@@ -97,15 +105,14 @@ export const getProducts = async (req, res) => {
             summary,
             availableCategories: categories.map(c => c.name),
             availableWarehouses: warehouses.map(w => w.warehouseName),
-            availableZones: [...new Set(warehouses .map(w => w.zone))],
+            availableZones: uniqueZones, // Returns unique string names
             availableSuppliers: [...new Set(products.map(p => p.supplier))],
             notices,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error syncing inventory modules" });
     }
-}; 
-
+};
 // --- 3. UPDATED SYNC PRODUCT (Handling Dynamic Variants) ---
 export const syncProduct = async (req, res) => {
     try {
