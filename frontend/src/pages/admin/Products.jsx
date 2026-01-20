@@ -352,14 +352,14 @@ export default function Products({ searchQuery = "" }) {
             <div className="flex flex-col lg:flex-row gap-12 items-center lg:items-start relative z-10 border-b border-slate-50 pb-12">
 
               {/* --- IMAGE SLIDER SECTION --- */}
-              <div className="w-full lg:w-[450px] shrink-0">
-                <div className="relative group aspect-square bg-slate-50 rounded-[3rem] overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center">
+              <div className="w-full lg:w-[450px] shrink-0 ">
+                <div className="relative group aspect-square bg-slate-50 rounded-[3rem] overflow-hidden border border-slate-100 shadow-inner flex items-center justify-center lg:h-[400px] lg:w-[400px]">
                   {formData.images && formData.images.length > 0 ? (
                     <>
                       <img
                         src={formData.images[currentImgIndex]}
                         alt="Product"
-                        className="w-full h-full object-contain p-8 animate-in fade-in zoom-in-95 duration-300"
+                        className="w-full h-full object-contain p-4 animate-in fade-in zoom-in-95 duration-300"
                       />
                       {formData.images.length > 1 && (
                         <>
@@ -373,7 +373,7 @@ export default function Products({ searchQuery = "" }) {
                   )}
                 </div>
                 {/* Thumbnails */}
-                <div className="flex justify-center gap-3 mt-6">
+                {/* <div className="flex justify-center gap-3 mt-6">
                   {formData.images?.map((img, idx) => (
                     <button
                       key={idx}
@@ -383,7 +383,7 @@ export default function Products({ searchQuery = "" }) {
                       <img src={img} className="w-full h-full object-cover" alt="thumb" />
                     </button>
                   ))}
-                </div>
+                </div> */}
               </div>
 
               <div className="flex-1 text-center lg:text-left">

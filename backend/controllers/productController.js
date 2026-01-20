@@ -1,6 +1,7 @@
 import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 import Warehouse from "../models/Warehouse.js"; 
+import Supplier from "../models/Supplier.js";
 import Order from "../models/Order.js";
 
 // --- 1. GET ANALYTICS TRENDS (7-Day Analysis) ---
@@ -63,6 +64,7 @@ export const getProductTrends = async (req, res) => {
 export const getProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
+        const suppliers = await Supplier.find();
         const categories = await Category.find({ status: "Active" });
         const warehouses = await Warehouse.find();
 
@@ -106,7 +108,7 @@ export const getProducts = async (req, res) => {
             availableCategories: categories.map(c => c.name),
             availableWarehouses: warehouses.map(w => w.warehouseName),
             availableZones: uniqueZones, // Returns unique string names
-            availableSuppliers: [...new Set(products.map(p => p.supplier))],
+            availableSuppliers: [...new Set(suppliers.map(p => p.name))],
             notices,
         });
     } catch (error) {

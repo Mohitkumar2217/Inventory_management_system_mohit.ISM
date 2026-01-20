@@ -1,7 +1,7 @@
 import Category from "../models/Category.js";
 import Order from "../models/Order.js";  
 import Warehouse from "../models/Warehouse.js";
-import Products from "../models/Product.js";
+import Supplier from "../models/Supplier.js"; 
 
 // --- 1. HISTORICAL TREND ANALYSIS ---
 export const getOrderTrends = async (req, res) => {
@@ -83,7 +83,7 @@ export const getOrderTrends = async (req, res) => {
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
-        const products = await Products.find().sort({ createdAt: -1 });
+        const suppliers = await Supplier.find({});
         const categories = await Category.find(); 
         const warehouses = await Warehouse.find();
  
@@ -134,9 +134,8 @@ export const getOrders = async (req, res) => {
             availableCategories: categories.map(c => c.name),
             availableWarehouses: warehouses.map(w => w.warehouseName),
             availableZones: [...new Set(warehouses .map(w => w.zone))],
-            availableSuppliers: [...new Set(orders.map(o => o.venderName))],
-            notices,
-            products
+            availableSuppliers: [...new Set(suppliers.map(o => o.name))],
+            notices, 
         });
     } catch (error) {
         res.status(500).json({ success: false, message: "Error fetching order analytics" });
@@ -168,12 +167,44 @@ export const syncOrder = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body; 
+        const { status } = req.body;
+
         const order = await Order.findById(id);
+        if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+        // Update the current status
         order.status = status;
+
+        // --- TRACKING LOGIC: Update specific timestamps based on status ---
+        if (!order.timeline) order.timeline = {}; // Initialize if missing
+
+        switch (status) {
+            case "Processing":
+                order.timeline.processedAt = new Date();
+                break;
+            case "Shipped":
+                order.timeline.shippedAt = new Date();
+                break;
+            case "Delivered":
+                order.timeline.deliveredAt = new Date();
+                order.actualDeliveryDate = new Date(); // Mark the final delivery date
+                break;
+            case "Cancelled":
+                // Logic for cancellation if needed
+                break;
+            default:
+                break;
+        }
+
         await order.save();
-        res.status(200).json({ success: true, message: `Order status set to ${status}` });
+        
+        res.status(200).json({ 
+            success: true, 
+            message: `Order status updated to ${status}`,
+            order 
+        });
     } catch (error) {
+        console.error("Status Update Error:", error);
         res.status(500).json({ success: false, message: "Status update failed" });
     }
 };

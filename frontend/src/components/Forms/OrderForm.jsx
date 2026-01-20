@@ -5,53 +5,50 @@ import {
   Hash, Tag, ShieldCheck, MapPin, Percent, Phone, Trash2, Search
 } from "lucide-react";
 
-export default function OrderForm({ 
-  purchaseOrder, 
-  handleFormChange, 
-  handleSubmit, 
-  onCancel, 
-  suppliers = [], 
-  zones = [], 
-  categories = [], 
+export default function OrderForm({
+  purchaseOrder,
+  handleFormChange,
+  handleSubmit,
+  onCancel,
+  suppliers = [],
+  zones = [],
+  categories = [],
   warehouses = [],
-  allProducts = [] // Local registry passed as props
+  allProducts = []
 }) {
 
   // --- AUTO-FETCH LOGIC (LOCAL SEARCH) ---
-  const handleProductSearch = (productId) => {
-    if (!productId) return;
+  // const handleProductSearch = (productId) => {
+  //   if (!productId) return;
 
-    // Search for a match in the registry using Product Code or SKU
-    const matchedProduct = allProducts.find(
-      (p) => p.code === productId || p.sku === productId
-    );
+  //   const matchedProduct = allProducts.find(
+  //     (p) => p.code === productId || p.sku === productId
+  //   );
 
-    if (matchedProduct) {
-      // Map matched product data to form fields
-      const updates = {
-        itemName: matchedProduct.name,
-        sku: matchedProduct.sku || matchedProduct.code,
-        brand: matchedProduct.brand,
-        category: matchedProduct.category,
-        unitPrice: matchedProduct.price,
-        images: matchedProduct.images || [] // Fetch image array for preview
-      };
+  //   if (matchedProduct) {
+  //     const updates = {
+  //       itemName: matchedProduct.name,
+  //       sku: matchedProduct.sku || matchedProduct.code,
+  //       brand: matchedProduct.brand,
+  //       category: matchedProduct.category,
+  //       unitPrice: matchedProduct.price,
+  //       images: matchedProduct.images || []
+  //     };
 
-      // Batch update the state via the parent handler
-      Object.entries(updates).forEach(([name, value]) => {
-        handleFormChange({ target: { name, value } });
-      });
-    } else {
-      alert("System Error: Product ID not found in inventory registry.");
-    }
-  };
+  //     Object.entries(updates).forEach(([name, value]) => {
+  //       handleFormChange({ target: { name, value } });
+  //     });
+  //   } else {
+  //     alert("System Error: Product ID not found in inventory registry.");
+  //   }
+  // };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault(); // Prevent accidental form submission
-      handleProductSearch(purchaseOrder.productId);
-    }
-  };
+  // const handleKeyDown = (e) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault(); 
+  //     handleProductSearch(purchaseOrder.productId);
+  //   }
+  // };
 
   // --- FINANCIAL CALCULATIONS ---
   const qty = parseInt(purchaseOrder.quantity || 0);
@@ -64,23 +61,6 @@ export default function OrderForm({
   const taxAmount = (subtotal * taxRate) / 100;
   const grandTotal = (subtotal + taxAmount + shipping - discount).toLocaleString('en-IN');
 
-  // --- VARIANT HANDLERS ---
-  const variants = purchaseOrder?.variants || [];
-  
-  const addVariant = () => {
-    const newVariant = { id: Date.now(), name: "", sku: "", price: "", stock: "" };
-    handleFormChange({ target: { name: "variants", value: [...variants, newVariant] } });
-  };
-
-  const removeVariant = (id) => {
-    handleFormChange({ target: { name: "variants", value: variants.filter(v => v.id !== id) } });
-  };
-
-  const updateVariant = (id, field, value) => {
-    const updated = variants.map(v => v.id === id ? { ...v, [field]: value } : v);
-    handleFormChange({ target: { name: "variants", value: updated } });
-  };
-
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
       <form onSubmit={handleSubmit} className="space-y-8 pb-20 mt-8">
@@ -91,27 +71,13 @@ export default function OrderForm({
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <FormInput label="Purchase Order #" name="poNumber" value={purchaseOrder.poNumber} onChange={handleFormChange} placeholder="PO-2024-001" required />
-            
-            {/* SEARCH INPUT: PRESS ENTER TO FETCH */}
-            <div className="relative group">
-               <FormInput 
-                  label="Product ID (Fetch Meta)" 
-                  name="productId" 
-                  value={purchaseOrder.productId} 
-                  onChange={handleFormChange} 
-                  onKeyDown={handleKeyDown} 
-                  placeholder="Enter ID & Press Enter" 
-               />
-               <Search className="absolute right-4 top-10 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={18} />
-            </div>
-
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Order Priority</label>
               <div className="relative">
-                <select 
-                  name="priority" 
-                  value={purchaseOrder.priority ?? "standard"} 
-                  onChange={handleFormChange} 
+                <select
+                  name="priority"
+                  value={purchaseOrder.priority ?? "standard"}
+                  onChange={handleFormChange}
                   className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-indigo-50/50 transition-all"
                 >
                   <option value="standard">Standard</option>
@@ -125,11 +91,10 @@ export default function OrderForm({
           </div>
         </div>
 
-        {/* SECTION 2: VENDOR & PRODUCT DETAILS (Populated via Fetch) */}
+        {/* SECTION 2: VENDOR & PRODUCT DETAILS */}
         <div className="bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/40 border border-slate-100">
           <SectionHeader icon={<Store className="text-indigo-500" />} title="Source Supplier & Specification" />
 
-          {/* FETCHED IMAGE PREVIEW */}
           {purchaseOrder.images?.length > 0 && (
             <div className="flex items-center gap-6 mb-8 p-6 bg-slate-50 rounded-[2.5rem] border border-slate-100 animate-in zoom-in-95">
               <div className="flex -space-x-6 overflow-hidden">
@@ -159,34 +124,9 @@ export default function OrderForm({
               <FormInput label="SKU / Batch Code (Auto)" name="sku" value={purchaseOrder.sku} onChange={handleFormChange} placeholder="SKU-88-B" required />
             </div>
             <div className="md:col-span-4">
-               <SelectField label="Category Group *" name="category" value={purchaseOrder?.category} onChange={handleFormChange} options={categories} />
+              <SelectField label="Category Group *" name="category" value={purchaseOrder?.category} onChange={handleFormChange} options={categories} />
             </div>
           </div>
-        </div>
-
-        {/* SECTION: PRODUCT VARIANTS */}
-        <div className="bg-slate-50/50 p-8 rounded-[3rem] border-2 border-dashed border-slate-200">
-           <div className="flex justify-between items-center mb-8 px-2">
-             <div className="flex items-center gap-3">
-               <div className="p-2 bg-indigo-50 rounded-xl"><Layers className="text-indigo-500" size={18} /></div>
-               <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Product Variants</h2>
-             </div>
-             <button type="button" onClick={addVariant} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 shadow-indigo-100">
-               <Plus size={14} /> Add Variant
-             </button>
-           </div>
-           <div className="space-y-4">
-             {variants.length === 0 && <p className="text-center text-xs font-bold text-slate-400 py-4 uppercase tracking-widest">No variants added.</p>}
-             {variants.map((v) => (
-               <div key={v.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end relative group">
-                 <FormInput label="Variant Name" value={v.name} onChange={(e) => updateVariant(v.id, "name", e.target.value)} placeholder="Red / XL" />
-                 <FormInput label="Variant SKU" value={v.sku} onChange={(e) => updateVariant(v.id, "sku", e.target.value)} placeholder="SKU-001" />
-                 <FormInput label="Price Override" type="number" value={v.price} onChange={(e) => updateVariant(v.id, "price", e.target.value)} placeholder="₹" />
-                 <FormInput label="Stock" type="number" value={v.stock} onChange={(e) => updateVariant(v.id, "stock", e.target.value)} placeholder="Qty" />
-                 <button type="button" onClick={() => removeVariant(v.id)} className="mb-2 p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all w-fit"><Trash2 size={18} /></button>
-               </div>
-             ))}
-           </div>
         </div>
 
         {/* SECTION 3: LOGISTICS & WAREHOUSING */}
@@ -195,13 +135,13 @@ export default function OrderForm({
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <SelectField label="Destination Warehouse *" name="warehouse" value={purchaseOrder?.warehouse} onChange={handleFormChange} options={warehouses} /> 
+              <SelectField label="Destination Warehouse *" name="warehouse" value={purchaseOrder?.warehouse} onChange={handleFormChange} options={warehouses} />
             </div>
             <FormInput label="Ship Via (Method)" name="shippingMethod" value={purchaseOrder.shippingMethod} onChange={handleFormChange} placeholder="e.g. Air Freight" required />
             <FormInput label="ETA Date" name="expectedDate" value={purchaseOrder.expectedDate} onChange={handleFormChange} type="date" required />
             <FormInput label="Warehouse Contact #" name="whContact" value={purchaseOrder.whContact} onChange={handleFormChange} placeholder="+91..." required />
             <div className="md:col-span-1">
-                <SelectField label="Warehouse Zone *" name="zone" value={purchaseOrder?.zone} onChange={handleFormChange} options={zones} /> 
+              <SelectField label="Warehouse Zone *" name="zone" value={purchaseOrder?.zone} onChange={handleFormChange} options={zones} />
             </div>
             <div className="md:col-span-2">
               <FormInput label="Full Delivery Address" name="deliveryAddress" value={purchaseOrder.deliveryAddress} onChange={handleFormChange} placeholder="Street, Building, Area..." required />
@@ -220,13 +160,13 @@ export default function OrderForm({
             <FormInput label="Shipping Fees (₹)" name="shippingCharges" value={purchaseOrder.shippingCharges} onChange={handleFormChange} type="number" />
             <FormInput label="Discount (₹)" name="discount" value={purchaseOrder.discount} onChange={handleFormChange} type="number" />
             <div className="md:col-span-2">
-               <div className="space-y-2">
+              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Payment Terms</label>
                 <div className="relative">
-                  <select 
-                    name="paymentTerms" 
-                    value={purchaseOrder.paymentTerms ?? "Due on Receipt"} 
-                    onChange={handleFormChange} 
+                  <select
+                    name="paymentTerms"
+                    value={purchaseOrder.paymentTerms ?? "Due on Receipt"}
+                    onChange={handleFormChange}
                     className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer focus:ring-4 focus:ring-indigo-50/50 transition-all"
                   >
                     <option value="Due on Receipt">Due on Receipt</option>

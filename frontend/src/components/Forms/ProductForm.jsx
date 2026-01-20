@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import JsBarcode from "jsbarcode"; 
+import JsBarcode from "jsbarcode";
 
 import {
   Package, IndianRupee, Truck, Layers, Save, Barcode,
@@ -11,12 +11,12 @@ import {
 export default function ProductForm({ formData, handleInputChange, handleSubmit, onCancel, categories = [], warehouses = [], zones = [], suppliers = [] }) {
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
-  
+
   // Dynamic images array from formData
   const images = formData?.images || [];
 
   // --- CLOUDINARY CONFIGURATION ---
-  const CLOUD_NAME = "dicvozonw"; 
+  const CLOUD_NAME = "dicvozonw";
   const UPLOAD_PRESET = "mohitkumawat";
 
   // --- CLOUDINARY UPLOAD LOGIC ---
@@ -113,7 +113,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 mt-8 max-w-6xl mx-auto px-4">
-      
+
       {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
@@ -137,12 +137,12 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8 pb-20">
-        
+
         {/* SECTION 1: VISUALS & IDENTITY (Cloudinary Uploads) */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
             <div className="p-2 bg-cyan-50 rounded-xl">
-               {isUploading ? <Loader2 className="text-cyan-500 animate-spin" size={18} /> : <ImageIcon className="text-cyan-500" size={18} />}
+              {isUploading ? <Loader2 className="text-cyan-500 animate-spin" size={18} /> : <ImageIcon className="text-cyan-500" size={18} />}
             </div>
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Product Media ({images.length}/4)</h2>
             {isUploading && <span className="text-[10px] font-black text-cyan-500 animate-pulse uppercase tracking-widest ml-auto">Syncing to Cloud...</span>}
@@ -151,13 +151,13 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
           <div className="grid grid-cols-1 gap-8">
             <div className="w-full">
               <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" multiple className="hidden" />
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {images.map((img, index) => (
                   <div key={index} className="relative group aspect-square bg-slate-50 rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-inner">
                     <img src={img} alt="Preview" className="w-full h-full object-cover" />
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       onClick={() => removeImage(index)}
                       className="absolute top-3 right-3 p-1.5 bg-rose-500 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all active:scale-90"
                     >
@@ -167,7 +167,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
                 ))}
 
                 {images.length < 4 && !isUploading && (
-                  <div 
+                  <div
                     onClick={handleImageClick}
                     className="aspect-square bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center group hover:border-cyan-400 transition-all cursor-pointer shadow-inner"
                   >
@@ -197,27 +197,27 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
 
         {/* SECTION: DYNAMIC VARIANTS */}
         <div className="bg-slate-50/50 p-8 rounded-[3rem] border-2 border-dashed border-slate-200">
-           <div className="flex justify-between items-center mb-8 px-2">
-             <div className="flex items-center gap-3">
-               <div className="p-2 bg-indigo-50 rounded-xl"><Layers className="text-indigo-500" size={18} /></div>
-               <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Product Variants</h2>
-             </div>
-             <button type="button" onClick={addVariant} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 shadow-indigo-100">
-               <Plus size={14} /> Add Variant
-             </button>
-           </div>
-           <div className="space-y-4">
-             {variants.length === 0 && <p className="text-center text-xs font-bold text-slate-400 py-4 uppercase tracking-widest">No variants added.</p>}
-             {variants.map((v) => (
-               <div key={v.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end relative group">
-                 <FormInput label="Variant Name" value={v.name} onChange={(e) => updateVariant(v.id, "name", e.target.value)} placeholder="Red / XL" />
-                 <FormInput label="Variant SKU" value={v.sku} onChange={(e) => updateVariant(v.id, "sku", e.target.value)} placeholder="SKU-001" />
-                 <FormInput label="Price Override" type="number" value={v.price} onChange={(e) => updateVariant(v.id, "price", e.target.value)} placeholder="₹" />
-                 <FormInput label="Stock" type="number" value={v.stock} onChange={(e) => updateVariant(v.id, "stock", e.target.value)} placeholder="Qty" />
-                 <button type="button" onClick={() => removeVariant(v.id)} className="mb-2 p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all w-fit"><Trash2 size={18} /></button>
-               </div>
-             ))}
-           </div>
+          <div className="flex justify-between items-center mb-8 px-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-50 rounded-xl"><Layers className="text-indigo-500" size={18} /></div>
+              <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Product Variants</h2>
+            </div>
+            <button type="button" onClick={addVariant} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg active:scale-95 shadow-indigo-100">
+              <Plus size={14} /> Add Variant
+            </button>
+          </div>
+          <div className="space-y-4">
+            {variants.length === 0 && <p className="text-center text-xs font-bold text-slate-400 py-4 uppercase tracking-widest">No variants added.</p>}
+            {variants.map((v) => (
+              <div key={v.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end relative group">
+                <FormInput label="Variant Name" value={v.name} onChange={(e) => updateVariant(v.id, "name", e.target.value)} placeholder="Red / XL" />
+                <FormInput label="Variant SKU" value={v.sku} onChange={(e) => updateVariant(v.id, "sku", e.target.value)} placeholder="SKU-001" />
+                <FormInput label="Price Override" type="number" value={v.price} onChange={(e) => updateVariant(v.id, "price", e.target.value)} placeholder="₹" />
+                <FormInput label="Stock" type="number" value={v.stock} onChange={(e) => updateVariant(v.id, "stock", e.target.value)} placeholder="Qty" />
+                <button type="button" onClick={() => removeVariant(v.id)} className="mb-2 p-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all w-fit"><Trash2 size={18} /></button>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* SECTION 2: LOGISTICS & LOCATION */}
@@ -262,10 +262,10 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             <div className="p-2 bg-amber-50 rounded-xl"><IndianRupee className="text-amber-500" size={18} /></div>
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Financial Intelligence</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <FormInput label="Global Selling Price" name="price" value={formData?.price} onChange={handleInputChange} type="number" required />
             <FormInput label="Procurement Cost" name="cost" value={formData?.cost} onChange={handleInputChange} type="number" />
-            <FormInput label="Tax Rate (%)" name="taxPercentage" value={formData?.taxPercentage || "18"} onChange={handleInputChange} type="number" icon={<Percent size={14} />} />
+            {/* <FormInput label="Tax Rate (%)" name="taxPercentage" value={formData?.taxPercentage || "18"} onChange={handleInputChange} type="number" icon={<Percent size={14} />} /> */}
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Projected Margin</label>
               <div className="w-full p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 font-black text-sm shadow-inner flex items-center gap-2">₹ {marginVal}</div>
@@ -295,15 +295,12 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
                 <h2 className="text-sm font-black uppercase tracking-[0.2em]">Quality Assurance</h2>
               </div>
               <div className="grid grid-cols-1 gap-6">
-                <FormInputDark label="Warranty Details" name="warranty" value={formData?.warranty} onChange={handleInputChange} placeholder="e.g. 12 Months Support" />
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Current Condition</label>
-                    <select name="condition" value={formData?.condition || "New"} onChange={handleInputChange} className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer">
-                      <option value="New">Brand New</option>
-                      <option value="Refurbished">Refurbished</option>
-                    </select>
-                  </div>
+                  <FormInputDark label="Warranty Details" name="warranty" value={formData?.warranty} onChange={handleInputChange} placeholder="e.g. 12 Months Support" />
+                  <FormInputDark label="Manufacturing Date" name="manufacturingDate" type="date" value={formData?.manufacturingDate} onChange={handleInputChange} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <SelectField1 label="Current Condition" name="condition" value={formData?.condition || "New"} onChange={handleInputChange} options={["Brand New", "Refurbished"]} />
                   <FormInputDark label="Asset Expiry" name="expiryDate" type="date" value={formData?.expiryDate} onChange={handleInputChange} />
                 </div>
               </div>
@@ -343,9 +340,9 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
 
         {/* ACTIONS */}
         <div className="flex flex-col sm:flex-row gap-4 pt-4 sticky bottom-8 p-4 bg-white/60 backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-2xl z-50">
-          <button 
-            type="submit" 
-            disabled={images.length === 0 || isUploading} 
+          <button
+            type="submit"
+            disabled={images.length === 0 || isUploading}
             className="flex-[2] bg-slate-900 hover:bg-slate-800 text-white py-6 rounded-[2rem] font-black shadow-2xl transition-all flex items-center justify-center gap-3 tracking-widest uppercase text-xs active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? <><Loader2 className="animate-spin" /> Syncing Media...</> : <><Save size={20} /> Finalize Asset Registration</>}
@@ -398,6 +395,29 @@ function SelectField({ label, name, value, onChange, options = [] }) {
             const val = typeof opt === 'object' ? (opt._id || opt.id || index) : opt;
             const lbl = typeof opt === 'object' ? (opt.name || opt.warehouse || opt.zone) : opt;
             return <option key={index} value={val}>{lbl}</option>;
+          })}
+        </select>
+        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+      </div>
+    </div>
+  );
+}
+function SelectField1({ label, name, value, onChange, options = [] }) {
+  return (
+    <div className="space-y-2 w-full text-left">
+      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">{label}</label>
+      <div className="relative">
+        <select
+          name={name}
+          value={value || ""}
+          onChange={onChange}
+          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none text-sm font-bold appearance-none cursor-pointer"
+        >
+          <option value="" className="bg-black">Select Option</option>
+          {options && options.filter(opt => opt !== null).map((opt, index) => {
+            const val = typeof opt === 'object' ? (opt._id || opt.id || index) : opt;
+            const lbl = typeof opt === 'object' ? (opt.name || opt.warehouse || opt.zone) : opt;
+            return <option key={index} value={val} className="bg-black">{lbl}</option>;
           })}
         </select>
         <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
