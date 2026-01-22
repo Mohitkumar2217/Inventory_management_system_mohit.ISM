@@ -227,7 +227,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
             <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Logistics & Localization</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-14 gap-6 items-start">
             <div className="md:col-span-3 space-y-2">
               <SelectField label="Warehouse Location *" name="warehouse" value={formData?.warehouse} onChange={handleInputChange} options={warehouses} />
             </div>
@@ -235,7 +235,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
               <SelectField label="Warehouse zone *" name="zone" value={formData?.zone} onChange={handleInputChange} options={zones} />
             </div>
 
-            <div className="md:col-span-4 space-y-2 group">
+            <div className="md:col-span-5 space-y-2 group">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex justify-between">
                 <span>EAN / UPC Barcode</span>
                 <span className="text-orange-500 flex items-center gap-1 font-black uppercase text-[8px]"><Barcode size={10} /> Auto-Gen Active</span>
@@ -250,7 +250,7 @@ export default function ProductForm({ formData, handleInputChange, handleSubmit,
               </div>
             </div>
 
-            <div className="md:col-span-2 space-y-2">
+            <div className="md:col-span-3 space-y-2">
               <SelectField label="Unit (UOM)" name="unit" value={formData?.unit} onChange={handleInputChange} options={["Pieces (pcs)", "Kilograms (kg)", "Box (Units)", "Liters (L)"]} />
             </div>
           </div>
