@@ -1,20 +1,29 @@
 import React from "react";
 import {
     ArrowLeft, Globe, MapPin, ShieldCheck, Truck, Landmark, BarChart3,
-    History, FileText, CheckCircle2, User, Package, ChevronRight
+    History, FileText, CheckCircle2, User, Package, ChevronRight, ExternalLink
 } from "lucide-react";
 
 export default function SupplierDetailPage({ selectedVendor, onBack }) {
     // --- HELPERS ---
-    const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { 
-        style: 'currency', 
-        currency: 'INR' 
+    const BASE_URL = "http://localhost:4000";
+
+    const formatCurrency = (val) => new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
     }).format(val || 0);
+
+    // --- FILE VIEWING ACTIVATION ---
+    const openFile = (path) => {
+        if (!path) return;
+        const fullUrl = path.startsWith('http') ? path : `${BASE_URL}${path}`;
+        window.open(fullUrl, '_blank', 'noopener,noreferrer');
+    };
 
     return (
         <div className="max-w-7xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 pb-20 mt-10">
-            <button 
-                onClick={onBack} 
+            <button
+                onClick={onBack}
                 className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest mb-8 group transition-all"
             >
                 <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all">
@@ -27,9 +36,12 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                 {/* Left Column: Identity & Metrics */}
                 <div className="lg:col-span-4 space-y-8">
                     <div className="bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-50 flex flex-col items-center text-center">
-                        <div className="w-40 h-40 bg-green-50 rounded-[3rem] flex items-center justify-center text-7xl font-black text-green-600 border border-green-100 shadow-xl overflow-hidden mb-6">
+                        <div
+                            onClick={() => selectedVendor.photo && openFile(selectedVendor.photo)}
+                            className="w-40 h-40 bg-green-50 rounded-[3rem] flex items-center justify-center text-7xl font-black text-green-600 border border-green-100 shadow-xl overflow-hidden mb-6 cursor-pointer hover:opacity-80 transition-all"
+                        >
                             {selectedVendor.photo ? (
-                                <img src={selectedVendor.photo} alt="Profile" className="w-full h-full object-cover" />
+                                <img src={`${BASE_URL}${selectedVendor.photo}`} alt="Profile" className="w-full h-full object-cover" />
                             ) : (
                                 selectedVendor.name?.charAt(0)
                             )}
@@ -45,6 +57,22 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                             <span className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase border border-blue-100">
                                 {selectedVendor.verificationStatus || selectedVendor.verification || 'Pending'}
                             </span>
+                        </div>
+                    </div>
+
+                    {/* --- ADDED: ID CARD SECTION --- */}
+                    <div className="bg-white p-8 rounded-[3rem] shadow-xl border border-slate-50">
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-2 text-slate-400">
+                            <User size={16} className="text-indigo-500" /> Identity Verification
+                        </h3>
+                        <div
+                            onClick={() => selectedVendor.idCard && openFile(selectedVendor.idCard)}
+                            className={`p-5 rounded-2xl border flex flex-col items-center gap-2 transition-all ${selectedVendor.idCard ? 'bg-indigo-50 border-indigo-100 hover:bg-indigo-100 cursor-pointer' : 'bg-slate-50 border-slate-100 opacity-50'}`}
+                        >
+                            <FileText size={24} className={selectedVendor.idCard ? 'text-indigo-500' : 'text-slate-300'} />
+                            <p className="text-[10px] font-black uppercase text-slate-500">
+                                {selectedVendor.idCard ? 'View Partner ID Card' : 'ID Card Not Provided'}
+                            </p>
                         </div>
                     </div>
 
@@ -80,9 +108,6 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                             <p className="font-black text-indigo-600 text-sm">{formatCurrency(item.unitPrice)}</p>
                                         </div>
                                     ))}
-                                    {(!selectedVendor.itemsDetails || selectedVendor.itemsDetails.length === 0) && (
-                                        <p className="text-xs italic text-slate-400">No items listed</p>
-                                    )}
                                 </div>
                             </section>
 
@@ -103,7 +128,7 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                             {selectedVendor.connectedWarehouses?.map((wh, idx) => (
                                                 <div key={idx} className="flex items-center justify-between text-xs font-bold text-slate-600 bg-white p-2 rounded-lg border border-slate-50">
                                                     <div className="flex items-center gap-2">
-                                                        <CheckCircle2 size={12} className="text-green-500" /> 
+                                                        <CheckCircle2 size={12} className="text-green-500" />
                                                         {wh.warehouseName || 'General Hub'}
                                                     </div>
                                                     <span className="text-indigo-500 font-black">{wh.itemCountSupplied || 0} U</span>
@@ -129,10 +154,12 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                     { key: 'idProof', label: 'ID Proof' },
                                     { key: 'addressProof', label: 'Address Proof' }
                                 ].map((doc) => {
-                                    const hasFile = !!selectedVendor.documents?.[doc.key];
+                                    const filePath = selectedVendor.documents?.[doc.key];
+                                    const hasFile = !!filePath;
                                     return (
-                                        <div 
-                                            key={doc.key} 
+                                        <div
+                                            key={doc.key}
+                                            onClick={() => hasFile && openFile(filePath)}
                                             className={`flex flex-col p-4 rounded-2xl border transition-all cursor-pointer group ${hasFile ? 'bg-emerald-50 border-emerald-100 hover:border-emerald-300' : 'bg-slate-50 border-slate-100'}`}
                                         >
                                             <FileText size={18} className={hasFile ? 'text-emerald-500' : 'text-slate-300'} />
@@ -154,6 +181,17 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                 <TreasuryRow label="Bank" val={selectedVendor.bankDetails?.bankName} />
                                 <TreasuryRow label="A/C Number" val={selectedVendor.bankDetails?.accountNumber} isMono />
                                 <TreasuryRow label="IFSC Code" val={selectedVendor.bankDetails?.ifscCode} isMono />
+
+                                {/* --- ADDED: BANK PASSBOOK SECTION --- */}
+                                {selectedVendor.bankDetails?.bankPassbookProof && (
+                                    <div
+                                        onClick={() => openFile(selectedVendor.bankDetails.bankPassbookProof)}
+                                        className="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between cursor-pointer hover:bg-emerald-100 transition-all"
+                                    >
+                                        <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">View Passbook Proof</span>
+                                        <ExternalLink size={14} className="text-emerald-500" />
+                                    </div>
+                                )}
                                 <div className="mt-4 p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
                                     <span className="text-[9px] font-black text-emerald-700 uppercase tracking-widest">Payout Ready</span>
                                     <CheckCircle2 size={14} className="text-emerald-500" />
@@ -175,8 +213,8 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                         <div>
                                             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Last Transit Event</p>
                                             <p className="text-sm font-bold text-white mt-1">
-                                                {selectedVendor.history?.lastDelivery?.date 
-                                                    ? new Date(selectedVendor.history.lastDelivery.date).toLocaleDateString('en-IN', { dateStyle: 'medium' }) 
+                                                {selectedVendor.history?.lastDelivery?.date
+                                                    ? new Date(selectedVendor.history.lastDelivery.date).toLocaleDateString('en-IN', { dateStyle: 'medium' })
                                                     : 'Never Active'}
                                             </p>
                                             <span className="text-[10px] font-black text-cyan-400 uppercase tracking-tighter block mt-1 underline decoration-cyan-400/30">
