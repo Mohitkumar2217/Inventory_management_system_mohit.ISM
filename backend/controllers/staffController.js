@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import bcrypt from "bcrypt"; // FIX: Added missing import
 
 export const getStaffList = async (req, res) => {
   try {
@@ -14,14 +15,13 @@ export const getStaffList = async (req, res) => {
     const managers = staff.filter(s => s.role === "manager").length;
 
     // Productivity Calculation: (Active / Total) * 100
-    // This represents the current operational "strength" of the team
     const productivityBase = totalStaff > 0 
       ? ((activeStaff / totalStaff) * 100).toFixed(1) 
       : 0;
 
     res.status(200).json({
       success: true,
-      staff, // The full list for the table
+      staff, 
       summary: {
         totalStaff,
         activeStaff,
@@ -44,9 +44,17 @@ export const syncStaffProfile = async (req, res) => {
 
         if (id) {
             // UPDATE existing staff
+            let updateData = { name, email, role, status, works };
+
+            // Logic: Only hash and update password if a new one is provided
+            if (password && password.trim() !== "") {
+                const salt = await bcrypt.genSalt(12);
+                updateData.password = await bcrypt.hash(password, salt);
+            }
+
             const updatedUser = await User.findByIdAndUpdate(
                 id, 
-                { name, email, role, status, works }, 
+                updateData, 
                 { new: true }
             ).select("-password");
             
@@ -61,6 +69,7 @@ export const syncStaffProfile = async (req, res) => {
         const existing = await User.findOne({ email });
         if (existing) return res.status(400).json({ success: false, message: "Email already registered" });
 
+        // Hash password for new user
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password || "Default@123", salt);
 

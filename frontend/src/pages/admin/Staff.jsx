@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext"; //
-import StaffSummaryCard from "../../components/Summerys/StaffSummaryCard.jsx";
+import { useAuth } from "../../context/AuthContext"; // 
 import StaffForm from "../../components/Forms/StaffForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
@@ -134,7 +133,7 @@ export default function Staff({ searchQuery }) {
     <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
       {view === "list" ? (
         <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
-          <StaffSummaryCard items={itemsSummary} nameSum="Team" />
+          {/* <StaffSummaryCard items={itemsSummary} nameSum="Team" /> */}
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-black text-slate-800 tracking-tight">Staff Directory</h1>

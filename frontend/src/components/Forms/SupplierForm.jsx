@@ -159,14 +159,14 @@ export default function SupplierForm({
 
         {/* SECTION 3 & 4: LOGISTICS & DOCUMENTS */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
-          <SectionHeader icon={<ShieldCheck className="text-blue-500" />} title="3 & 4. Status & Compliance" />
+          <SectionHeader icon={<ShieldCheck className="text-blue-500" />} title="3. Compliance" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <FileUploadField label="Business Licence" fileName={fileNames.licence} onSelect={(e) => onFileSelect(e, "licence")} />
             <FileUploadField label="Contract" fileName={fileNames.contract} onSelect={(e) => onFileSelect(e, "contract")} />
             <FileUploadField label="ID Proof" fileName={fileNames.idProof} onSelect={(e) => onFileSelect(e, "idProof")} />
             <FileUploadField label="Address Proof" fileName={fileNames.addressProof} onSelect={(e) => onFileSelect(e, "addressProof")} />
           </div>
-          <div className="border-t border-slate-50 pt-8">
+          {/* <div className="border-t border-slate-50 pt-8">
             <div className="flex justify-between items-center mb-6">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inventory Hub Links</p>
               <button type="button" onClick={() => addListItem("connectedWarehouses", { warehouseId: "", warehouseName: "", itemCountSupplied: 0 })} className="text-xs font-black text-blue-500 flex items-center gap-1 hover:text-blue-700 transition-colors"><Plus size={14} /> Add Hub</button>
@@ -185,12 +185,12 @@ export default function SupplierForm({
                 <button type="button" onClick={() => removeListItem("connectedWarehouses", idx)} className="mb-2 p-3 text-slate-300 hover:text-rose-500"><Trash2 size={18} /></button>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
 
         {/* SECTION 5: BANKING */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
-          <SectionHeader icon={<Landmark className="text-amber-500" />} title="5. Treasury & Bank Details" />
+          <SectionHeader icon={<Landmark className="text-amber-500" />} title="4. Treasury & Bank Details" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <FormInput label="Bank" value={formData.bankDetails?.bankName} onChange={(e) => handleNestedChange("bankDetails", "bankName", e.target.value)} />
             <FormInput label="A/C No" value={formData.bankDetails?.accountNumber} onChange={(e) => handleNestedChange("bankDetails", "accountNumber", e.target.value)} />
@@ -202,7 +202,7 @@ export default function SupplierForm({
 
         {/* SECTION 8: DESCRIPTION */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
-          <SectionHeader icon={<Layers className="text-indigo-500" />} title="8. Strategic Ranking" />
+          <SectionHeader icon={<Layers className="text-indigo-500" />} title="5. Strategic Ranking" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">
             <FormInput label="Internal Score" type="number" value={formData.description?.ranking} onChange={(e) => handleNestedChange("description", "ranking", e.target.value)} />
           </div>

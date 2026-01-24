@@ -1,4 +1,6 @@
 import Warehouse from "../models/Warehouse.js";
+import Category from "../models/Category.js";
+import Supplier from "../models/Supplier.js";
 
 export const getStockList = async (req, res) => {
     try {
@@ -7,8 +9,8 @@ export const getStockList = async (req, res) => {
         // --- CALCULATION LOGIC ---
         const totalWarehouses = warehouse.length;
         const totalQuantity = warehouse.reduce((sum, w) => sum + w.quantity, 0);
-        const inStockCount = warehouse.filter(w => w.status === "In Stock").length;
-        const outOfStockCount = warehouse.filter(w => w.status === "Out of Stock").length;
+        const inStockCount = warehouse.filter(w => w.status === "active").length;
+        const outOfStockCount = warehouse.filter(w => w.status === "out of stock").length;
 
         // 1. Availability Rate: (In Stock / Total SKUs) * 100
         const availabilityRate = totalWarehouses > 0 

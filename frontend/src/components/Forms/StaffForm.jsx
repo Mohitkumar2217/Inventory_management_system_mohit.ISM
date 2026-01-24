@@ -70,7 +70,10 @@ export default function StaffForm({ formData, handleInputChange, handleSubmit, o
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Work Department</label>
                 <div className="relative">
                   <select name="department" value={formData.department} onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-50 transition-all text-sm font-bold appearance-none shadow-inner cursor-pointer">
-                    <option>Logistics & Warehouse</option><option>Inventory Control</option><option>Administration</option><option>Quality Assurance</option>
+                    <option>Logistics & Warehouse</option>
+                    <option>Inventory Control</option>
+                    <option>Administration</option>
+                    <option>Quality Assurance</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 </div>
@@ -80,9 +83,9 @@ export default function StaffForm({ formData, handleInputChange, handleSubmit, o
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Employment Level</label>
                 <div className="relative">
                   <select name="role" value={formData.role} onChange={handleInputChange} className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-50 transition-all text-sm font-bold appearance-none shadow-inner cursor-pointer">
-                    <option value="Staff">Junior Staff</option>
-                    <option value="Manager">Department Lead</option>
-                    <option value="Admin">System Administrator</option>
+                    <option value="staff">Junior Staff</option>
+                    <option value="manager">Department Lead</option>
+                    <option value="admin">System Administrator</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
                 </div>

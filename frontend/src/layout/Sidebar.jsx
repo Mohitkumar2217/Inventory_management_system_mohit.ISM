@@ -27,8 +27,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             ]
         },
         { name: 'Suppliers', link: '/admin/suppliers', icon: <FaTruck />, hasSub: false },
-        { name: 'Staff', link: '/admin/staff', icon: <FaUsers />, hasSub: false },
         { name: 'Warehouse', link: '/admin/warehouse', icon: <FaWarehouse />, hasSub: false },
+        { name: 'Staff', link: '/admin/staff', icon: <FaUsers />, hasSub: false },
         { name: 'Categories', link: '/admin/categories', icon: <FaTags />, hasSub: false },
         { name: 'Reports', link: '/admin/reports', icon: <FaChartBar />, hasSub: false },
         { name: 'Settings', link: '/admin/settings', icon: <FaCog />, hasSub: false },

@@ -122,7 +122,7 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                             {selectedVendor.address || 'No Address Provided'}
                                         </p>
                                     </div>
-                                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                                    {/* <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
                                         <p className="text-[9px] font-black text-slate-400 uppercase mb-3">Linked Warehouses</p>
                                         <div className="space-y-2">
                                             {selectedVendor.connectedWarehouses?.map((wh, idx) => (
@@ -135,7 +135,7 @@ export default function SupplierDetailPage({ selectedVendor, onBack }) {
                                                 </div>
                                             ))}
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </section>
                         </div>
