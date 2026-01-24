@@ -103,7 +103,6 @@ export default function SupplierForm({
               <FormInput label="Contact Phone *" name="phone" value={formData.phone} onChange={handleInputChange} required placeholder="+91..." />
               <FormInput label="Physical Address *" name="address" value={formData.address} onChange={handleInputChange} required placeholder="Full business address" />
               <SelectField label="Availability Status" name="status" value={formData.status} onChange={handleInputChange} options={["Active", "Inactive", "Suspended"]} />
-              <FileUploadField label="ID Card Upload" fileName={fileNames.idCard} onSelect={(e) => onFileSelect(e, "idCard", "root")} />
             </div>
           </div>
         </div>
@@ -153,7 +152,6 @@ export default function SupplierForm({
               <input type="checkbox" name="isCurrentlyActiveForDelivery" checked={formData.isCurrentlyActiveForDelivery} onChange={(e) => handleInputChange({ target: { name: "isCurrentlyActiveForDelivery", value: e.target.checked } })} className="w-5 h-5 rounded-lg border-slate-300 text-indigo-600 focus:ring-indigo-500" />
               <label className="text-xs font-bold text-slate-600 uppercase tracking-widest">Active for Delivery</label>
             </div>
-            <FormInput label="Supply Limit (Units)" name="itemLimit" type="number" value={formData.itemLimit} onChange={handleInputChange} />
           </div>
         </div>
 

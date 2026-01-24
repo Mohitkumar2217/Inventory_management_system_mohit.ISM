@@ -6,7 +6,7 @@ import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
   PackageSearch, MapPin, Hash, ChevronLeft, ChevronRight, Filter, Loader2,
-  Layers, Info, Calendar, Palette, Activity, Box, DollarSign, Users, ShieldCheck, Truck
+  Layers, Info, Calendar, Activity, Box, DollarSign, Users, ShieldCheck
 } from "lucide-react";
 
 export default function Warehouse({ searchQuery = "" }) {
@@ -15,6 +15,8 @@ export default function Warehouse({ searchQuery = "" }) {
   const [stockList, setStockList] = useState([]);
   const [view, setView] = useState("list");
   const [loading, setLoading] = useState(true);
+  const [productList, setProductList] = useState([]);
+  const [userList, setUserList] = useState([]);
   const [localSearch, setLocalSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedStock, setSelectedStock] = useState(null);
@@ -22,40 +24,29 @@ export default function Warehouse({ searchQuery = "" }) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const initialFormState = {
-    // --- Basic Details ---
     warehouseId: "",
     name: "",
-    storageType: "solid", // enum: 'liquid', 'solid', 'air'
+    storageType: "solid",
     capacity: 0,
     hierarchyLevel: 1,
     details: "",
     ranking: 0,
-
-    // --- Address Details ---
     address: {
-      zone: "", 
+      zone: "",
       city: "",
       state: "",
       pin: 0,
     },
-
-    // --- Current Status & Management ---
-    statusWarehouse: "active", // enum: 'active', 'inactive', 'maintenance'
-    quantity: 0, 
-    status: "In Stock", 
-
-    // --- Workers Details ---
-    admin: "", 
-    staff: [], 
+    statusWarehouse: "active",
+    quantity: 0,
+    status: "In Stock",
+    admin: "",
+    staff: [],
     labourCount: 0,
-
-    // --- Nested Data (Arrays) --- 
-    zone: [],      
-    inventory: [], 
-    order: [],     
+    zone: [],
+    inventory: [],
+    order: [],
     img: null,
-    
-    // --- Financials (Added for logic) ---
     unitCost: 0,
     sellingPrice: 0,
     totalRevenue: 0
@@ -70,8 +61,6 @@ export default function Warehouse({ searchQuery = "" }) {
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
-
-    // Handle nested address fields using dot notation (address.city)
     if (name.includes('.')) {
       const [parent, child] = name.split('.');
       setFormData(prev => ({
@@ -81,15 +70,13 @@ export default function Warehouse({ searchQuery = "" }) {
           [child]: type === 'number' ? (value === "" ? 0 : Number(value)) : value
         }
       }));
-    } 
-    // Handle top-level numeric casting
+    }
     else if (type === 'number') {
       setFormData(prev => ({
         ...prev,
         [name]: value === "" ? 0 : Number(value)
       }));
-    } 
-    // Handle standard fields and direct array updates
+    }
     else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -101,6 +88,8 @@ export default function Warehouse({ searchQuery = "" }) {
       const res = await api.get("/warehouse");
       if (res.data.success) {
         setStockList(res.data.stocks || []);
+        setProductList(res.data.product || []);
+        setUserList(res.data.users || []);
       }
     } catch (err) {
       console.error("Fetch Error:", err);
@@ -116,7 +105,6 @@ export default function Warehouse({ searchQuery = "" }) {
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, localSearch, statusFilter]);
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -159,10 +147,7 @@ export default function Warehouse({ searchQuery = "" }) {
     const zoneString = Array.isArray(s.zone)
       ? s.zone.map(z => typeof z === 'object' ? z.name : z).join(" ")
       : "";
-    
-    // Check address fields for search
     const addressString = s.address ? `${s.address.city} ${s.address.state} ${s.address.zone}` : "";
-
     const matchesSearch =
       (s.name || "").toLowerCase().includes(finalQuery) ||
       (s.warehouseId || "").toLowerCase().includes(finalQuery) ||
@@ -277,10 +262,10 @@ export default function Warehouse({ searchQuery = "" }) {
                       <td className="p-5 font-bold text-slate-400 text-xs">{stock.warehouseId || "N/A"}</td>
                       <td className="p-5">
                         <div className="flex flex-col">
-                            <span className="text-slate-700">{stock.name}</span>
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1 uppercase tracking-tighter">
-                                <MapPin size={10} /> {stock.address?.city || "Unknown City"}
-                            </span>
+                          <span className="text-slate-700">{stock.name}</span>
+                          <span className="text-[10px] text-slate-400 flex items-center gap-1 uppercase tracking-tighter">
+                            <MapPin size={10} /> {stock.address?.city || "Unknown City"}
+                          </span>
                         </div>
                       </td>
                       <td className="p-5 text-slate-500">
@@ -311,6 +296,7 @@ export default function Warehouse({ searchQuery = "" }) {
               </table>
             </div>
 
+
             <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
               <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                 Viewing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredStock.length)} / {filteredStock.length} items
@@ -324,6 +310,17 @@ export default function Warehouse({ searchQuery = "" }) {
                 >
                   <ChevronLeft size={18} />
                 </button>
+                <div className="flex gap-1">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${activePage === i + 1 ? "bg-orange-600 text-white shadow-xl shadow-orange-100" : "text-slate-400 hover:bg-slate-50"}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
                 <button
                   disabled={activePage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
@@ -353,12 +350,11 @@ export default function Warehouse({ searchQuery = "" }) {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Main Information */}
             <div className="lg:col-span-8 space-y-8">
               <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl border border-slate-50 relative overflow-hidden">
                 <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
                   <div className="w-48 h-48 rounded-[3.5rem] bg-orange-50 flex items-center justify-center text-7xl shadow-2xl shrink-0 overflow-hidden">
-                      {selectedStock.img ? <img src={selectedStock.img} className="w-full h-full object-cover" /> : "🏢"}
+                    {selectedStock.img ? <img src={selectedStock.img} className="w-full h-full object-cover" alt="Profile" /> : "🏢"}
                   </div>
                   <div className="pt-4 flex-1">
                     <h1 className="text-5xl font-black text-slate-800 tracking-tighter mb-2">{selectedStock.name}</h1>
@@ -371,7 +367,7 @@ export default function Warehouse({ searchQuery = "" }) {
                         <Activity size={10} /> {selectedStock.statusWarehouse}
                       </span>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-slate-50 pt-8">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={12} className="text-orange-500" /> City</p>
@@ -394,22 +390,21 @@ export default function Warehouse({ searchQuery = "" }) {
                 </div>
               </div>
 
-              {/* Mapped Zones & Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-sm">
-                   <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
                     <Layers className="text-indigo-500" size={20} />
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em]">Operational Zones</h3>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {Array.isArray(selectedStock.zone) && selectedStock.zone.length > 0 ? (
-                        selectedStock.zone.map((z, i) => (
-                            <span key={z.id || i} className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-wider">
-                                {typeof z === 'object' ? z.name : z}
-                            </span>
-                        ))
+                      selectedStock.zone.map((z, i) => (
+                        <span key={z.id || i} className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-wider">
+                          {typeof z === 'object' ? z.name : z}
+                        </span>
+                      ))
                     ) : (
-                        <p className="text-slate-400 text-xs font-bold italic">No internal zones defined.</p>
+                      <p className="text-slate-400 text-xs font-bold italic">No internal zones defined.</p>
                     )}
                   </div>
                 </div>
@@ -424,80 +419,43 @@ export default function Warehouse({ searchQuery = "" }) {
               </div>
             </div>
 
-            {/* Side Analytics & Personnel */}
             <div className="lg:col-span-4 space-y-8">
-              {/* Financial intelligence */}
-              <div className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-lg">
-                <div className="flex items-center gap-3 mb-8"><DollarSign className="text-emerald-500" size={18} /><h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Financial Ledger</h3></div>
-                <div className="space-y-4">
-                    <div className="flex justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase">Unit Cost</p>
-                            <p className="text-lg font-black text-slate-700">${selectedStock.unitCost || 0}</p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-[9px] font-black text-slate-400 uppercase">Potential Value</p>
-                            <p className="text-lg font-black text-emerald-600">${(selectedStock.quantity * (selectedStock.unitCost || 0)).toLocaleString()}</p>
-                        </div>
-                    </div>
-                    <div className="flex justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <div>
-                            <p className="text-[9px] font-black text-slate-400 uppercase">Revenue YTD</p>
-                            <p className="text-lg font-black text-slate-700">${selectedStock.totalRevenue || 0}</p>
-                        </div>
-                        <div className="text-right">
-                             <p className="text-[9px] font-black text-slate-400 uppercase">Ranking</p>
-                             <p className="text-lg font-black text-orange-500">{selectedStock.ranking || 0} / 5</p>
-                        </div>
-                    </div>
-                </div>
-              </div>
-
-              {/* Personnel */}
               <div className="bg-white p-10 rounded-[3.5rem] border border-slate-50 shadow-lg">
                 <div className="flex items-center gap-3 mb-8"><Users className="text-blue-500" size={18} /><h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Human Resources</h3></div>
                 <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><ShieldCheck size={20} /></div>
-                        <div>
-                            <p className="text-[9px] font-black text-indigo-400 uppercase">Lead Admin</p>
-                            <p className="text-xs font-black text-indigo-900">{typeof selectedStock.admin === 'object' ? selectedStock.admin.name : (selectedStock.admin || "Unassigned")}</p>
-                        </div>
+                  <div className="flex items-center gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white"><ShieldCheck size={20} /></div>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black text-indigo-400 uppercase">Lead Admin</p>
+                      <p className="text-xs font-black text-indigo-900 truncate">
+                        {(() => {
+                          const adminId = typeof selectedStock.admin === 'object' ? selectedStock.admin?._id : selectedStock.admin;
+                          const found = (userList || []).find(u => u._id === adminId);
+                          return found ? found.name : "Unassigned / ID Not Found";
+                        })()}
+                      </p>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase">Staff</p>
-                            <p className="text-lg font-black text-slate-700">{selectedStock.staff?.length || 0}</p>
-                        </div>
-                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <p className="text-[9px] font-black text-slate-400 uppercase">Labour</p>
-                            <p className="text-lg font-black text-slate-700">{selectedStock.labourCount || 0}</p>
-                        </div>
-                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Status & Expiry Analytics */}
               <div className="bg-slate-900 p-10 rounded-[3.5rem] text-white shadow-2xl relative overflow-hidden">
                 <div className="relative z-10 space-y-8">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inventory Health</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center"><Calendar size={18} className="text-slate-400" /></div>
-                      <div>
-                        <p className="text-[9px] font-black text-slate-500 uppercase">Expiry Date Check</p>
-                        <p className="text-xs font-bold text-slate-300">{selectedStock.expiryDate ? new Date(selectedStock.expiryDate).toLocaleDateString() : "No Date Set"}</p>
-                      </div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Inventory Financials</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-4xl font-black text-emerald-400">${(selectedStock.totalRevenue || 0).toLocaleString()}</span>
+                      <span className="text-[10px] font-bold text-white/30 mb-1">YTD Revenue</span>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Address Mapping</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center"><MapPin size={18} className="text-slate-400" /></div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-slate-300 line-clamp-1">{selectedStock.address?.state}, {selectedStock.address?.city}</p>
-                        <p className="text-[9px] font-black text-slate-500 uppercase">Pin: {selectedStock.address?.pin}</p>
-                      </div>
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5"><Calendar size={12} /> Last Expiry Check</p>
+                      <p className="text-xs font-bold text-white/80">{selectedStock.expiryDate ? new Date(selectedStock.expiryDate).toLocaleDateString() : "No Date Set"}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5"><MapPin size={12} /> Full Address</p>
+                      <p className="text-xs font-bold text-white/80">{selectedStock.address?.state}, PIN: {selectedStock.address?.pin}</p>
                     </div>
                   </div>
                 </div>
@@ -515,7 +473,13 @@ export default function Warehouse({ searchQuery = "" }) {
             </button>
             <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-widest">{formData._id ? "Update Deployment" : "New Inventory Log"}</h1>
           </div>
-          <WarehouseForm formData={formData} handleInputChange={handleInputChange} handleSubmit={handleSubmit} onCancel={() => setView("list")} />
+          <WarehouseForm
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleSubmit={handleSubmit} onCancel={() => setView("list")}
+            users={userList}
+            products={productList}
+          />
         </div>
       )}
     </div>

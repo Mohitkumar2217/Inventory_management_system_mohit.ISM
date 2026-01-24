@@ -61,8 +61,8 @@ export default function CategoryForm({ formData, handleInputChange, handleSubmit
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormInput label="Display Name *" name="name" value={formData.name || ""} onChange={handleInputChange} required />
                                 <FormInput label="Group Code *" name="code" value={formData.code || ""} onChange={handleInputChange} required />
-                                <FormInput label="URL Slug" name="slug" value={formData.slug || ""} onChange={handleInputChange} />
-                                <FormInput label="Meta Title" name="metaTitle" value={formData.metaTitle || ""} onChange={handleInputChange} />
+                                {/* <FormInput label="URL Slug" name="slug" value={formData.slug || ""} onChange={handleInputChange} />
+                                <FormInput label="Meta Title" name="metaTitle" value={formData.metaTitle || ""} onChange={handleInputChange} /> */}
                             </div>
                         </div>
 
@@ -75,7 +75,7 @@ export default function CategoryForm({ formData, handleInputChange, handleSubmit
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Plus size={14} className="text-blue-500"/> Stage New Brand Partner
                                 </h4>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Brand Name</label>
                                         <input className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold shadow-sm" 
@@ -86,30 +86,10 @@ export default function CategoryForm({ formData, handleInputChange, handleSubmit
                                         <input className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold shadow-sm" 
                                             value={tempBrand.code} onChange={(e) => setTempBrand({...tempBrand, code: e.target.value.toUpperCase()})} placeholder="SS-01" />
                                     </div>
-                                    <div className="pt-6">
+                                    <div className="pt-6 col-span-2">
                                         <button type="button" onClick={addBrandToRegistry} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
                                             <Plus size={18}/> Add to Registry
                                         </button>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Specialization</label>
-                                        <select value={tempBrand.specialization} onChange={(e) => setTempBrand({...tempBrand, specialization: e.target.value})} className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold shadow-sm">
-                                            <option value="general">General</option><option value="liquid">Liquid</option><option value="solid">Solid</option><option value="air">Air</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Lead Time (Days)</label>
-                                        <input type="number" className="w-full p-4 bg-white border border-slate-200 rounded-2xl outline-none text-sm font-bold shadow-sm" 
-                                            value={tempBrand.leadTimeDays} onChange={(e) => setTempBrand({...tempBrand, leadTimeDays: Number(e.target.value)})} />
-                                    </div>
-                                    <div className="flex items-end pb-2">
-                                        <label className="flex items-center gap-3 cursor-pointer p-4 bg-white rounded-2xl border border-slate-200 w-full shadow-sm">
-                                            <input type="checkbox" checked={tempBrand.isPremium} onChange={(e) => setTempBrand({...tempBrand, isPremium: e.target.checked})} className="w-4 h-4 rounded text-blue-600" />
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Premium Partner</span>
-                                        </label>
                                     </div>
                                 </div>
                             </div>

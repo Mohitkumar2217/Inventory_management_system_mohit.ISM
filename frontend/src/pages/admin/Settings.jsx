@@ -1,51 +1,76 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import axios from "axios";
 import PageTitle from "../../components/PageTitle";
-import SettingsForm from "../../components/Forms/SettingsFrom.jsx";
+import SettingsForm from "../../components/Forms/SettingsFrom"; 
+import { useAuth } from "../../context/AuthContext";
 import {
-  Settings as SettingsIcon, Shield, Bell,
-  Globe, Database, Save, User, CheckCircle,
-  Camera, Clock, Activity, ChevronRight,
-  UserCheck, ShieldCheck, Cpu
+  Shield, Bell, Globe, Database, Save, User, 
+  Camera, Clock, Activity, UserCheck, ShieldCheck, Cpu
 } from "lucide-react";
 
 export default function Settings() {
+  const { token, user } = useAuth(); // Retrieve current user from AuthContext
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Advanced state with Profile Photo
+  // Initialize with placeholder structure, but we will fill this from API/Context
   const [settingsData, setSettingsData] = useState({
-    // Primary Identity
-    userName: "Mohit Kumar",
-    jobTitle: "Chief Logistics Officer",
-    bio: "Focused on optimizing supply chain efficiency and warehouse automation for the Rajasthan region.",
-    profileImage: "https://i.pravatar.cc/150?img=11",
-    employeeId: "EMP-2025-0942",
-
-    // Personal & Contact Details
-    gender: "Male",
+    name: user?.name || "",
+    role: user?.role || "Staff",
+    works: user?.works || "",
+    img: user?.img || "https://i.pravatar.cc/150?img=11",
+    employeeId: user?.employeeId || "",
+    gender: user?.gender || "Not Set",
     language: "English (US)",
-    phoneNumber: "+91 98765-43210",
-    adminEmail: "admin@mohit.com",
-    secondaryEmail: "mohit.k@logistics-corp.in",
-    address: "Logistics Park, Jaipur, Rajasthan, India",
-
-    // Business & System Context
-    businessName: "Mohit Logistics Corp",
-    department: "Global Operations",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    secondaryEmail: "",
+    address: user?.address || "",
+    businessName: "Logistics Hub",
+    department: user?.department || "Operations",
     currency: "INR",
     timezone: "IST (UTC+5:30)",
-
-    // System Config
-    twoFactor: true,
-    emailNotifications: true,
-    lowStockAlerts: true,
+    twoFactor: false,
+    emailNotifications: false,
+    lowStockAlerts: false,
     autoBackup: false,
     pushNotifications: true
   });
 
+  const api = axios.create({
+    baseURL: "http://localhost:4000/api",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  // Fetch real profile data for the current logged-in user
+  const fetchUser = async () => {
+    if (!token) return;
+    setLoading(true);
+    try { 
+      const res = await api.get("/staffs/profile"); 
+      if (res.data.success) { 
+        setSettingsData(prev => ({ 
+            ...prev, 
+            ...res.data.member, 
+            img: res.data.member.img || prev.img,
+            name: res.data.member.name || prev.name
+        }));
+      }
+    } catch (err) {
+      console.error("Fetch Error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUser();
+  }, [token]);
+
   const completionStats = useMemo(() => {
-    const requiredFields = ['userName', 'businessName', 'adminEmail', 'phoneNumber', 'address', 'profileImage'];
+    const requiredFields = ['name', 'email', 'phone', 'address'];
     const filledFields = requiredFields.filter(field => !!settingsData[field]);
     return Math.round((filledFields.length / requiredFields.length) * 100);
   }, [settingsData]);
@@ -63,19 +88,24 @@ export default function Settings() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSettingsData(prev => ({ ...prev, profileImage: reader.result }));
+        setSettingsData(prev => ({ ...prev, img: reader.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("System configuration synced successfully!");
-    }, 1000);
+    try {
+        // Sync the logged-in user's changes to the database
+        const res = await api.put("/staffs/update-profile", settingsData);
+        if(res.data.success) alert("Your profile has been updated successfully!");
+    } catch (err) {
+        alert("Sync failed: " + (err.response?.data?.message || err.message));
+    } finally {
+        setIsSaving(false);
+    }
   };
 
   const tabs = [
@@ -88,7 +118,7 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 font-sans animate-in fade-in duration-700">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto mt-10">
 
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
@@ -100,7 +130,7 @@ export default function Settings() {
               </span>
               <span className="text-slate-300">|</span>
               <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest flex items-center gap-1">
-                <Clock size={12} /> Last Sync: 2 mins ago
+                <Clock size={12} /> Last Sync: Just Now
               </p>
             </div>
           </div>
@@ -120,8 +150,8 @@ export default function Settings() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl font-black text-sm transition-all group ${activeTab === tab.id
-                    ? "bg-slate-900 text-white shadow-xl shadow-slate-300"
-                    : "bg-white text-slate-500 hover:bg-slate-100 border border-slate-100"
+                  ? "bg-slate-900 text-white shadow-xl shadow-slate-300"
+                  : "bg-white text-slate-500 hover:bg-slate-100 border border-slate-100"
                   }`}
               >
                 <div className="flex items-center gap-3">
@@ -154,14 +184,13 @@ export default function Settings() {
           {/* RIGHT SIDEBAR: Profile & Meta Data */}
           <div className="w-full lg:w-80 space-y-6 shrink-0">
 
-            {/* User Profile Card */}
             <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm text-center relative group overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-indigo-500 to-blue-600 opacity-10"></div>
               <div className="relative">
                 <div className="relative inline-block mb-4 mt-2">
                   <img
-                    src={settingsData.profileImage}
-                    alt="Admin"
+                    src={settingsData.img}
+                    alt="Logged In User"
                     className="w-28 h-28 rounded-[2.5rem] object-cover border-4 border-white shadow-2xl"
                   />
                   <button
@@ -173,12 +202,11 @@ export default function Settings() {
                   <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*" />
                 </div>
 
-                <h4 className="text-xl font-black text-slate-800 tracking-tight">{settingsData.userName}</h4>
+                <h4 className="text-xl font-black text-slate-800 tracking-tight">{settingsData.name}</h4>
                 <span className="inline-block bg-blue-50 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mt-1">
-                  Super Admin
+                  {settingsData.role}
                 </span>
 
-                {/* Completion Tracker inside card */}
                 <div className="mt-8 pt-8 border-t border-slate-50">
                   <div className="flex justify-between items-end mb-2 px-1">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Profile Progress</p>
@@ -194,7 +222,6 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
                 <UserCheck size={18} className="text-emerald-500 mb-2" />
@@ -207,36 +234,7 @@ export default function Settings() {
                 <p className="text-sm font-black text-slate-800">High</p>
               </div>
             </div>
-
-            {/* Activity Log */}
-            {/* <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white relative overflow-hidden">
-                <div className="relative z-10">
-                    <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-4">Security Log</p>
-                    <div className="space-y-4">
-                        <div className="flex gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                            <div>
-                                <p className="text-xs font-black text-slate-200 leading-none">Login from Chrome</p>
-                                <p className="text-[10px] text-slate-500 mt-1 font-bold">Today, 10:45 AM • Jaipur</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-3">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-700 mt-1.5 shrink-0" />
-                            <div>
-                                <p className="text-xs font-black text-slate-400 leading-none">Password Changed</p>
-                                <p className="text-[10px] text-slate-500 mt-1 font-bold">4 days ago</p>
-                            </div>
-                        </div>
-                    </div>
-                    <button className="w-full mt-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border border-white/5">
-                        View Full History
-                    </button>
-                </div>
-                <Shield className="absolute -right-4 -bottom-4 text-white/5 w-32 h-32 rotate-12" />
-            </div> */}
-
           </div>
-
         </div>
       </div>
     </div>

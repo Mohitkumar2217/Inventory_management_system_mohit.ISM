@@ -85,8 +85,10 @@ const productSchema = new mongoose.Schema({
     // --- PERFORMANCE TRACKING ---
     rating: { type: Number, default: 0 },     // 1 to 5 stars
     reviewCount: { type: Number, default: 0 },
-    totalSold: { type: Number, default: 0 }   // Tracks popularity
-
+    totalSold: { type: Number, default: 0 }, // Tracks popularity
+    damageQuantity: { type: Number, default: 0 },
+    badQuantity: { type: Number, default: 0 },
+    
 }, { timestamps: true });
 
 // // Pre-save hook to calculate Margin automatically 

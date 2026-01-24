@@ -2,20 +2,16 @@ import React, { useState } from "react";
 import {
   Layers, Save, FileText, ChevronDown, Activity, Hash,
   AlertTriangle, Box, DollarSign, Users, ShieldCheck,
-  MapPin, Plus, X, Navigation, Truck, Package
+  MapPin, Plus, X, Navigation, Truck, Package, Link2
 } from "lucide-react";
 
-export default function WarehouseForm({ formData, handleInputChange, handleSubmit, onCancel, users = [], productList = [] }) {
+export default function WarehouseForm({ formData, handleInputChange, handleSubmit, onCancel, users = [], products = [] }) {
   const [zoneInput, setZoneInput] = useState("");
 
-  // Temporary state for the Product sub-form
   const [productEntry, setProductEntry] = useState({
+    productId: "",
     productName: "",
     sku: "",
-    quantity: 0,
-    unitCost: 0,
-    sellingPrice: 0,
-    expiryDate: ""
   });
 
   // --- MULTI-ZONE HANDLERS ---
@@ -26,7 +22,7 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
       const exists = zones.find(z => z.name.toLowerCase() === zoneInput.trim().toLowerCase());
       if (!exists) {
         const newZoneObject = {
-          id: `ZONE-${Date.now()}`, // Unique ID required by schema
+          id: `ZONE-${Date.now()}`, 
           name: zoneInput.trim()
         };
         const updatedZones = [...zones, newZoneObject];
@@ -45,19 +41,26 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
   const inventory = formData.inventory || [];
 
   const handleProductSubChange = (e) => {
-    const { name, value, type } = e.target;
-    setProductEntry(prev => ({
-      ...prev,
-      [name]: type === 'number' ? (value === "" ? 0 : Number(value)) : value
-    }));
+    const { name, value } = e.target;
+    
+    if (name === "productSelect") {
+      const selected = products.find(p => p._id === value || p.id === value);
+      if (selected) {
+        setProductEntry({
+          productId: value,
+          productName: selected.name,
+          sku: selected.sku || "",
+        });
+      }
+      return;
+    }
   };
 
   const addProductToInventory = () => {
     if (productEntry.productName) {
       const updatedInventory = [...inventory, { ...productEntry, id: Date.now() }];
       handleInputChange({ target: { name: "inventory", value: updatedInventory } });
-      // Reset sub-form
-      setProductEntry({ productName: "", sku: "", quantity: 0, unitCost: 0, sellingPrice: 0, expiryDate: "" });
+      setProductEntry({ productId: "", productName: "", sku: "" });
     }
   };
 
@@ -137,58 +140,82 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
           </div>
         </div>
 
-        {/* SECTION 2: PRODUCT STOCK ENTRY (ADDED) */}
+        {/* SECTION 2: PRODUCT STOCK ENTRY */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
           <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
             <div className="p-2 bg-blue-50 rounded-xl"><Package className="text-blue-500" size={18} /></div>
-            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Product Stock Entry</h2>
+            <h2 className="text-sm font-black text-slate-800 uppercase tracking-[0.2em]">Inventory Linkage</h2>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div className="lg:col-span-4 space-y-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
+            <div className="lg:col-span-5 space-y-4 p-6 bg-slate-50 rounded-[2rem] border border-slate-100 shadow-inner">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Product</label>
-                <select
-                  name="productName"
-                  value={productEntry.productName}
-                  onChange={handleProductSubChange}
-                  className="w-full p-4 bg-white border border-slate-100 rounded-2xl outline-none text-sm font-bold shadow-inner cursor-pointer"
-                >
-                  <option value="">Choose Product</option>
-                  {productList.map((p, i) => <option key={i} value={p.name || p}>{p.name || p}</option>)}
-                </select>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Catalog Product</label>
+                <div className="relative">
+                  <select
+                    name="productSelect"
+                    value={productEntry.productId}
+                    onChange={handleProductSubChange}
+                    className="w-full p-4 bg-white border border-slate-100 rounded-2xl outline-none text-sm font-bold shadow-inner cursor-pointer appearance-none"
+                  >
+                    <option value="">Choose from Master List</option>
+                    {products.map((p, i) => (
+                      <option key={p._id || p.id || i} value={p._id || p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Link2 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={addProductToInventory}
-                className="w-full py-4 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase hover:bg-blue-700 transition-all flex items-center justify-center gap-3 active:scale-95 shadow-lg shadow-blue-100"
               >
-                <Plus size={16} /> Add to Stock List
+                <Plus size={18} /> Add to Stock List
               </button>
             </div>
 
-            <div className="lg:col-span-8 overflow-hidden border border-slate-100 rounded-[2rem]">
+            <div className="lg:col-span-7 overflow-hidden border border-slate-100 rounded-[2rem]">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 text-[9px] font-black uppercase text-slate-400">
-                  <tr><th className="p-4">Item Details</th><th className="p-4">Qty</th><th className="p-4">Financials</th><th className="p-4 text-center">Action</th></tr>
+                  <tr>
+                    <th className="p-5">Linked Product Name</th>
+                    <th className="p-5 text-center">Action</th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {inventory.map((item, idx) => (
-                    <tr key={idx} className="text-xs font-bold text-slate-600 hover:bg-slate-50/50">
-                      <td className="p-4"><div className="flex flex-col"><span>{item.productName}</span><span className="text-[10px] text-slate-400">{item.sku}</span></div></td>
-                      <td className="p-4">{item.quantity} Units</td>
-                      <td className="p-4"><span className="text-emerald-600">${item.unitCost}</span> / <span className="text-blue-600">${item.sellingPrice}</span></td>
-                      <td className="p-4 text-center"><button type="button" onClick={() => removeProduct(idx)} className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl"><X size={16} /></button></td>
+                    <tr key={idx} className="text-xs font-bold text-slate-600 hover:bg-slate-50/50 transition-colors group">
+                      <td className="p-5">
+                        <div className="flex items-center gap-3">
+                           <div className="w-2 h-2 rounded-full bg-blue-400" />
+                           {item.productName}
+                        </div>
+                      </td>
+                      <td className="p-5 text-center">
+                        <button type="button" onClick={() => removeProduct(idx)} className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all">
+                          <X size={18} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
-                  {inventory.length === 0 && <tr><td colSpan="4" className="p-10 text-center text-slate-300 italic text-xs">No products in list</td></tr>}
+                  {inventory.length === 0 && (
+                    <tr>
+                      <td colSpan="2" className="p-12 text-center text-slate-300 italic text-[10px] font-black uppercase tracking-widest">
+                        No products linked to this warehouse
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
 
-        {/* SECTION 3: STORAGE LOGISTICS (NEW MULTI-ZONE ADDITION) */}
+        {/* SECTION 3: STORAGE LOGISTICS & ADMIN SELECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
             <div className="flex items-center gap-3 mb-8 border-b border-slate-50 pb-4">
@@ -220,7 +247,6 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
                 </div>
               </div>
 
-              {/* Display List of Zones */}
               <div className="flex flex-wrap gap-2 pt-2">
                 {zones.map((z, index) => (
                   <div key={z.id || index} className="flex items-center gap-2 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-xl group transition-all hover:bg-indigo-100">
@@ -234,7 +260,6 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
                     </button>
                   </div>
                 ))}
-                {zones.length === 0 && <p className="text-[10px] font-bold text-slate-300 uppercase italic ml-1">No zones assigned yet</p>}
               </div>
             </div>
           </div>
@@ -249,7 +274,8 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
                 <FormInput label="Max Safety Cap" name="maxStock" type="number" value={formData.maxStock || 500} onChange={handleInputChange} />
               </div>
             </div>
-            {/* SECTION 3: FINANCE & PERSONNEL */}
+
+            {/* RESOLVED USER NOT DEFINED ERROR IN THIS BLOCK */}
             <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-50 rounded-xl"><Users className="text-blue-500" size={18} /></div>
@@ -266,9 +292,10 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
                     className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-blue-50/50 transition-all text-sm font-bold text-slate-700 shadow-inner appearance-none cursor-pointer"
                   >
                     <option value="">Select an Admin</option>
-                    {users.map((user) => (
-                      <option key={user._id} value={user._id}>
-                        {user.name}
+                    {/* Variable renamed to staffMember to avoid scoping issues */}
+                    {users && users.length > 0 && users.map((staffMember) => (
+                      <option key={staffMember._id} value={staffMember._id}>
+                        {staffMember.name}
                       </option>
                     ))}
                   </select>
@@ -279,7 +306,6 @@ export default function WarehouseForm({ formData, handleInputChange, handleSubmi
             </div>
           </div>
         </div>
-
 
         {/* SECTION 5: ADDRESS & NOTES */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/40">
