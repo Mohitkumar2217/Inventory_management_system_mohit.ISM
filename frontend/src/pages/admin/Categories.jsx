@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { Plus, Trash2, Edit2, Eye, Layers, Percent, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import CategoryForm from "../../components/Forms/CategoryForm"; // Ensure path is correct
-import CategoryDetails from "../details/CategoryDetails"; // Ensure path is correct
+import {
+    Plus, Trash2, Edit2, Eye, Layers, Percent,
+    ChevronLeft, ChevronRight, Loader2, Search, X, Filter
+} from "lucide-react";
+import CategoryForm from "../../components/Forms/CategoryForm";
+import CategoryDetails from "../details/CategoryDetails";
 
-export default function Categories({ searchQuery }) {
+export default function Categories({ searchQuery = "" }) {
     const initialFormData = {
         name: '',
         code: '',
         description: '',
         slug: '',
         metaTitle: '',
-        // CHANGED: brand is now an array to support multiple entries
         brand: [],
         storageType: 'solid',
         requiresCooling: false,
@@ -28,6 +30,7 @@ export default function Categories({ searchQuery }) {
         icon: 'package',
         isPrivate: false
     };
+
     const { token } = useAuth();
     const [categories, setCategories] = useState([]);
     const [view, setView] = useState("list");
@@ -40,6 +43,10 @@ export default function Categories({ searchQuery }) {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
+    // --- Filter States ---
+    const [localSearch, setLocalSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("All");
+
     const api = axios.create({
         baseURL: "http://localhost:4000/api",
         headers: { Authorization: `Bearer ${token}` }
@@ -49,7 +56,7 @@ export default function Categories({ searchQuery }) {
         setLoading(true);
         try {
             const res = await api.get("/categories");
-            if (res.data.success) setCategories(res.data.categories);
+            if (res.data.success) setCategories(res.data.categories || []);
         } catch (err) {
             console.error("Fetch Error:", err);
         } finally {
@@ -58,6 +65,11 @@ export default function Categories({ searchQuery }) {
     };
 
     useEffect(() => { if (token) fetchCategories(); }, [token]);
+
+    // Auto-reset pagination on search or filter change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, localSearch, statusFilter]);
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -68,12 +80,10 @@ export default function Categories({ searchQuery }) {
             setFormData((prev) => {
                 let updated = { ...prev };
                 let current = updated;
-
                 for (let i = 0; i < keys.length - 1; i++) {
                     current[keys[i]] = { ...current[keys[i]] };
                     current = current[keys[i]];
                 }
-
                 current[keys[keys.length - 1]] = val;
                 return updated;
             });
@@ -129,14 +139,22 @@ export default function Categories({ searchQuery }) {
         }
     };
 
-    const filteredCategories = categories.filter(c =>
-        c.name?.toLowerCase().includes((searchQuery || "").toLowerCase()) ||
-        c.code?.toLowerCase().includes((searchQuery || "").toLowerCase())
-    );
+    // --- Filter Logic ---
+    const filteredCategories = categories.filter(c => {
+        const finalQuery = (searchQuery || localSearch || "").toLowerCase();
+        const matchesSearch =
+            (c.name || "").toLowerCase().includes(finalQuery) ||
+            (c.code || "").toLowerCase().includes(finalQuery);
 
-    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+        const matchesStatus = statusFilter === "All" || c.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+
+    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage) || 1;
     const activePage = currentPage > totalPages ? 1 : currentPage;
-    const currentItems = filteredCategories.slice((activePage - 1) * itemsPerPage, activePage * itemsPerPage);
+    const indexOfLastItem = activePage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredCategories.slice(indexOfFirstItem, indexOfLastItem);
 
     if (loading && categories.length === 0) {
         return (
@@ -149,29 +167,71 @@ export default function Categories({ searchQuery }) {
     return (
         <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
             {view === "list" ? (
-                <div className="max-w-7xl mx-auto p-4 md:p-8 animate-in fade-in duration-700">
-                    <div className="flex justify-between items-center mb-8 mt-10">
+                <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
+                    
+                    <div className="flex justify-between items-center mb-6 mt-4">
                         <div>
                             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Departmental Groups</h1>
                             <p className="text-slate-500 text-sm font-bold flex items-center gap-1 uppercase tracking-tighter">
-                                <Layers size={14} className="text-blue-500" /> {filteredCategories.length} Categories Defined
+                                <Layers size={14} className="text-blue-500" /> {filteredCategories.length} Categories Matching
                             </p>
                         </div>
-                        <button onClick={() => { resetForm(); setView("add"); }} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg transition-all active:scale-95">
-                            <Plus size={20} /> Create New
-                        </button>
                     </div>
 
-                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-                        <div className="p-6 border-b border-slate-50 flex items-center justify-between bg-white">
-                            <div className="flex items-center gap-2 text-slate-500 text-sm font-bold">
-                                Show
-                                <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} className="border border-slate-200 rounded-xl px-3 py-1.5 bg-slate-50 outline-none font-black cursor-pointer">
+                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible mt-8">
+                        <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                            
+                            {/* Items Per Page Selector */}
+                            <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                                <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                                    className="bg-white border-none rounded-xl px-4 py-1.5 text-xs font-black shadow-sm outline-none cursor-pointer"
+                                >
+                                    <option value={categories.length}>all</option>
+                                    <option value={5}>5</option>
                                     <option value={10}>10</option>
                                     <option value={25}>25</option>
+                                    <option value={50}>50</option>
                                 </select>
                             </div>
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Global Registry</p>
+
+                            <div className="flex flex-1 items-center gap-3 w-full lg:max-w-3xl justify-end">
+                                {/* Search Input */}
+                                <div className="flex-1 bg-slate-50 border border-slate-100 rounded-2xl px-4 py-2.5 flex items-center gap-2 group focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                                    <Search className="text-slate-300 group-focus-within:text-blue-400" size={18} />
+                                    <input
+                                        type="text"
+                                        placeholder="Quick search category name or code..."
+                                        className="bg-transparent outline-none font-bold text-sm w-full placeholder:text-slate-300"
+                                        value={localSearch}
+                                        onChange={(e) => setLocalSearch(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Status Filter */}
+                                <div className="bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 flex items-center gap-2">
+                                    <Filter size={16} className="text-slate-400" />
+                                    <select
+                                        className="bg-transparent outline-none font-bold text-xs text-slate-600 cursor-pointer"
+                                        value={statusFilter}
+                                        onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+                                    >
+                                        <option value="All">All Status</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+
+                                {/* Add Button */}
+                                <button
+                                    onClick={() => { resetForm(); setView("add"); }}
+                                    className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-blue-100 active:scale-95 transition-all whitespace-nowrap"
+                                >
+                                    <Plus size={18} /> Create New
+                                </button>
+                            </div>
                         </div>
 
                         <div className="overflow-x-auto">
@@ -180,8 +240,8 @@ export default function Categories({ searchQuery }) {
                                     <tr>
                                         <th className="p-6">Group Info</th>
                                         <th className="p-6">Compliance</th>
-                                        <th className="p-6">Level</th>
-                                        <th className="p-6 text-center">Actions</th>
+                                        <th className="p-6">Status</th>
+                                        <th className="p-6 text-center">Manage</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50 text-sm font-bold">
@@ -203,28 +263,47 @@ export default function Categories({ searchQuery }) {
                                                 </div>
                                             </td>
                                             <td className="p-6">
-                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${cat.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                                                    Priority {cat.priority}
+                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase ${cat.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-400'}`}>
+                                                    {cat.status}
                                                 </span>
                                             </td>
                                             <td className="p-6 text-center">
                                                 <div className="flex justify-center gap-2">
-                                                    <button onClick={() => handleViewDetails(cat)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={16} /></button>
-                                                    <button onClick={() => handleEdit(cat)} className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={16} /></button>
-                                                    <button onClick={() => deleteCategory(cat._id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={16} /></button>
+                                                    <button onClick={() => handleViewDetails(cat)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
+                                                    <button onClick={() => handleEdit(cat)} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
+                                                    <button onClick={() => deleteCategory(cat._id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+                            {filteredCategories.length === 0 && (
+                                <div className="p-20 text-center text-slate-300 font-black uppercase tracking-[0.2em] text-xs italic">
+                                    No matching categories found.
+                                </div>
+                            )}
                         </div>
 
+                        {/* Pagination Footer */}
                         <div className="p-6 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center bg-white rounded-b-[2.5rem]">
-                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Page {activePage} of {totalPages}</p>
+                            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredCategories.length)} / {filteredCategories.length} items
+                            </p>
                             <div className="flex items-center gap-2">
-                                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={activePage === 1} className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 transition-all"><ChevronLeft size={18} /></button>
-                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={activePage === totalPages || totalPages === 0} className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 transition-all"><ChevronRight size={18} /></button>
+                                <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={activePage === 1} className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 transition-all hover:bg-slate-50 active:scale-95"><ChevronLeft size={18} /></button>
+                                <div className="flex gap-1">
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <button
+                                            key={i + 1}
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={`w-10 h-10 rounded-xl text-xs font-black transition-all ${activePage === i + 1 ? "bg-blue-600 text-white shadow-xl shadow-blue-100" : "text-slate-400 hover:bg-slate-50"}`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={activePage === totalPages || totalPages === 0} className="p-2 rounded-xl border border-slate-100 disabled:opacity-30 transition-all hover:bg-slate-50 active:scale-95"><ChevronRight size={18} /></button>
                             </div>
                         </div>
                     </div>
@@ -235,6 +314,13 @@ export default function Categories({ searchQuery }) {
                 </div>
             ) : (
                 <div className="max-w-5xl mx-auto p-6 animate-in slide-in-from-bottom-4 duration-700 ">
+                    <div className="flex items-center justify-between mb-8">
+                        <button onClick={() => setView("list")} className="flex items-center gap-2 text-slate-500 font-bold group transition-all">
+                            <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100 group-hover:bg-slate-100 transition-all"><ChevronLeft size={20} /></div>
+                            Back
+                        </button>
+                        <h1 className="text-2xl font-black text-slate-800 tracking-tight">{currentId ? "Edit Department Group" : "Create New Group"}</h1>
+                    </div>
                     <CategoryForm formData={formData} handleInputChange={handleInputChange} handleSubmit={handleSubmit} onCancel={() => setView("list")} currentId={currentId} />
                 </div>
             )}

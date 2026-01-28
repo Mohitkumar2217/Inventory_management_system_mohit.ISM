@@ -130,16 +130,6 @@ export default function SupplierForm({
                 </div>
 
                 {/* Row 2: Pricing & Descriptions */}
-                <div className="md:col-span-4">
-                  <FormInput label="Unit Price (₹)" type="number" value={item.unitPrice} onChange={(e) => handleListChange("itemsDetails", idx, "unitPrice", e.target.value)} />
-                </div>
-                <div className="md:col-span-4">
-                  <FormInput label="Min Order Product (MOP)" type="number" value={item.mop} onChange={(e) => handleListChange("itemsDetails", idx, "mop", e.target.value)} />
-                </div>
-                <div className="md:col-span-3">
-                  {/* Placeholder for alignment or additional small field */}
-                  <div className="hidden md:block"></div>
-                </div>
                 <div className="md:col-span-11">
                   <FormInput label="Item Description" value={item.itemDescription} onChange={(e) => handleListChange("itemsDetails", idx, "itemDescription", e.target.value)} placeholder="Provide specific material or quality details..." />
                 </div>

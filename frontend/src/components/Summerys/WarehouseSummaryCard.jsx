@@ -13,7 +13,7 @@ const WareHouseSummaryCard = ({ items = {}, nameSum }) => {
     const summaryData = [
         { 
             label: "Total SKUs", 
-            value: items.totalProducts || 0, 
+            value: items.totalWarehouses || 0, 
             stats: 'Unique Items', 
             color: "bg-blue-600", 
             bg: "bg-blue-50", 

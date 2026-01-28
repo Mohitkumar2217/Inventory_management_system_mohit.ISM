@@ -144,18 +144,21 @@ export default function Warehouse({ searchQuery = "" }) {
 
   const filteredStock = (stockList || []).filter(s => {
     const finalQuery = (searchQuery || localSearch || "").toLowerCase();
+     
     const zoneString = Array.isArray(s.zone)
       ? s.zone.map(z => typeof z === 'object' ? z.name : z).join(" ")
       : "";
     const addressString = s.address ? `${s.address.city} ${s.address.state} ${s.address.zone}` : "";
+    
     const matchesSearch =
       (s.name || "").toLowerCase().includes(finalQuery) ||
       (s.warehouseId || "").toLowerCase().includes(finalQuery) ||
       (s.details || "").toLowerCase().includes(finalQuery) ||
       addressString.toLowerCase().includes(finalQuery) ||
       zoneString.toLowerCase().includes(finalQuery);
-
-    const matchesStatus = statusFilter === "All" || s.status === statusFilter;
+ 
+    const matchesStatus = statusFilter === "All" || s.statusWarehouse === statusFilter;
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -170,6 +173,10 @@ export default function Warehouse({ searchQuery = "" }) {
     totalQuantity: stockList.reduce((sum, s) => sum + Number(s.quantity || 0), 0),
     inStockCount: stockList.filter(s => s.status === "In Stock").length,
     outOfStockCount: stockList.filter(s => s.status === "Out of Stock").length,
+    availabilityRate: stockList.length > 0
+      ? Number(((stockList.filter(s => s.status === "In Stock").length / stockList.length) * 100).toFixed(2)) + "%"
+      : '0%',
+    activeZonesCount: stockList.length,
   };
 
   if (loading && stockList.length === 0) {
@@ -204,6 +211,7 @@ export default function Warehouse({ searchQuery = "" }) {
                   onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
                   className="bg-transparent outline-none focus:ring-0 cursor-pointer font-black"
                 >
+                  <option value={itemsSummary.totalWarehouses}>all</option>
                   <option value={5}>05</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
@@ -230,8 +238,9 @@ export default function Warehouse({ searchQuery = "" }) {
                     onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                   >
                     <option value="All">All Status</option>
-                    <option value="In Stock">In Stock</option>
-                    <option value="Out of Stock">Out of Stock</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="maintenance">Maintenance</option>
                   </select>
                 </div>
 

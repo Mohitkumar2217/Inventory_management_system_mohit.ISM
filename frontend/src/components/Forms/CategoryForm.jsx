@@ -40,17 +40,6 @@ export default function CategoryForm({ formData, handleInputChange, handleSubmit
 
     return (
         <div className="max-w-7xl mx-auto p-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 mt-10">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-10">
-                <button onClick={onCancel} type="button" className="flex items-center gap-2 text-slate-400 hover:text-slate-800 font-black text-xs uppercase tracking-widest transition-all">
-                    <div className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-100"><ArrowLeft size={18} /></div>
-                    Cancel
-                </button>
-                <h1 className="text-2xl font-black text-slate-800 tracking-tight uppercase tracking-[0.2em]">
-                    {currentId ? "Update Category Registry" : "New Category Registration"}
-                </h1>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     
@@ -60,9 +49,7 @@ export default function CategoryForm({ formData, handleInputChange, handleSubmit
                             <SectionTitle icon={<Box size={16} className="text-orange-500"/>} title="Identity & SEO" />
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <FormInput label="Display Name *" name="name" value={formData.name || ""} onChange={handleInputChange} required />
-                                <FormInput label="Group Code *" name="code" value={formData.code || ""} onChange={handleInputChange} required />
-                                {/* <FormInput label="URL Slug" name="slug" value={formData.slug || ""} onChange={handleInputChange} />
-                                <FormInput label="Meta Title" name="metaTitle" value={formData.metaTitle || ""} onChange={handleInputChange} /> */}
+                                <FormInput label="Group Code *" name="code" value={formData.code || ""} onChange={handleInputChange} required /> 
                             </div>
                         </div>
 
