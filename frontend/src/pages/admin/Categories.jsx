@@ -168,7 +168,7 @@ export default function Categories({ searchQuery = "" }) {
         <div className="min-h-screen bg-slate-50/50 font-sans text-slate-900">
             {view === "list" ? (
                 <div className="max-w-7xl mx-auto p-2 md:p-4 animate-in fade-in duration-700">
-                    
+
                     <div className="flex justify-between items-center mb-6 mt-4">
                         <div>
                             <h1 className="text-3xl font-black text-slate-800 tracking-tight">Departmental Groups</h1>
@@ -180,7 +180,7 @@ export default function Categories({ searchQuery = "" }) {
 
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-visible mt-8">
                         <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-                            
+
                             {/* Items Per Page Selector */}
                             <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
                                 <span className="text-slate-400 text-[10px] font-black uppercase tracking-widest ml-3">Show</span>

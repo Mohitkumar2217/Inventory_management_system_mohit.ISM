@@ -145,7 +145,7 @@ export default function SupplierForm({
           </div>
         </div>
 
-        {/* SECTION 3 & 4: LOGISTICS & DOCUMENTS */}
+        {/* SECTION 3: LOGISTICS & DOCUMENTS */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
           <SectionHeader icon={<ShieldCheck className="text-blue-500" />} title="3. Compliance" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -154,29 +154,9 @@ export default function SupplierForm({
             <FileUploadField label="ID Proof" fileName={fileNames.idProof} onSelect={(e) => onFileSelect(e, "idProof")} />
             <FileUploadField label="Address Proof" fileName={fileNames.addressProof} onSelect={(e) => onFileSelect(e, "addressProof")} />
           </div>
-          {/* <div className="border-t border-slate-50 pt-8">
-            <div className="flex justify-between items-center mb-6">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Inventory Hub Links</p>
-              <button type="button" onClick={() => addListItem("connectedWarehouses", { warehouseId: "", warehouseName: "", itemCountSupplied: 0 })} className="text-xs font-black text-blue-500 flex items-center gap-1 hover:text-blue-700 transition-colors"><Plus size={14} /> Add Hub</button>
-            </div>
-            {formData.connectedWarehouses?.map((wh, idx) => (
-              <div key={idx} className="flex gap-4 mb-3 items-end bg-slate-50/30 p-3 rounded-2xl border border-slate-100">
-                <div className="flex-1">
-                  <SelectField label="Target Hub" value={wh.warehouseId} onChange={(e) => {
-                    const selectedWh = warehouses.find(w => w._id === e.target.value);
-                    handleListChange("connectedWarehouses", idx, "warehouseId", e.target.value);
-                    handleListChange("connectedWarehouses", idx, "warehouseName", selectedWh?.warehouseName || "");
-                  }} options={warehouses.map(w => ({ val: w._id, lbl: w.warehouseName }))}
-                  />
-                </div>
-                <div className="w-32"><FormInput label="Load" type="number" value={wh.itemCountSupplied} onChange={(e) => handleListChange("connectedWarehouses", idx, "itemCountSupplied", e.target.value)} /></div>
-                <button type="button" onClick={() => removeListItem("connectedWarehouses", idx)} className="mb-2 p-3 text-slate-300 hover:text-rose-500"><Trash2 size={18} /></button>
-              </div>
-            ))}
-          </div> */}
         </div>
 
-        {/* SECTION 5: BANKING */}
+        {/* SECTION 4: BANKING */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
           <SectionHeader icon={<Landmark className="text-amber-500" />} title="4. Treasury & Bank Details" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -188,7 +168,7 @@ export default function SupplierForm({
           <FileUploadField label="Bank Passbook Proof" fileName={fileNames.bankPassbookProof} onSelect={(e) => onFileSelect(e, "bankPassbookProof", "bankDetails")} />
         </div>
 
-        {/* SECTION 8: DESCRIPTION */}
+        {/* SECTION 5: DESCRIPTION */}
         <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-xl">
           <SectionHeader icon={<Layers className="text-indigo-500" />} title="5. Strategic Ranking" />
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-6">

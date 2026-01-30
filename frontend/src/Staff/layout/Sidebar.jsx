@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import {
     FaHome, FaBox, FaBoxOpen, FaTags, FaUsers,
     FaWarehouse, FaChartBar, FaShoppingCart,
@@ -16,22 +16,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
-        { name: 'Dashboard', link: '/admin/dashboard', icon: <FaHome />, hasSub: false },
-        {
-            name: 'Inventory',
-            icon: <FaBoxOpen />,
-            hasSub: true,
-            subItems: [
-                { name: 'Products', link: '/admin/products', icon: <FaBox /> },
-                { name: 'Orders List', link: '/admin/orders', icon: <FaShoppingCart /> },
-            ]
-        },
-        { name: 'Suppliers', link: '/admin/suppliers', icon: <FaTruck />, hasSub: false },
-        { name: 'Warehouse', link: '/admin/warehouse', icon: <FaWarehouse />, hasSub: false },
-        { name: 'Staff', link: '/admin/staff', icon: <FaUsers />, hasSub: false },
-        { name: 'Categories', link: '/admin/categories', icon: <FaTags />, hasSub: false },
-        { name: 'Reports', link: '/admin/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/admin/settings', icon: <FaCog />, hasSub: false },
+        { name: 'Dashboard', link: '/staff/dashboard', icon: <FaHome />, hasSub: false }, 
+        { name: 'Staff', link: '/staff/my-account', icon: <FaUsers />, hasSub: false }, 
+        { name: 'Reports', link: '/staff/reports', icon: <FaChartBar />, hasSub: false },
+        { name: 'Settings', link: '/staff/settings', icon: <FaCog />, hasSub: false },
     ];
 
     const handleLogout = () => {

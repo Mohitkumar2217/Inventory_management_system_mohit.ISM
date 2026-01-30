@@ -40,7 +40,7 @@ const OrderAnalysisModal = ({ isOpen, onClose, item }) => {
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}>
             <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100" onClick={(e) => e.stopPropagation()}>
-                
+
                 {/* Header Section */}
                 <div className="p-8 flex justify-between items-start border-b border-slate-50">
                     <div className="flex items-center gap-4">
@@ -72,12 +72,12 @@ const OrderAnalysisModal = ({ isOpen, onClose, item }) => {
                                 <AreaChart data={chartData.length > 0 ? chartData : [{ name: '...', val: 0 }]}>
                                     <defs>
                                         <linearGradient id="orderColor" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor={themeColor} stopOpacity={0.4}/>
-                                            <stop offset="95%" stopColor={themeColor} stopOpacity={0}/>
+                                            <stop offset="5%" stopColor={themeColor} stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor={themeColor} stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 900}} />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }} />
                                     <YAxis hide />
                                     <Tooltip cursor={{ stroke: '#e2e8f0', strokeWidth: 2 }} contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', padding: '12px' }} />
                                     <Area type="monotone" dataKey="val" stroke={themeColor} strokeWidth={4} fillOpacity={1} fill="url(#orderColor)" />

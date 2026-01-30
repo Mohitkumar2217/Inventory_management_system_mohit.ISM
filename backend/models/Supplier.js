@@ -7,10 +7,10 @@ const supplierSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     phone: { type: String, required: true },
     address: { type: String, required: true },
-    status: { 
-        type: String, 
-        enum: ['Active', 'Inactive', 'Suspended'], 
-        default: 'Active' 
+    status: {
+        type: String,
+        enum: ['Active', 'Inactive', 'Suspended', 'Assigned'],
+        default: 'Active'
     },
     idCard: { type: String }, // URL/Path to ID card image
 
@@ -23,19 +23,18 @@ const supplierSchema = new mongoose.Schema({
         Mop: Number,
         itemid: String,
         itemDescription: String
-    }],
-    warehouses: { type: Number, default: 1 },
+    }], 
     suppliesQuantity: { type: Number, default: 0 }, // SKUs Supplied
     hierarchy: { type: String, default: "Level 1" },
-    details: { type: String },
+    details: { type: String }, 
     isCurrentlyActiveForDelivery: { type: Boolean, default: true },
     itemLimit: { type: Number, default: 0 }, // numbers of item(limit)
 
     // --- 3. STATUS & COMPLIANCE DETAILS ---
-    verification: { 
-        type: String, 
-        enum: ['Verified', 'Pending', 'Rejected'], 
-        default: 'Pending' 
+    verification: {
+        type: String,
+        enum: ['Verified', 'Pending', 'Rejected'],
+        default: 'Pending'
     },
     documents: {
         licence: { type: String }, // URL to file
@@ -46,9 +45,12 @@ const supplierSchema = new mongoose.Schema({
 
     // --- 4. CONNECTED WAREHOUSE ---
     connectedWarehouses: [{
-        warehouseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Warehouse' },
+        warehouseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Warehouse'
+        },
         warehouseName: String,
-        itemCategorySupplied: {type: String},
+        itemCategorySupplied: { type: String },
         itemCountSupplied: { type: Number, default: 0 }
     }],
 
@@ -65,10 +67,10 @@ const supplierSchema = new mongoose.Schema({
     performance: {
         daysActive: { type: Number, default: 0 }, // numbers of days actively working
         deliveryPercentage: { type: Number, default: 100 },
-        goodsQualityStatus: { 
-            type: String, 
-            enum: ['Excellent', 'Good', 'Average', 'Poor'], 
-            default: 'Good' 
+        goodsQualityStatus: {
+            type: String,
+            enum: ['Excellent', 'Good', 'Average', 'Poor'],
+            default: 'Good'
         },
         deliveryAccuracy: { type: Number, default: 100 }, // how accurate delivery
         staffFeedback: [{
@@ -82,7 +84,7 @@ const supplierSchema = new mongoose.Schema({
     // --- 7. HISTORY ---
     history: {
         lastDelivery: {
-            status: { type: String, enum: ['active', 'completed', 'cancelled'] },
+            status: { type: String, enum: ['active', 'completed', 'cancelled', 'pending'] },
             date: Date,
             orderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' }
         },
@@ -103,7 +105,7 @@ const supplierSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Virtual for calculating average rating from feedback
-supplierSchema.virtual('averageFeedback').get(function() {
+supplierSchema.virtual('averageFeedback').get(function () {
     if (this.performance.staffFeedback.length === 0) return 0;
     const sum = this.performance.staffFeedback.reduce((acc, curr) => acc + curr.rating, 0);
     return sum / this.performance.staffFeedback.length;

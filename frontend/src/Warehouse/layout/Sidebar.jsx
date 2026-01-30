@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
     FaHome, FaBox, FaBoxOpen, FaTags, FaUsers,
-    FaWarehouse, FaChartBar, FaShoppingCart,
+    FaChartBar, FaShoppingCart,
     FaTruck, FaCog, FaBars, FaSignOutAlt
 } from 'react-icons/fa';
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
@@ -11,45 +11,79 @@ import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout } = useAuth(); //
-    const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+    const { logout } = useAuth();
+    
+    // Manage which dropdowns are open
+    const [openMenus, setOpenMenus] = useState({});
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
-        { name: 'Dashboard', link: '/admin/dashboard', icon: <FaHome />, hasSub: false },
+        { name: 'Dashboard', link: '/warehouse/dashboard', icon: <FaHome />, hasSub: false },
         {
             name: 'Inventory',
             icon: <FaBoxOpen />,
             hasSub: true,
             subItems: [
-                { name: 'Products', link: '/admin/products', icon: <FaBox /> },
-                { name: 'Orders List', link: '/admin/orders', icon: <FaShoppingCart /> },
+                { name: 'Products', link: '/warehouse/products', icon: <FaBox /> },
+                { name: 'Orders List', link: '/warehouse/orders', icon: <FaShoppingCart /> },
+                { name: 'Out Of Stock', link: '/warehouse/stocks', icon: <FaShoppingCart /> },
+                { name: 'Damage', link: '/warehouse/damages', icon: <FaShoppingCart /> },
             ]
         },
-        { name: 'Suppliers', link: '/admin/suppliers', icon: <FaTruck />, hasSub: false },
-        { name: 'Warehouse', link: '/admin/warehouse', icon: <FaWarehouse />, hasSub: false },
-        { name: 'Staff', link: '/admin/staff', icon: <FaUsers />, hasSub: false },
-        { name: 'Categories', link: '/admin/categories', icon: <FaTags />, hasSub: false },
-        { name: 'Reports', link: '/admin/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/admin/settings', icon: <FaCog />, hasSub: false },
+        {
+            name: 'Suppliers',
+            icon: <FaTruck />,
+            hasSub: true,
+            subItems: [
+                { name: 'Active on Order', link: '/warehouse/suppliers', icon: <FaTruck /> },
+                { name: 'Offline Suppliers', link: '/warehouse/offline-suppliers', icon: <FaTruck /> },
+                { name: 'Remote Suppliers', link: '/warehouse/remote-suppliers', icon: <FaTruck /> },
+            ]
+        },
+        {
+            name: 'Management',
+            icon: <FaUsers />,
+            hasSub: true,
+            subItems: [
+                { name: 'Stock Managers', link: '/warehouse/stock-manager', icon: <FaUsers /> },
+                { name: 'Labour Managers', link: '/warehouse/labour-manager', icon: <FaUsers /> },
+                { name: 'Staff List', link: '/warehouse/staff', icon: <FaUsers /> },
+            ]
+        },
+        { name: 'Categories', link: '/warehouse/categories', icon: <FaTags />, hasSub: false },
+        { name: 'Reports', link: '/warehouse/reports', icon: <FaChartBar />, hasSub: false },
+        { name: 'Settings', link: '/warehouse/settings', icon: <FaCog />, hasSub: false },
     ];
 
-    const handleLogout = () => {
-        logout(); //
-        navigate('/login'); //
+    // Check if any sub-item of a menu is active
+    const isChildActive = (subItems) => subItems?.some(sub => location.pathname === sub.link);
+
+    // Auto-open menus if a child is active on page load
+    useEffect(() => {
+        const initialOpenState = {};
+        menuItems.forEach(item => {
+            if (item.hasSub && isChildActive(item.subItems)) {
+                initialOpenState[item.name] = true;
+            }
+        });
+        setOpenMenus(initialOpenState);
+    }, []);
+
+    const toggleMenu = (name) => {
+        if (isCollapsed) setIsCollapsed(false);
+        setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
     };
 
-    const isChildActive = (subItems) => subItems?.some(sub => location.pathname === sub.link);
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     return (
         <>
-            {/* MAIN SIDEBAR 
-                - overflow-hidden on aside stops the main container from scrolling.
-                - flex-col lets us use mt-auto to pin the footer.
-            */}
-            <aside className={`fixed left-0 top-0 h-screen transition-all duration-300 bg-[#1a1c23] border-r border-gray-800 text-gray-400 flex flex-col z-50 overflow-hidden ${isCollapsed ? 'w-20' : 'w-64'}`}>
+            <aside className={`fixed left-0 top-0 h-screen transition-all duration-300 bg-[#1a1c23] border-r border-gray-800 text-gray-400 flex flex-col z-[60] overflow-hidden ${isCollapsed ? 'w-20' : 'w-64'}`}>
 
-                {/* HEADER SECTION (Fixed) */}
+                {/* HEADER SECTION */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-800/50 min-h-[80px] shrink-0">
                     {!isCollapsed && (
                         <div className="flex items-center gap-2 ml-2 animate-in fade-in duration-500">
@@ -59,33 +93,33 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                             <span className="text-lg font-bold text-white tracking-tight">Inventory<span className="text-blue-500">MS</span></span>
                         </div>
                     )}
-                    <button onClick={() => { setIsCollapsed(!isCollapsed); setIsInventoryOpen(false); }}
+                    <button onClick={() => setIsCollapsed(!isCollapsed)}
                         className="p-2.5 hover:bg-gray-800 rounded-xl mx-auto text-gray-500 hover:text-white transition-all outline-none">
                         <FaBars size={18} />
                     </button>
                 </div>
 
-                {/* NAVIGATION SECTION (Scrollable only if items overflow) */}
+                {/* NAVIGATION SECTION */}
                 <nav className="flex-1 p-4 overflow-y-auto overflow-x-hidden no-scrollbar min-h-0">
                     <ul className="space-y-2">
                         {menuItems.map((item) => {
                             const activeChild = isChildActive(item.subItems);
-                            const isActiveParent = location.pathname === item.link;
+                            const isOpen = openMenus[item.name];
 
                             return (
                                 <li key={item.name} className="relative group">
                                     {item.hasSub ? (
                                         <div className="flex flex-col">
-                                            <button onClick={() => { if (isCollapsed) setIsCollapsed(false); setIsInventoryOpen(!isInventoryOpen); }}
-                                                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all w-full group outline-none ${isInventoryOpen || activeChild ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-gray-800/50 hover:text-white'}`}>
+                                            <button onClick={() => toggleMenu(item.name)}
+                                                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all w-full group outline-none ${isOpen || activeChild ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-gray-800/50 hover:text-white'}`}>
                                                 <div className="flex items-center gap-4">
-                                                    <span className={`text-lg transition-colors ${isInventoryOpen || activeChild ? 'text-white' : 'group-hover:text-blue-400'}`}>{item.icon}</span>
+                                                    <span className={`text-lg transition-colors ${isOpen || activeChild ? 'text-white' : 'group-hover:text-blue-400'}`}>{item.icon}</span>
                                                     {!isCollapsed && <span className="font-semibold text-sm whitespace-nowrap">{item.name}</span>}
                                                 </div>
-                                                {!isCollapsed && (isInventoryOpen ? <LuChevronDown size={16} /> : <LuChevronRight size={16} />)}
+                                                {!isCollapsed && (isOpen ? <LuChevronDown size={16} /> : <LuChevronRight size={16} />)}
                                             </button>
 
-                                            {!isCollapsed && isInventoryOpen && (
+                                            {!isCollapsed && isOpen && (
                                                 <ul className="mt-2 ml-6 space-y-1 border-l border-gray-800 pl-4 animate-in slide-in-from-top-2 duration-300">
                                                     {item.subItems.map((sub) => (
                                                         <li key={sub.name}>
@@ -116,8 +150,8 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     </ul>
                 </nav>
 
-                {/* FOOTER SECTION (Pinned & No Overflow) */}
-                <div className="p-4 mt-auto border-t border-gray-800/50 shrink-0 overflow-hidden bg-[#1a1c23]">
+                {/* FOOTER SECTION */}
+                <div className="p-4 mt-auto border-t border-gray-800/50 shrink-0 bg-[#1a1c23]">
                     <button
                         onClick={() => setShowLogoutModal(true)}
                         className={`flex items-center gap-4 px-4 py-3 rounded-xl w-full text-red-400 hover:bg-red-400/10 transition-all group mb-4 outline-none ${isCollapsed ? 'justify-center' : ''}`}
@@ -127,10 +161,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     </button>
 
                     {!isCollapsed && (
-                        <div className="bg-gray-800/20 rounded-2xl p-4 border border-gray-800/50 animate-in fade-in duration-500">
+                        <div className="bg-gray-800/20 rounded-2xl p-4 border border-gray-800/50">
                             <div className="flex items-center gap-3 mb-2">
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0"></div>
-                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest whitespace-nowrap">v2.4.0 Secure</span>
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">v2.4.0 Secure</span>
                             </div>
                             <p className="text-[9px] font-medium text-gray-600 uppercase tracking-tighter leading-relaxed">
                                 Authorized Access Only <br />
@@ -148,23 +182,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                         <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-red-500">
                             <FaSignOutAlt size={28} />
                         </div>
-
                         <h3 className="text-xl font-black text-white text-center tracking-tight mb-2">Terminate Session?</h3>
                         <p className="text-gray-400 text-sm text-center font-medium leading-relaxed mb-8 px-2">
                             Are you sure you want to logout? You will need to re-authenticate to access the management portal.
                         </p>
-
                         <div className="flex flex-col gap-3">
-                            <button
-                                onClick={handleLogout}
-                                className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-red-900/20"
-                            >
+                            <button onClick={handleLogout} className="w-full py-4 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-red-900/20">
                                 Confirm Logout
                             </button>
-                            <button
-                                onClick={() => setShowLogoutModal(false)}
-                                className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-2xl font-black text-xs uppercase tracking-widest transition-all"
-                            >
+                            <button onClick={() => setShowLogoutModal(false)} className="w-full py-4 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
                                 Cancel
                             </button>
                         </div>

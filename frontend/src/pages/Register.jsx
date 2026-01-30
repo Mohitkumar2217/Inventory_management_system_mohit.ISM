@@ -173,9 +173,8 @@ const Register = () => {
                 >
                   <option value="staff">Staff</option>
                   <option value="manager">Manager</option>
-                  {/* <option value="warehouse">Warehouse Admin</option> */}
-                  <option value="accountant">Accountant</option>
-                  {/* <option value="admin">Admin</option> */}
+                  <option value="warehouse">Warehouse Admin</option> 
+                  <option value="admin">Admin</option>
                 </select>
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                   <UserPlus size={18} />

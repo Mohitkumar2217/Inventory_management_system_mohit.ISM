@@ -8,8 +8,8 @@ const userSchema = new mongoose.Schema({
     },
     employeeId: {
         type: String,
-        unique: true,
-        sparse: true // Allows multiple nulls but ensures uniqueness for provided IDs
+        // unique: true,
+        // sparse: true // Allows multiple nulls but ensures uniqueness for provided IDs
     },
     department: {
         type: String,
@@ -28,12 +28,12 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Email is required"],
         unique: true,
-        lowercase: true,
-        trim: true
+        // lowercase: true,
+        // trim: true
     },
     phone: {
         type: String,
-        required: [true, "Phone number is required"]
+        // required: [true, "Phone number is required"]
     },
     password: {
         type: String,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 import OrderSummaryCard from "../../components/Summerys/OrderSummaryCard.jsx";
 import OrderForm from "../../components/Forms/OrderForm.jsx";
 import OrderDetailPage from "../details/OrderDetailPage.jsx";
@@ -19,7 +19,7 @@ export default function Orders({ searchQuery = "" }) {
   const [view, setView] = useState("list");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [liveNotices, setLiveNotices] = useState([]); 
+  const [liveNotices, setLiveNotices] = useState([]);
   const [localSearch, setLocalSearch] = useState("");
   const [showFilterPopup, setShowFilterPopup] = useState(false);
   const [showTracking, setShowTracking] = useState(false); // LIVE TRACKING TOGGLE
@@ -38,37 +38,37 @@ export default function Orders({ searchQuery = "" }) {
     _id: null,
     poNumber: "",
     refId: "",
-    priority: "standard", 
+    priority: "standard",
     vendorName: "",
     vendorEmail: "",
     itemName: "",
     sku: "",
     category: "",
-    variants: [], 
+    variants: [],
     warehouse: "",
     zone: "",
     whContact: "",
     shippingMethod: "",
-    deliveryAddress: "", 
+    deliveryAddress: "",
     quantity: 1,
     unitPrice: 0,
     taxRate: 0,
     shippingCharges: 0,
-    discount: 0, 
-    totalOrderValue: 0, 
+    discount: 0,
+    totalOrderValue: 0,
     paymentTerms: "Due on Receipt",
-    minStock: 0,  
+    minStock: 0,
     status: "Pending",
     stockUpdated: false,
     notes: "",
     trackingId: `TRK-${Math.floor(100000 + Math.random() * 900000)}`,
-    estimatedDuration: 7, 
+    estimatedDuration: 7,
     expectedDate: "",
     timeline: {
-        processedAt: null,
-        shippedAt: null,
-        deliveredAt: null
-    }, 
+      processedAt: null,
+      shippedAt: null,
+      deliveredAt: null
+    },
     images: []
   };
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
@@ -89,7 +89,7 @@ export default function Orders({ searchQuery = "" }) {
         setWarehouseList(["All", ...(res.data.availableWarehouses || [])]);
         setZoneList(["All", ...(res.data.availableZones || [])]);
         setSupplierList(["All", ...(res.data.availableSuppliers || [])]);
-        setLiveNotices(res.data.notices || []); 
+        setLiveNotices(res.data.notices || []);
       }
     } catch (err) { console.error("Fetch Error:", err); } finally { setLoading(false); }
   };
@@ -113,11 +113,11 @@ export default function Orders({ searchQuery = "" }) {
     if (e) e.preventDefault();
     try {
       const res = purchaseOrder._id ? await api.put(`/orders/${purchaseOrder._id}`, purchaseOrder) : await api.post("/orders", purchaseOrder);
-      if (res.data.success) { 
-        alert(res.data.message); 
-        fetchOrders(); 
-        setView("list"); 
-        setPurchaseOrder(initialPurchaseForm); 
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchOrders();
+        setView("list");
+        setPurchaseOrder(initialPurchaseForm);
       }
     } catch (err) { alert(err.response?.data?.message || "Sync failed"); }
   };
@@ -158,10 +158,10 @@ export default function Orders({ searchQuery = "" }) {
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
   const currentItems = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleOpenDetails = (order) => { 
-    setSelectedOrder(order); 
-    setView("view-details"); 
-    setShowTracking(false); 
+  const handleOpenDetails = (order) => {
+    setSelectedOrder(order);
+    setView("view-details");
+    setShowTracking(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -309,8 +309,8 @@ export default function Orders({ searchQuery = "" }) {
         </div>
       ) : view === "view-details" && selectedOrder ? (
         <div className="max-w-7xl mx-auto animate-in fade-in duration-700 pb-20 mt-10">
-          <OrderDetailPage 
-            selectedOrder={selectedOrder} 
+          <OrderDetailPage
+            selectedOrder={selectedOrder}
             showTracking={showTracking}
             setShowTracking={setShowTracking}
             onBack={() => setView("list")}
@@ -323,16 +323,16 @@ export default function Orders({ searchQuery = "" }) {
           <button onClick={() => setView("list")} className="mb-8 flex items-center gap-2 text-slate-500 font-bold transition-all group">
             <div className="p-2.5 bg-white rounded-2xl border border-slate-100 group-hover:scale-110 transition-transform"><ArrowLeft size={18} /></div> Back
           </button>
-          <OrderForm 
-            purchaseOrder={purchaseOrder} 
-            handleFormChange={handleFormChange} 
-            handleSubmit={handleAddPurchaseOrder} 
-            onCancel={() => setView("list")} 
-            suppliers={supplierList} 
-            zones={zoneList} 
-            categories={categoryList} 
-            warehouses={warehouseList} 
-            allProducts={[]} 
+          <OrderForm
+            purchaseOrder={purchaseOrder}
+            handleFormChange={handleFormChange}
+            handleSubmit={handleAddPurchaseOrder}
+            onCancel={() => setView("list")}
+            suppliers={supplierList}
+            zones={zoneList}
+            categories={categoryList}
+            warehouses={warehouseList}
+            allProducts={[]}
           />
         </div>
       )}
@@ -347,13 +347,13 @@ function PriorityBadge({ priority }) {
 }
 
 function StatusBadge({ status, onUpdate }) {
-  const styles = { 
-    Pending: "bg-indigo-50 text-indigo-500 border-indigo-100", 
+  const styles = {
+    Pending: "bg-indigo-50 text-indigo-500 border-indigo-100",
     Processing: "bg-blue-50 text-blue-500 border-blue-100",
     Shipped: "bg-amber-50 text-amber-500 border-amber-100",
     Delivered: "bg-emerald-50 text-emerald-500 border-emerald-100",
-    Completed: "bg-emerald-50 text-emerald-500 border-emerald-100", 
-    Cancelled: "bg-rose-50 text-rose-500 border-rose-100" 
+    Completed: "bg-emerald-50 text-emerald-500 border-emerald-100",
+    Cancelled: "bg-rose-50 text-rose-500 border-rose-100"
   };
   return (
     <select value={status} onChange={(e) => onUpdate(e.target.value)} className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border outline-none cursor-pointer ${styles[status] || styles.Pending}`}>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 import WareHouseSummaryCard from "../../components/Summerys/WarehouseSummaryCard.jsx";
 import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
 import {
@@ -144,21 +144,21 @@ export default function Warehouse({ searchQuery = "" }) {
 
   const filteredStock = (stockList || []).filter(s => {
     const finalQuery = (searchQuery || localSearch || "").toLowerCase();
-     
+
     const zoneString = Array.isArray(s.zone)
       ? s.zone.map(z => typeof z === 'object' ? z.name : z).join(" ")
       : "";
     const addressString = s.address ? `${s.address.city} ${s.address.state} ${s.address.zone}` : "";
-    
+
     const matchesSearch =
       (s.name || "").toLowerCase().includes(finalQuery) ||
       (s.warehouseId || "").toLowerCase().includes(finalQuery) ||
       (s.details || "").toLowerCase().includes(finalQuery) ||
       addressString.toLowerCase().includes(finalQuery) ||
       zoneString.toLowerCase().includes(finalQuery);
- 
+
     const matchesStatus = statusFilter === "All" || s.statusWarehouse === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 

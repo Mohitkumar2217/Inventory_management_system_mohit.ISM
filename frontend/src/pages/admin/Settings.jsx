@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import axios from "axios";
 import PageTitle from "../../components/PageTitle";
-import SettingsForm from "../../components/Forms/SettingsFrom"; 
+import SettingsForm from "../../components/Forms/SettingsFrom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  Shield, Bell, Globe, Database, Save, User, 
+  Shield, Bell, Globe, Database, Save, User,
   Camera, Clock, Activity, UserCheck, ShieldCheck, Cpu
 } from "lucide-react";
 
@@ -48,14 +48,14 @@ export default function Settings() {
   const fetchUser = async () => {
     if (!token) return;
     setLoading(true);
-    try { 
-      const res = await api.get("/staffs/profile"); 
-      if (res.data.success) { 
-        setSettingsData(prev => ({ 
-            ...prev, 
-            ...res.data.member, 
-            img: res.data.member.img || prev.img,
-            name: res.data.member.name || prev.name
+    try {
+      const res = await api.get("/staffs/profile");
+      if (res.data.success) {
+        setSettingsData(prev => ({
+          ...prev,
+          ...res.data.member,
+          img: res.data.member.img || prev.img,
+          name: res.data.member.name || prev.name
         }));
       }
     } catch (err) {
@@ -98,13 +98,13 @@ export default function Settings() {
     e.preventDefault();
     setIsSaving(true);
     try {
-        // Sync the logged-in user's changes to the database
-        const res = await api.put("/staffs/update-profile", settingsData);
-        if(res.data.success) alert("Your profile has been updated successfully!");
+      // Sync the logged-in user's changes to the database
+      const res = await api.put("/staffs/update-profile", settingsData);
+      if (res.data.success) alert("Your profile has been updated successfully!");
     } catch (err) {
-        alert("Sync failed: " + (err.response?.data?.message || err.message));
+      alert("Sync failed: " + (err.response?.data?.message || err.message));
     } finally {
-        setIsSaving(false);
+      setIsSaving(false);
     }
   };
 

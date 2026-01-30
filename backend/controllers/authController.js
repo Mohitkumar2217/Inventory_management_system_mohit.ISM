@@ -15,8 +15,8 @@ export const forgotPassword = async (req, res) => {
 
     // Generate a temporary token valid for 15 minutes
     const resetToken = jwt.sign(
-      { id: user._id }, 
-      process.env.JWT_SECRET || 'fallback_secret', 
+      { id: user._id },
+      process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '15m' }
     );
 
@@ -68,7 +68,7 @@ export const resetPassword = async (req, res) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    
+
     // Hash new password with 12 salt rounds
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -126,6 +126,12 @@ export const Register = async (req, res) => {
 
     return res.status(201).json({ success: true, message: "Registered successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Registration failed" });
+    console.error("REGISTRATION ERROR DETAILS:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Registration failed",
+      error: error.message // Send the actual message to Postman/Frontend to see what's wrong
+    });
   }
 };

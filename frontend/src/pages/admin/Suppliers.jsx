@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 import SupplierSummaryCard from "../../components/Summerys/SupplierSummaryCard.jsx";
 import SupplierForm from "../../components/Forms/SupplierForm.jsx";
 
@@ -96,56 +96,56 @@ export default function Suppliers({ searchQuery }) {
     setLoading(true);
 
     try {
-        const data = new FormData();
+      const data = new FormData();
 
-        // 1. Append Standard Text Fields
-        const simpleFields = ["name", "address", "email", "phone", "status", "verification", "itemLimit", "details", "isCurrentlyActiveForDelivery"];
-        simpleFields.forEach(field => {
-            if (formData[field] !== undefined) data.append(field, formData[field]);
-        });
+      // 1. Append Standard Text Fields
+      const simpleFields = ["name", "address", "email", "phone", "status", "verification", "itemLimit", "details", "isCurrentlyActiveForDelivery"];
+      simpleFields.forEach(field => {
+        if (formData[field] !== undefined) data.append(field, formData[field]);
+      });
 
-        // 2. Stringify and Append Complex Objects
-        data.append("itemsDetails", JSON.stringify(formData.itemsDetails));
-        data.append("connectedWarehouses", JSON.stringify(formData.connectedWarehouses));
-        data.append("bankDetails", JSON.stringify(formData.bankDetails));
-        data.append("description", JSON.stringify(formData.description));
-        data.append("performance", JSON.stringify(formData.performance));
+      // 2. Stringify and Append Complex Objects
+      data.append("itemsDetails", JSON.stringify(formData.itemsDetails));
+      data.append("connectedWarehouses", JSON.stringify(formData.connectedWarehouses));
+      data.append("bankDetails", JSON.stringify(formData.bankDetails));
+      data.append("description", JSON.stringify(formData.description));
+      data.append("performance", JSON.stringify(formData.performance));
 
-        // 3. Append Files (Binary data from state)
-        if (formData.photo instanceof File) data.append("photo", formData.photo);
-        if (formData.idCard instanceof File) data.append("idCard", formData.idCard);
-        
-        // Nested Files (Keys must match the backend router names)
-        if (formData.documents?.licence instanceof File) data.append("documents.licence", formData.documents.licence);
-        if (formData.documents?.contract instanceof File) data.append("documents.contract", formData.documents.contract);
-        if (formData.documents?.idProof instanceof File) data.append("documents.idProof", formData.documents.idProof);
-        if (formData.documents?.addressProof instanceof File) data.append("documents.addressProof", formData.documents.addressProof);
-        
-        if (formData.bankDetails?.bankPassbookProof instanceof File) {
-            data.append("bankDetails.bankPassbookProof", formData.bankDetails.bankPassbookProof);
-        }
+      // 3. Append Files (Binary data from state)
+      if (formData.photo instanceof File) data.append("photo", formData.photo);
+      if (formData.idCard instanceof File) data.append("idCard", formData.idCard);
 
-        // 4. Send Request
-        const url = formData._id ? `/suppliers/${formData._id}` : "/suppliers";
-        const method = formData._id ? "put" : "post";
+      // Nested Files (Keys must match the backend router names)
+      if (formData.documents?.licence instanceof File) data.append("documents.licence", formData.documents.licence);
+      if (formData.documents?.contract instanceof File) data.append("documents.contract", formData.documents.contract);
+      if (formData.documents?.idProof instanceof File) data.append("documents.idProof", formData.documents.idProof);
+      if (formData.documents?.addressProof instanceof File) data.append("documents.addressProof", formData.documents.addressProof);
 
-        const res = await api[method](url, data, {
-            headers: { "Content-Type": "multipart/form-data" }
-        });
+      if (formData.bankDetails?.bankPassbookProof instanceof File) {
+        data.append("bankDetails.bankPassbookProof", formData.bankDetails.bankPassbookProof);
+      }
 
-        if (res.data.success) {
-            alert(res.data.message);
-            fetchVendors();
-            setView("list");
-            setFormData(initialFormState);
-        }
+      // 4. Send Request
+      const url = formData._id ? `/suppliers/${formData._id}` : "/suppliers";
+      const method = formData._id ? "put" : "post";
+
+      const res = await api[method](url, data, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
+      if (res.data.success) {
+        alert(res.data.message);
+        fetchVendors();
+        setView("list");
+        setFormData(initialFormState);
+      }
     } catch (err) {
-        console.error("Submission Error:", err);
-        alert(err.response?.data?.message || "Operation failed");
+      console.error("Submission Error:", err);
+      alert(err.response?.data?.message || "Operation failed");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
+  };
 
   const handleDeleteVendor = async (id) => {
     if (!window.confirm("Are you sure you want to remove this partner?")) return;

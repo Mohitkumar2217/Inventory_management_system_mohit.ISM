@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext"; // 
+import { useAuth } from "../../context/AuthContext.jsx"; // 
 import StaffForm from "../../components/Forms/StaffForm.jsx";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
-  UserCog, Mail, Briefcase,Phone,BadgeCheck,MapPin,FileText, Landmark,
+  UserCog, Mail, Briefcase, Phone, BadgeCheck, MapPin, FileText, Landmark,
   Calendar, Info, ChevronLeft, ChevronRight, Filter, Loader2
 } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function Staff({ searchQuery }) {
     role: 'staff',
     email: "",
     phone: "",
-    gender:"",
+    gender: "",
     password: "",
     address: "",
     status: 'Active',
@@ -302,18 +302,18 @@ export default function Staff({ searchQuery }) {
                 <div className="flex flex-col md:flex-row gap-10 items-start relative z-10">
                   <div className="w-40 h-40 bg-indigo-50 rounded-[3rem] flex items-center justify-center text-6xl font-black text-indigo-600 border border-indigo-100 shadow-inner overflow-hidden">
                     {selectedStaff.img ? (
-                        <img src={selectedStaff.img} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={selectedStaff.img} alt="Profile" className="w-full h-full object-cover" />
                     ) : selectedStaff.name.charAt(0)}
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-1">{selectedStaff.name}</h1>
-                            <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em] mb-6">{selectedStaff.role} • Security Level {selectedStaff.role === 'admin' ? '01' : '02'}</p>
-                        </div>
-                        <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase ${selectedStaff.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
-                            {selectedStaff.status}
-                        </span>
+                      <div>
+                        <h1 className="text-4xl font-black text-slate-800 tracking-tight mb-1">{selectedStaff.name}</h1>
+                        <p className="text-xs font-black text-indigo-500 uppercase tracking-[0.3em] mb-6">{selectedStaff.role} • Security Level {selectedStaff.role === 'admin' ? '01' : '02'}</p>
+                      </div>
+                      <span className={`px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase ${selectedStaff.status === "Active" ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                        {selectedStaff.status}
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12 border-t border-slate-50 pt-8">
@@ -344,30 +344,30 @@ export default function Staff({ searchQuery }) {
             <div className="space-y-8">
               <div className="bg-slate-900 p-8 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
                 <div className="relative z-10 space-y-8">
-                   <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white/10 rounded-xl"><BadgeCheck className="text-cyan-400" size={18} /></div>
-                      <h3 className="text-[10px] font-black uppercase tracking-widest">Registry Intelligence</h3>
-                   </div>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/10 rounded-xl"><BadgeCheck className="text-cyan-400" size={18} /></div>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest">Registry Intelligence</h3>
+                  </div>
 
-                   <div className="space-y-1">
-                      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Productivity Score</p>
-                      <div className="flex items-end gap-2">
-                        <span className="text-4xl font-black text-cyan-400">{selectedStaff.productivity || 0}%</span>
-                        <span className="text-[10px] font-bold text-white/30 mb-1">Efficiency Rating</span>
-                      </div>
-                   </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Productivity Score</p>
+                    <div className="flex items-end gap-2">
+                      <span className="text-4xl font-black text-cyan-400">{selectedStaff.productivity || 0}%</span>
+                      <span className="text-[10px] font-bold text-white/30 mb-1">Efficiency Rating</span>
+                    </div>
+                  </div>
 
-                   <div className="space-y-4 pt-4 border-t border-white/5">
-                      <DetailItemDark icon={<MapPin size={12}/>} label="Registry Address" value={selectedStaff.address || "Warehouse Local Hub"} />
-                      <DetailItemDark icon={<Calendar size={12}/>} label="Registration Date" value={new Date(selectedStaff.createdAt).toLocaleDateString()} />
-                      <div className="space-y-2">
-                        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Identity Verification</p>
-                        <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5">
-                            <FileText size={14} className="text-cyan-500" />
-                            <span className="text-[10px] font-bold text-white/70 truncate">{selectedStaff.verification || "Verification Pending"}</span>
-                        </div>
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <DetailItemDark icon={<MapPin size={12} />} label="Registry Address" value={selectedStaff.address || "Warehouse Local Hub"} />
+                    <DetailItemDark icon={<Calendar size={12} />} label="Registration Date" value={new Date(selectedStaff.createdAt).toLocaleDateString()} />
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">Identity Verification</p>
+                      <div className="flex items-center gap-2 bg-white/5 p-3 rounded-2xl border border-white/5">
+                        <FileText size={14} className="text-cyan-500" />
+                        <span className="text-[10px] font-bold text-white/70 truncate">{selectedStaff.verification || "Verification Pending"}</span>
                       </div>
-                   </div>
+                    </div>
+                  </div>
                 </div>
                 <Landmark className="absolute -right-8 -bottom-8 text-white/5 rotate-12" size={200} />
               </div>
@@ -400,10 +400,10 @@ function DetailItem({ icon, label, value }) {
 }
 
 function DetailItemDark({ icon, label, value }) {
-    return (
-      <div className="space-y-1">
-        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">{icon} {label}</p>
-        <p className="text-xs font-bold text-white/80">{value}</p>
-      </div>
-    );
+  return (
+    <div className="space-y-1">
+      <p className="text-[9px] font-black text-white/40 uppercase tracking-widest flex items-center gap-1.5">{icon} {label}</p>
+      <p className="text-xs font-bold text-white/80">{value}</p>
+    </div>
+  );
 }

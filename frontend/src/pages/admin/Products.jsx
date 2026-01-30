@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/AuthContext.jsx";
 import ProductSummaryCard from "../../components/Summerys/ProductSummaryCard.jsx";
 import ProductForm from "../../components/Forms/ProductForm.jsx";
 import ProductDetailPage from "../details/ProductDetailPage.jsx";
@@ -37,7 +37,7 @@ export default function Products({ searchQuery = "" }) {
   const initialFormState = {
     _id: null, name: "", code: "", category: "", price: "", cost: "",
     stock: "", brand: "", details: "", sku: "", supplier: "", minStock: 20,
-    weight: "", dimensions: "", color: "", images: [], 
+    weight: "", dimensions: "", color: "", images: [],
     warehouse: "", zone: "", barcode: "", unit: "pcs", taxPercentage: 18,
     status: "Active", condition: "New", expiryDate: "", totalSold: 0,
     variants: [], manufacturingDate: "",
