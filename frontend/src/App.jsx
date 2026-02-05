@@ -15,8 +15,20 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
-import WarehouseDashboard from "./Warehouse/Warehouse.jsx";
+
+// warehouse
+import WarehouseDashboardLayout from "./Warehouse/Warehouse.jsx";
+import WarehouseDashboard from "./Warehouse/pages/WarehouseDashboard.jsx";
+import WarehouseProducts from "./Warehouse/pages/WarehouseProducts.jsx";
+import WarehouseStaff from "./Warehouse/pages/WarehouseStaff.jsx";
+import WarehouseSuppliers from "./Warehouse/pages/WarehouseSuppliers.jsx";
+import { WarehouseReports, WarehouseSettings } from "./Warehouse/pages/WarehouseShared.jsx";
+
+//staff
 import StaffDashboard from "./Staff/Staff.jsx";
+import StaffDashboardHome from "./Staff/pages/StaffDashboardHome.jsx";
+import MyAccount from "./Staff/pages/MyAccount.jsx";
+import { StaffReports, StaffSettings } from "./Staff/pages/StaffCommon.jsx";
 
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
@@ -44,8 +56,8 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
 
         {/* Admin & Manager Routes */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={<ProtectedRoute requireRole={["admin", "manager"]}><Dashboard /></ProtectedRoute>}
         >
           <Route path="dashboard" element={<DashboardHome />} />
@@ -60,20 +72,29 @@ function App() {
         </Route>
 
         {/* Warehouse Routes */}
-        <Route 
-          path="/warehouse-portal" 
-          element={<ProtectedRoute requireRole={["warehouse"]}><WarehouseDashboard /></ProtectedRoute>}
+        <Route
+          path="/warehouse-portal"
+          element={<ProtectedRoute requireRole={["warehouse"]}><WarehouseDashboardLayout /></ProtectedRoute>}
         >
-          {/* <Route index element={<WarehouseDashboard />} /> */}
-          {/* Add warehouse sub-routes here if needed */}
+          <Route index element={<WarehouseDashboard />} />
+          <Route path="dashboard" element={<WarehouseDashboard />} />
+          <Route path="products" element={<WarehouseProducts />} />
+          <Route path="suppliers" element={<WarehouseSuppliers />} />
+          <Route path="staff" element={<WarehouseStaff />} />
+          <Route path="reports" element={<WarehouseReports />} />
+          <Route path="settings" element={<WarehouseSettings />} />
         </Route>
 
         {/* Staff Routes */}
-        <Route 
-          path="/staff-portal" 
+        <Route
+          path="/staff-portal"
           element={<ProtectedRoute requireRole={["staff"]}><StaffDashboard /></ProtectedRoute>}
         >
-          {/* <Route index element={<StaffDashboard />} /> */}
+          <Route index element={<StaffDashboardHome />} />
+          <Route path="dashboard" element={<StaffDashboardHome />} />
+          <Route path="my-account" element={<MyAccount />} />
+          <Route path="reports" element={<StaffReports />} />
+          <Route path="settings" element={<StaffSettings />} />
         </Route>
 
         {/* Catch-all */}

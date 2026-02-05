@@ -12,47 +12,40 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { logout } = useAuth();
-    
+
     // Manage which dropdowns are open
     const [openMenus, setOpenMenus] = useState({});
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
-        { name: 'Dashboard', link: '/warehouse/dashboard', icon: <FaHome />, hasSub: false },
+        { name: 'Dashboard', link: '/warehouse-portal/dashboard', icon: <FaHome />, hasSub: false },
         {
             name: 'Inventory',
             icon: <FaBoxOpen />,
             hasSub: true,
             subItems: [
-                { name: 'Products', link: '/warehouse/products', icon: <FaBox /> },
-                { name: 'Orders List', link: '/warehouse/orders', icon: <FaShoppingCart /> },
-                { name: 'Out Of Stock', link: '/warehouse/stocks', icon: <FaShoppingCart /> },
-                { name: 'Damage', link: '/warehouse/damages', icon: <FaShoppingCart /> },
+                { name: 'Products', link: '/warehouse-portal/products', icon: <FaBox /> },
+                { name: 'Orders List', link: '/warehouse-portal/orders', icon: <FaShoppingCart /> },
+                { name: 'Out Of Stock', link: '/warehouse-portal/stocks', icon: <FaShoppingCart /> },
+                { name: 'Damage', link: '/warehouse-portal/damages', icon: <FaShoppingCart /> },
             ]
         },
         {
-            name: 'Suppliers',
-            icon: <FaTruck />,
-            hasSub: true,
-            subItems: [
-                { name: 'Active on Order', link: '/warehouse/suppliers', icon: <FaTruck /> },
-                { name: 'Offline Suppliers', link: '/warehouse/offline-suppliers', icon: <FaTruck /> },
-                { name: 'Remote Suppliers', link: '/warehouse/remote-suppliers', icon: <FaTruck /> },
-            ]
+            name: 'Active on Order', link: '/warehouse-portal/suppliers', icon: <FaTruck />, hasSub: false
         },
         {
             name: 'Management',
             icon: <FaUsers />,
             hasSub: true,
             subItems: [
-                { name: 'Stock Managers', link: '/warehouse/stock-manager', icon: <FaUsers /> },
-                { name: 'Labour Managers', link: '/warehouse/labour-manager', icon: <FaUsers /> },
-                { name: 'Staff List', link: '/warehouse/staff', icon: <FaUsers /> },
+                { name: 'Stock Managers', link: '/warehouse-portal/stock-manager', icon: <FaUsers /> },
+                { name: 'Labour Managers', link: '/warehouse-portal/labour-manager', icon: <FaUsers /> },
+                { name: 'Staff List', link: '/warehouse-portal/staff', icon: <FaUsers /> },
             ]
         },
-        { name: 'Categories', link: '/warehouse/categories', icon: <FaTags />, hasSub: false },
-        { name: 'Reports', link: '/warehouse/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/warehouse/settings', icon: <FaCog />, hasSub: false },
+        { name: 'Categories', link: '/warehouse-portal/categories', icon: <FaTags />, hasSub: false },
+        { name: 'Reports', link: '/warehouse-portal/reports', icon: <FaChartBar />, hasSub: false },
+        { name: 'Settings', link: '/warehouse-portal/settings', icon: <FaCog />, hasSub: false },
     ];
 
     // Check if any sub-item of a menu is active

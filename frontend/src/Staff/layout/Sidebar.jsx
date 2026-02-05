@@ -31,10 +31,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
     return (
         <>
-            {/* MAIN SIDEBAR 
-                - overflow-hidden on aside stops the main container from scrolling.
-                - flex-col lets us use mt-auto to pin the footer.
-            */}
             <aside className={`fixed left-0 top-0 h-screen transition-all duration-300 bg-[#1a1c23] border-r border-gray-800 text-gray-400 flex flex-col z-50 overflow-hidden ${isCollapsed ? 'w-20' : 'w-64'}`}>
 
                 {/* HEADER SECTION (Fixed) */}

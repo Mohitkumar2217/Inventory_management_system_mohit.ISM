@@ -3,7 +3,7 @@ import Sidebar from './layout/Sidebar.jsx';
 import Navbar from './layout/main/Navbar.jsx';
 import { Outlet } from 'react-router';
 
-function WarehouseDashboard() {
+function WarehouseDashboardLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
 
@@ -42,4 +42,4 @@ function WarehouseDashboard() {
   );
 }
 
-export default WarehouseDashboard;
+export default WarehouseDashboardLayout;
