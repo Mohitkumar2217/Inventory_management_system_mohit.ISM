@@ -11,7 +11,7 @@ const ResetPassword = () => {
   const [error, setError] = useState("");
   const API = useMemo(() => axios.create({
     baseURL: `${import.meta.env.VITE_API_URL}/api/auth`, // NO SLASH AT END
-    withCredentials: true
+    // withCredentials: true
   }), []);
 
   const handleReset = async (e) => {

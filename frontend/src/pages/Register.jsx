@@ -17,7 +17,7 @@ const Register = () => {
   const navigate = useNavigate();
   const API = useMemo(() => axios.create({
     baseURL: `${import.meta.env.VITE_API_URL}/api/auth`, // NO SLASH AT END
-    withCredentials: true
+    // withCredentials: true
   }), []);
 
   // Password Strength Logic
