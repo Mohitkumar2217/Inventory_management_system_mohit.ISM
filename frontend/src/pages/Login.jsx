@@ -18,7 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const API = useMemo(() => axios.create({
-    baseURL: `${import.meta.env.URL}/api`, // NO SLASH AT END
+    baseURL: `${import.meta.env.URL}/api/auth`, // NO SLASH AT END
     // withCredentials: true
   }), []);
 
@@ -58,7 +58,7 @@ const Login = () => {
     setMessage(null);
     try {
       // Replace with your actual forgot-password endpoint
-      await axios.post("http://localhost:4000/api/auth/forgot-password", { email });
+      await axios.post(`${import.meta.env.URL}api/auth/forgot-password`, { email });
       setMessage("Reset link sent! Please check your email inbox.");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset link.");
