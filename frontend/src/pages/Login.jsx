@@ -18,7 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const API = useMemo(() => axios.create({
-    baseURL: `${import.meta.env.URL}/api/auth`, // NO SLASH AT END
+    baseURL: `${import.meta.env.VITE_API_URL}/api/auth`, // NO SLASH AT END
     // withCredentials: true
   }), []);
 
