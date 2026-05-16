@@ -47,6 +47,7 @@ export default function Categories({ searchQuery = "" }) {
     const [localSearch, setLocalSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
 
+    
     const api = axios.create({
         baseURL: `${import.meta.env.VITE_API_URL}/api`,
         headers: { Authorization: `Bearer ${token}` }
