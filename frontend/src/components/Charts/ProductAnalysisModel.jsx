@@ -20,7 +20,7 @@ const ProductAnalysisModal = ({ isOpen, onClose, item }) => {
         setChartData([]); // Clear old data before fetching new data
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:4000/api/products/analysis/trends?type=${item.label}`, {
+            const res = await axios.get(`${process.env.URL}/api/products/analysis/trends?type=${item.label}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) {

@@ -19,7 +19,7 @@ const OrderAnalysisModal = ({ isOpen, onClose, item }) => {
         setChartData([]); // Clear previous data
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:4000/api/orders/analysis/trends?type=${item.label}`, {
+            const res = await axios.get(`${process.env.URL}/api/orders/analysis/trends?type=${item.label}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (res.data.success) {

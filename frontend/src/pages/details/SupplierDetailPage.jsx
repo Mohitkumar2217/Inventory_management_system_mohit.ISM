@@ -6,7 +6,7 @@ import {
 
 export default function SupplierDetailPage({ selectedVendor, onBack }) {
     // --- HELPERS ---
-    const BASE_URL = "http://localhost:4000";
+    const BASE_URL = `${process.env.URL}`;
 
     const formatCurrency = (val) => new Intl.NumberFormat('en-IN', {
         style: 'currency',
