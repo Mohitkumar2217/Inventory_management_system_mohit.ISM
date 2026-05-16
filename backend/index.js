@@ -14,7 +14,8 @@ dotenv.config();
 connectDB();
 const app = express();
 
-app.use(cors({origin: ["http://localhost:5173","http://localhost:5174"]})); // Adjust the origin as needed
+// app.use(cors({origin: ["http://localhost:5173","http://localhost:5174"]})); // Adjust the origin as needed
+app.use(cors({origin: "https://inventory-management-system-mohit-i.vercel.app/"})); // Adjust the origin as needed
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -28,5 +29,5 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 
 app.listen(process.env.PORT || 4000, () => {
-    console.log('Sever is running on http://localhost:4000');
+    console.log('Sever is running on https://inventory-management-system-mohit-ism.onrender.com');
 });
