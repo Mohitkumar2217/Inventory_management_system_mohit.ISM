@@ -11,7 +11,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://inventory-management-system-mohit-ism.onrender.com',
+        // target: 'https://inventory-management-system-mohit-ism.onrender.com',
+        target: 'https://localhost:4000',
         changeOrigin: true,
       },
     },
