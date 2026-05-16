@@ -10,7 +10,7 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const API = useMemo(() => axios.create({
-    baseURL: `${process.env.URL}/api`, // NO SLASH AT END
+    baseURL: `${import.meta.env.URL}/api`, // NO SLASH AT END
     // withCredentials: true
   }), []);
 

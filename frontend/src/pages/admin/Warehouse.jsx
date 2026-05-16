@@ -55,7 +55,7 @@ export default function Warehouse({ searchQuery = "" }) {
   const [formData, setFormData] = useState(initialFormState);
 
   const api = axios.create({
-    baseURL: `${process.env.URL}/api`,
+    baseURL: `${import.meta.env.URL}/api`,
     headers: { Authorization: `Bearer ${token}` }
   });
 

@@ -6,7 +6,7 @@ import {
 
 export default function SupplierDetailPage({ selectedVendor, onBack }) {
     // --- HELPERS ---
-    const BASE_URL = `${process.env.URL}`;
+    const BASE_URL = `${import.meta.env.URL}`;
 
     const formatCurrency = (val) => new Intl.NumberFormat('en-IN', {
         style: 'currency',

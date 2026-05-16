@@ -74,7 +74,7 @@ export default function Orders({ searchQuery = "" }) {
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
 
   const api = axios.create({
-    baseURL: `${process.env.URL}/api`,
+    baseURL: `${import.meta.env.URL}/api`,
     headers: { Authorization: `Bearer ${token}` }
   });
 

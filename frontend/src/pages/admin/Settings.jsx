@@ -40,7 +40,7 @@ export default function Settings() {
   });
 
   const api = axios.create({
-    baseURL: `${process.env.URL}/api`,
+    baseURL: `${import.meta.env.URL}/api`,
     headers: { Authorization: `Bearer ${token}` }
   });
 
