@@ -1,4 +1,4 @@
-// backend/routes/supplierRoutes.js
+ 
 import express from 'express';
 import multer from 'multer'; 
 import { getSuppliers, addSupplier, deleteSupplier } from "../controllers/supplierController.js";
@@ -23,18 +23,16 @@ const supplierFiles = upload.fields([
   { name: 'bankDetails.bankPassbookProof', maxCount: 1 }
 ]);
 
-// --- ROUTES ---
-
-// 1. Get List (Protected)
+// Get List (Protected)
 router.get("/", verifyUser, getSuppliers);
 
-// 2. Create New (Protected + Files)
+// Create New (Protected + Files)
 router.post("/", verifyUser, checkRole(['admin', 'manager']), supplierFiles, addSupplier);
 
-// 3. Update Existing (Protected + Files)
+// Update Existing (Protected + Files)
 router.put("/:id", verifyUser, checkRole(['admin', 'manager']), supplierFiles, addSupplier);
 
-// 4. Delete (Admin Only)
+// Delete (Admin Only)
 router.delete("/:id", verifyUser, checkRole(['admin']), deleteSupplier);
 
 export default router;

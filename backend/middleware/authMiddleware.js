@@ -6,7 +6,7 @@ import User from "../models/User.js";
  */
 const verifyUser = async (req, res, next) => {
     try {
-        // 1. Get token from header
+        // Get token from header
         const token = req.headers.authorization?.split(' ')[1];
 
         if (!token) {
@@ -16,7 +16,7 @@ const verifyUser = async (req, res, next) => {
             });
         }
 
-        // 2. Verify Token
+        // Verify Token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
         if (!decoded) {
@@ -26,7 +26,7 @@ const verifyUser = async (req, res, next) => {
             });
         }
 
-        // 3. Find User in DB (optional but recommended for security)
+        // Find User in DB 
         const user = await User.findById(decoded.id).select('-password');
         
         if (!user) {
@@ -36,7 +36,7 @@ const verifyUser = async (req, res, next) => {
             });
         }
 
-        // 4. Attach user and role to request object
+        // Attach user and role to request object
         req.user = user;
         next(); // Move to the next middleware or controller
 

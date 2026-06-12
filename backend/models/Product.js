@@ -7,8 +7,7 @@ const VariantSchema = new mongoose.Schema({
   stock: { type: Number, default: 0 }
 });
 
-const productSchema = new mongoose.Schema({
-    // --- EXISTING FIELDS ---
+const productSchema = new mongoose.Schema({ 
     name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true },
     category: { type: String, required: true },
@@ -29,11 +28,8 @@ const productSchema = new mongoose.Schema({
     weight: { type: String },
     dimensions: { type: String },
     color: { type: String },
-
-    // --- dynamic VARIANTS ---
-    variants: [VariantSchema],
-    
-    // --- NEW LOGISTICS & WAREHOUSING ---
+ 
+    variants: [VariantSchema], 
     warehouse: { type: String, required: true },      // e.g., "Aisle 4, Shelf B"
     barcode: {
         type: String,
@@ -42,14 +38,11 @@ const productSchema = new mongoose.Schema({
     }, // EAN/UPC for scanning
     unit: { type: String, default: "pcs" },   // pcs, kg, box, liters
     isTaxable: { type: Boolean, default: true },
-    taxPercentage: { type: Number, default: 18 },
-
-    // --- FINANCIAL METRICS ---
+    taxPercentage: { type: Number, default: 18 }, 
     currency: { type: String, default: "INR" },
     discountPrice: { type: Number },          // Sale price if active
     margin: { type: Number },                 // Can be auto-calculated (Price - Cost)
-
-    // --- STATUS & VISIBILITY ---
+ 
     status: {
         type: String,
         enum: ["Active", "Inactive", "Draft", "Discontinued"],
@@ -61,8 +54,7 @@ const productSchema = new mongoose.Schema({
         enum: ["In Stock", "Out of Stock", "Pre-order"],
         default: "In Stock"
     },
-
-    // --- PRODUCT VARIANTS & TYPES ---
+ 
     material: { type: String },               // e.g., "Stainless Steel", "Cotton"
     warranty: { type: String },               // e.g., "1 Year Manufacturer"
     condition: {
@@ -70,19 +62,16 @@ const productSchema = new mongoose.Schema({
         enum: ["New", "Refurbished", "Used"],
         default: "New"
     },
-
-    // --- SHELF LIFE & BATCHING ---
+ 
     expiryDate: { type: Date },               // Critical for food/meds
     manufacturingDate: { type: Date },
     batchNumber: { type: String },
-
-    // --- SEO & ONLINE DISCOVERY ---
+ 
     slug: { type: String, lowercase: true },  // for URL: /product/nebula-x1
     tags: [{ type: String }],                 // ["gadget", "wireless", "premium"]
     metaTitle: { type: String },
     metaDescription: { type: String },
-
-    // --- PERFORMANCE TRACKING ---
+ 
     rating: { type: Number, default: 0 },     // 1 to 5 stars
     reviewCount: { type: Number, default: 0 },
     totalSold: { type: Number, default: 0 }, // Tracks popularity

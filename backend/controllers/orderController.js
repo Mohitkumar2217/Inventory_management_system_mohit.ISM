@@ -3,7 +3,7 @@ import Order from "../models/Order.js";
 import Warehouse from "../models/Warehouse.js";
 import Supplier from "../models/Supplier.js"; 
 
-// --- 1. HISTORICAL TREND ANALYSIS ---
+// HISTORICAL TREND ANALYSIS
 export const getOrderTrends = async (req, res) => {
     try {
         const { type } = req.query;
@@ -79,7 +79,7 @@ export const getOrderTrends = async (req, res) => {
     }
 };
 
-// --- 2. GET ALL ORDERS & REAL-TIME SUMMARY ---
+// GET ALL ORDERS & REAL-TIME SUMMARY
 export const getOrders = async (req, res) => {
     try {
         const orders = await Order.find().sort({ createdAt: -1 });
@@ -142,7 +142,7 @@ export const getOrders = async (req, res) => {
     }
 };
 
-// --- 3. CRUD OPERATIONS ---
+// CRUD OPERATIONS 
 export const syncOrder = async (req, res) => {
     try {
         const { id } = req.params;

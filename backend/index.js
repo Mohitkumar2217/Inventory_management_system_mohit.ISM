@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from "dotenv";
+
 import connectDB from './db/connection.js';
 import authRoutes from "./routes/auth.js";
 import categoryRoutes from "./routes/category.js";
@@ -25,6 +26,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
+// APIS
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/suppliers", supplierRoutes);

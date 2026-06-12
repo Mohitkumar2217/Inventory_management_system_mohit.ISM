@@ -5,14 +5,14 @@ import Products from "../models/Product.js";
 import Staff from "../models/User.js"; // This is imported as Staff
 import Supplier from "../models/Supplier.js";
 
-// --- 1. FETCH LEDGER DATA ---
+// FETCH LEDGER DATA 
 export const getStockList = async (req, res) => {
     try {
         const warehouse = await Warehouse.find().sort({ createdAt: -1 });
         const product = await Products.find().sort({ createdAt: -1 });
         const users = await Staff.find().sort({ createdAt: -1 });
 
-        // --- CALCULATION LOGIC ---
+        // CALCULATION LOGIC 
         const totalWarehouses = warehouse.length;
         const totalQuantity = warehouse.reduce((sum, w) => sum + (Number(w.quantity) || 0), 0);
         
@@ -21,9 +21,7 @@ export const getStockList = async (req, res) => {
         const outOfStockCount = warehouse.filter(w => w.statusWarehouse === "inactive").length;
 
         // 1. Availability Rate: (Active / Total) * 100
-        const availabilityRate = totalWarehouses > 0 
-            ? ((inStockCount / totalWarehouses) * 100).toFixed(1) 
-            : 0;
+        const availabilityRate = totalWarehouses > 0 ? ((inStockCount / totalWarehouses) * 100).toFixed(1) : 0;
         
         // 2. Active Zones: Count unique zones from the array
         const activeZonesCount = [...new Set(
@@ -49,13 +47,13 @@ export const getStockList = async (req, res) => {
     }
 }; 
 
-// --- 2. SYNC STOCK & UPGRADE ADMIN ---
+// SYNC STOCK & UPGRADE ADMIN 
 export const syncStockRecord = async (req, res) => {
     try {
         const { id } = req.params;
         const data = req.body;
 
-        // 1. Auto-update status logic
+        // Auto-update status logic
         if (Number(data.quantity) <= 0) data.status = "Out of Stock";
 
         let warehouseRecord;
@@ -69,7 +67,7 @@ export const syncStockRecord = async (req, res) => {
             await warehouseRecord.save();
         }
 
-        // 2. ROLE UPGRADE & NOTIFICATION LOGIC
+        // ROLE UPGRADE & NOTIFICATION LOGIC
         if (data.admin) {
             // FIX: Changed "User" to "Staff" to match your import at top of file
             const adminUser = await Staff.findByIdAndUpdate(
@@ -98,7 +96,7 @@ export const syncStockRecord = async (req, res) => {
     }
 };
 
-// --- 3. DELETE RECORD ---
+// DELETE RECORD 
 export const deleteStock = async (req, res) => {
     try {
         await Warehouse.findByIdAndDelete(req.params.id);

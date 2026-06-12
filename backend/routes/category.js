@@ -4,16 +4,16 @@ import { verifyUser, checkRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Matches: GET /api/categories
+// GET /api/categories
 router.get("/", verifyUser, getCategories);
 
-// Matches: POST /api/categories
+// POST /api/categories
 router.post("/", verifyUser, checkRole(['admin', 'manager']), addCategory);
 
-// Matches: PUT /api/categories/:id for updates
+// PUT /api/categories/:id for updates
 router.put("/:id", verifyUser, checkRole(['admin', 'manager']), addCategory);
 
-// Matches: DELETE /api/categories/:id
+// DELETE /api/categories/:id
 router.delete("/:id", verifyUser, checkRole(['admin']), deleteCategory);
 
 export default router;

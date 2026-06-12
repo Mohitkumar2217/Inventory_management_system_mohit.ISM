@@ -7,8 +7,7 @@ const VariantSchema = new mongoose.Schema({
     stock: { type: Number, default: 0 }
 });
 
-const orderSchema = new mongoose.Schema({
-    // SECTION 1: IDENTIFICATION
+const orderSchema = new mongoose.Schema({ 
     poNumber: {
         type: String,
         required: true,
@@ -20,9 +19,7 @@ const orderSchema = new mongoose.Schema({
         type: String,
         enum: ["standard", "urgent", "critical"],
         default: "standard"
-    },
-
-    // SECTION 2: VENDOR & PRODUCT
+    }, 
     vendorName: { type: String, required: true },
     vendorEmail: {
         type: String,
@@ -34,15 +31,13 @@ const orderSchema = new mongoose.Schema({
     sku: { type: String, required: true },
     category: { type: String, default: "Electronics" },
     variants: [VariantSchema],
-
-    // SECTION 3: LOGISTICS & WAREHOUSING
+ 
     warehouse: { type: String, required: true, default: "Main Hub - New Delhi" },
     zone: { type: String, required: true, default: "zone-A" },
     whContact: { type: String, required: true },
     shippingMethod: { type: String, required: true },
     deliveryAddress: { type: String, required: true },
-    
-    // SECTION 4: FINANCIALS (Detailed)
+     
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },
     taxRate: { type: Number, default: 0 },
@@ -51,9 +46,7 @@ const orderSchema = new mongoose.Schema({
     paymentTerms: { type: String, default: "Due on Receipt" },
 
     // Total calculation (Optional: can also be calculated on the fly)
-    totalOrderValue: { type: Number },
-
-    // SECTION 5: INVENTORY & SYSTEM STATUS
+    totalOrderValue: { type: Number }, 
     minStock: { type: Number, default: 0 }, // Reorder point target
     status: {
         type: String,

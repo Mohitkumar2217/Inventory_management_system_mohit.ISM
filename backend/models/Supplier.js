@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
-const supplierSchema = new mongoose.Schema({
-    // --- 1. BASIC DETAILS ---
+const supplierSchema = new mongoose.Schema({ 
     name: { type: String, required: true, trim: true },
     photo: { type: String }, // URL to image
     email: { type: String, required: true, unique: true, lowercase: true },
@@ -13,8 +12,7 @@ const supplierSchema = new mongoose.Schema({
         default: 'Active'
     },
     idCard: { type: String }, // URL/Path to ID card image
-
-    // --- 2. GOODS PROVIDING DETAILS ---
+ 
     itemsDetails: [{
         itemName: String,
         category: String,
@@ -29,8 +27,7 @@ const supplierSchema = new mongoose.Schema({
     details: { type: String }, 
     isCurrentlyActiveForDelivery: { type: Boolean, default: true },
     itemLimit: { type: Number, default: 0 }, // numbers of item(limit)
-
-    // --- 3. STATUS & COMPLIANCE DETAILS ---
+ 
     verification: {
         type: String,
         enum: ['Verified', 'Pending', 'Rejected'],
@@ -41,9 +38,7 @@ const supplierSchema = new mongoose.Schema({
         contract: { type: String }, // URL to file
         idProof: { type: String },   // URL to file
         addressProof: { type: String } // URL to file
-    },
-
-    // --- 4. CONNECTED WAREHOUSE ---
+    }, 
     connectedWarehouses: [{
         warehouseId: {
             type: mongoose.Schema.Types.ObjectId,
@@ -53,8 +48,7 @@ const supplierSchema = new mongoose.Schema({
         itemCategorySupplied: { type: String },
         itemCountSupplied: { type: Number, default: 0 }
     }],
-
-    // --- 5. ACCOUNT DETAILS ---
+ 
     bankDetails: {
         bankName: { type: String, required: true },
         accountNumber: { type: String, required: true },
@@ -62,8 +56,7 @@ const supplierSchema = new mongoose.Schema({
         bankBranch: { type: String },
         bankPassbookProof: { type: String } // URL to image/pdf
     },
-
-    // --- 6. PERFORMANCE ---
+ 
     performance: {
         daysActive: { type: Number, default: 0 }, // numbers of days actively working
         deliveryPercentage: { type: Number, default: 100 },
@@ -80,8 +73,7 @@ const supplierSchema = new mongoose.Schema({
         }],
         totalOrdersCompleted: { type: Number, default: 0 }
     },
-
-    // --- 7. HISTORY ---
+ 
     history: {
         lastDelivery: {
             status: { type: String, enum: ['active', 'completed', 'cancelled', 'pending'] },
@@ -95,8 +87,7 @@ const supplierSchema = new mongoose.Schema({
             status: String
         }]
     },
-
-    // --- 8. DESCRIPTION & RANKING ---
+ 
     description: {
         ranking: { type: Number, default: 0 },
         additionalNotes: { type: String }

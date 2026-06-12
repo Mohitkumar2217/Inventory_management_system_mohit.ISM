@@ -4,7 +4,7 @@ import Warehouse from "../models/Warehouse.js";
 import Supplier from "../models/Supplier.js";
 import Order from "../models/Order.js";
 
-// --- 1. GET ANALYTICS TRENDS (7-Day Analysis) ---
+// GET ANALYTICS TRENDS  
 export const getProductTrends = async (req, res) => {
     try {
         const { type } = req.query;
@@ -60,7 +60,7 @@ export const getProductTrends = async (req, res) => {
     }
 };
 
-// --- 2. GET ALL PRODUCTS & MODULE ANALYTICS (CORRECTED) ---
+// GET ALL PRODUCTS & MODULE ANALYTICS (CORRECTED)
 export const getProducts = async (req, res) => {
     try {
         const products = await Product.find().sort({ createdAt: -1 });
@@ -115,7 +115,7 @@ export const getProducts = async (req, res) => {
         res.status(500).json({ success: false, message: "Error syncing inventory modules" });
     }
 };
-// --- 3. UPDATED SYNC PRODUCT (Handling Dynamic Variants) ---
+// UPDATED SYNC PRODUCT (Handling Dynamic Variants) 
 export const syncProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -175,7 +175,7 @@ export const syncProduct = async (req, res) => {
 };
 
 
-// --- 4. DELETE PRODUCT ---
+// DELETE PRODUCT 
 export const deleteProduct = async (req, res) => {
     try {
         await Product.findByIdAndDelete(req.params.id);

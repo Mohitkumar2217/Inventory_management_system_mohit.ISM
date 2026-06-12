@@ -49,7 +49,7 @@ export const updateOwnProfile = async (req, res) => {
     }
 };
 
-// --- 1. Admin View: Add or Update Staff member ---
+// Admin View: Add or Update Staff member
 export const syncStaffProfile = async (req, res) => {
     try {
         const { id } = req.params;
@@ -124,7 +124,7 @@ export const syncStaffProfile = async (req, res) => {
     }
 };
 
-// --- 2. Fetch Staff Directory (Matches your Staff.jsx call) ---
+// Fetch Staff Directory 
 export const getStaffList = async (req, res) => {
     try {
         const staff = await User.find().select("-password").sort({ createdAt: -1 });

@@ -9,13 +9,11 @@ import {
 import { verifyUser, checkRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
-
-// --- PROFILE ROUTES (Current User) ---
+ 
 // Order matters: Static paths must come before dynamic /:id
 router.get("/profile", verifyUser, getMyProfile);
 router.put("/update-profile", verifyUser, updateOwnProfile);
-
-// --- STAFF MANAGEMENT ROUTES (Admin/Manager only) ---
+ 
 router.get("/", verifyUser, checkRole(['admin', 'manager']), getStaffList);
 router.post("/", verifyUser, checkRole(['admin']), syncStaffProfile);
 router.put("/:id", verifyUser, checkRole(['admin']), syncStaffProfile);

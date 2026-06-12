@@ -9,8 +9,7 @@ const categorySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId, 
         ref: "Brand",
     },
-
-    // --- LOGISTICS & STORAGE RULES --- 
+ 
     storageType: { 
         type: String, 
         enum: ['liquid', 'solid', 'air', 'ceramic', 'semiconductor'], 
@@ -22,23 +21,19 @@ const categorySchema = new mongoose.Schema({
     requiresCooling: { type: Boolean, default: false },
     isFragile: { type: Boolean, default: false },
     hazardLevel: { type: String, enum: ['None', 'Low', 'High', 'Medium', 'Danger'], default: 'None' },
-
-    // --- GLOBAL THRESHOLDS ---
+ 
     // Sets default safety levels for all products in this category
     defaultMinStock: { type: Number, default: 10 },
     defaultMaxStock: { type: Number, default: 500 },
-
-    // --- FINANCIALS ---
+ 
     taxRate: { type: Number, default: 18 }, // Percentage
     hsnCode: { type: String }, // Harmonized System of Nomenclature for tax
-
-    // --- UI & ORGANIZATION ---
+ 
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
     priority: { type: Number, default: 1 }, // Sort order in dropdowns
     colorCode: { type: String, default: '#3b82f6' }, // For dashboard badges
     icon: { type: String, default: 'package' }, // Lucide icon name string
-    
-    // --- SEO & META ---
+     
     metaTitle: { type: String },
     isPrivate: { type: Boolean, default: false }, // If true, only admins can assign
     

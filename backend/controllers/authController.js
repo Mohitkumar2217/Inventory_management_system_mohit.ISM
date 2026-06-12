@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import nodemailer from 'nodemailer';
 
-// --- PART 1: SEND RESET EMAIL ---
+// SEND RESET EMAIL
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -60,7 +60,7 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// --- PART 2: UPDATE PASSWORD IN DB ---
+// UPDATE PASSWORD IN DB
 export const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
@@ -84,7 +84,7 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// --- PART 3: LOGIN ---
+// LOGIN 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -111,7 +111,7 @@ export const login = async (req, res) => {
   }
 };
 
-// --- PART 4: REGISTER ---
+// REGISTER 
 export const Register = async (req, res) => {
   try {
     const { name, email, password, address, role } = req.body;
@@ -131,7 +131,7 @@ export const Register = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Registration failed",
-      error: error.message // Send the actual message to Postman/Frontend to see what's wrong
+      error: error.message // testing in postman
     });
   }
 };
