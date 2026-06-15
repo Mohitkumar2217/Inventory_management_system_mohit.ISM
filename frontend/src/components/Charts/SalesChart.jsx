@@ -37,7 +37,7 @@ const SalesChart = () => {
         return [{ data }];
     }, [range]);
 
-    // 3. ApexChart Configurations
+    // ApexChart Configurations
     const chartOptions = {
         chart: {
             type: 'candlestick',

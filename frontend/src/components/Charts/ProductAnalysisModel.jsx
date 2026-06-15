@@ -14,12 +14,12 @@ const ProductAnalysisModal = ({ isOpen, onClose, item }) => {
             fetchTrendData();
         }
     }, [isOpen, item]);
-
-    // Add this to your ProductAnalysisModal.jsx inside fetchTrendData
+ 
     const fetchTrendData = async () => {
         setChartData([]); // Clear old data before fetching new data
         setLoading(true);
         try {
+            // third party fetch of api 
             const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/products/analysis/trends?type=${item.label}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
