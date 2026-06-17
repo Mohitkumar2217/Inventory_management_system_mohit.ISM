@@ -27,12 +27,11 @@ export const forgotPassword = async (req, res) => {
       port: 465,
       secure: true, // Use SSL/TLS
       auth: {
-        user: process.env.EMAIL_USER, // Your Gmail address from .env
-        pass: process.env.EMAIL_PASS  // Your 16-character App Password from .env
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS 
       }
     });
-
-    // Link points to your FRONTEND URL (Vite default is 5173)
+ 
     const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
 
     const mailOptions = {

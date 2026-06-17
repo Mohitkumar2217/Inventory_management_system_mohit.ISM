@@ -25,8 +25,7 @@ const Login = () => {
   const handleRegister = (e) => {
     e.preventDefault();
     navigate("/register");
-  };
-
+  }; 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -40,7 +39,7 @@ const Login = () => {
           admin: "/admin/dashboard",
           manager: "/manager/dashboard",
           staff: "/staff-portal/staff/dashboard",
-          warehouse: "/wareouse-portal/warehouse/dashboard", 
+          warehouse: "/warehouse-portal/warehouse/dashboard", 
         };
         navigate(roleRedirects[user.role] || "/login");
       }
@@ -58,7 +57,7 @@ const Login = () => {
     setMessage(null);
     try {
       // Replace with your actual forgot-password endpoint
-      await axios.post(`${import.meta.env.VITE_API_URL}api/auth/forgot-password`, { email });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
       setMessage("Reset link sent! Please check your email inbox.");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset link.");
