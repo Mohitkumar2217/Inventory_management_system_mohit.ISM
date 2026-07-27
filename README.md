@@ -104,40 +104,41 @@ Inventory_management_system_mohit.ISM
 
 ---
 
-# System Architecture
+```mermaid
+flowchart TB
 
-```text
-                              Inventory Management System
+subgraph Client["Client Layer"]
+A["React Frontend"]
+end
 
-┌────────────────────────────────────────────────────────────────────────────┐
-│                             React Frontend                                │
-│                                                                            │
-│ Dashboard │ Staff │ Warehouse │ Orders │ Products │ Suppliers │ Categories │
-└───────────────────────────────┬────────────────────────────────────────────┘
-                                │
-                         HTTP / REST API
-                                │
-┌───────────────────────────────▼────────────────────────────────────────────┐
-│                            Express.js Server                              │
-│                                                                            │
-│ Authentication │ Routes │ Middleware │ Controllers │ Business Logic        │
-└───────────────────────────────┬────────────────────────────────────────────┘
-                                │
-┌───────────────────────────────▼────────────────────────────────────────────┐
-│                          Authentication Layer                             │
-│                                                                            │
-│ JWT Authentication │ Role-Based Authorization │ Request Validation         │
-└───────────────────────────────┬────────────────────────────────────────────┘
-                                │
-┌───────────────────────────────▼────────────────────────────────────────────┐
-│                            Mongoose Models                                │
-│                                                                            │
-│ Users │ Staff │ Warehouse │ Products │ Orders │ Categories │ Suppliers     │
-└───────────────────────────────┬────────────────────────────────────────────┘
-                                │
-┌───────────────────────────────▼────────────────────────────────────────────┐
-│                             MongoDB Database                              │
-└────────────────────────────────────────────────────────────────────────────┘
+subgraph API["API Layer"]
+B["Express.js REST API"]
+end
+
+subgraph Security["Security Layer"]
+C["JWT Authentication"]
+D["Role-Based Authorization"]
+end
+
+subgraph Application["Application Layer"]
+E["Controllers"]
+F["Business Logic"]
+G["Utilities"]
+end
+
+subgraph Data["Data Layer"]
+H["Mongoose Models"]
+I["MongoDB"]
+end
+
+A -->|HTTP Requests| B
+B --> C
+C --> D
+D --> E
+E --> F
+F --> G
+G --> H
+H --> I
 ```
 
 ---
