@@ -143,31 +143,73 @@ H --> I
 
 ---
 
-# Request Flow
+```mermaid
+flowchart TB
 
-```text
-User
- │
- ▼
-React Frontend
- │
- ▼
-Axios HTTP Requests
- │
- ▼
-Express Routes
- │
- ▼
-Authentication Middleware
- │
- ▼
-Controllers
- │
- ▼
-Database Models
- │
- ▼
-MongoDB
+    User([👤 User])
+
+    subgraph Client["Client Layer"]
+        React["React + Vite"]
+        Dashboard["Dashboard"]
+        Staff["Staff Module"]
+        Warehouse["Warehouse Module"]
+        Products["Products"]
+        Orders["Orders"]
+        Suppliers["Suppliers"]
+        Categories["Categories"]
+    end
+
+    subgraph API["API Layer"]
+        Axios["Axios Client"]
+        Routes["Express Routes"]
+    end
+
+    subgraph Security["Security Layer"]
+        JWT["JWT Authentication"]
+        RBAC["Role-Based Access"]
+    end
+
+    subgraph Application["Application Layer"]
+        Controllers["Controllers"]
+        Services["Business Logic"]
+    end
+
+    subgraph Data["Data Layer"]
+        Models["Mongoose Models"]
+        MongoDB[("MongoDB")]
+    end
+
+    User --> React
+
+    React --> Dashboard
+    React --> Staff
+    React --> Warehouse
+    React --> Products
+    React --> Orders
+    React --> Suppliers
+    React --> Categories
+
+    Dashboard --> Axios
+    Staff --> Axios
+    Warehouse --> Axios
+    Products --> Axios
+    Orders --> Axios
+    Suppliers --> Axios
+    Categories --> Axios
+
+    Axios --> Routes
+    Routes --> JWT
+    JWT --> RBAC
+    RBAC --> Controllers
+    Controllers --> Services
+    Services --> Models
+    Models --> MongoDB
+
+    MongoDB --> Models
+    Models --> Services
+    Services --> Controllers
+    Controllers --> Axios
+    Axios --> React
 ```
 
 ---
