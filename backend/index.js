@@ -35,6 +35,12 @@ app.use("/api/warehouse", warehouseRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    message: "ok"
+  });
+})
+
 app.listen(process.env.PORT || 4000, () => {
     console.log('Sever is running on https://localhost:4000');
 });
