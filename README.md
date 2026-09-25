@@ -1,6 +1,6 @@
 # Inventory Management System
 
-A full-stack **Inventory Management System** built using the **MERN Stack (MongoDB, Express.js, React.js, Node.js)**. The application streamlines warehouse operations by providing secure inventory, supplier, product, category, order, and staff management through a modern dashboard.
+A full-stack **Inventory Management System** built using the **MERN Stack (MongoDB, Express.js, React.js, Node.js)**. The application provides inventory, supplier, product, category, order, and staff management through role-specific dashboards.
 
 The backend follows a modular RESTful architecture with JWT-based authentication and role-based authorization, while the frontend delivers a responsive user experience using React and Vite.
 
@@ -28,16 +28,19 @@ The backend follows a modular RESTful architecture with JWT-based authentication
 - Role Management (Admin, Manager, Warehouse Staff)
 
 ### Dashboard
-- Product Analytics
-- Order Analytics
+- Product and order chart components (some currently use demo data)
 - Inventory Tracking
-- Search & Filtering
+- Admin search and filtering
 
 ### Additional Features
-- File Uploads using Multer
+- Supplier document uploads using Multer
+- Product image uploads using Cloudinary
+- Barcode generation and CSV report export
 - RESTful API Design
 - MongoDB Integration
 - Responsive User Interface
+
+> **Current limitation:** Some dashboard cards, charts, staff/warehouse summaries, and report data are static or generated sample data rather than live backend analytics.
 
 ---
 
@@ -50,7 +53,10 @@ The backend follows a modular RESTful architecture with JWT-based authentication
 - React Router
 - Context API
 - Axios
-- CSS
+- Tailwind CSS
+- Recharts and ApexCharts
+- Lucide React and React Icons
+- JsBarcode
 
 ## Backend
 
@@ -61,6 +67,7 @@ The backend follows a modular RESTful architecture with JWT-based authentication
 - JWT
 - bcrypt
 - Multer
+- Nodemailer
 - dotenv
 
 ---
@@ -85,14 +92,14 @@ Inventory_management_system_mohit.ISM
 ├── frontend
 │   ├── public/
 │   ├── src/
-│   │   ├── Staff/
-│   │   ├── Warehouse/
 │   │   ├── assets/
 │   │   ├── components/
 │   │   ├── context/
-│   │   ├── layout/
+│   │   ├── layout/   # Shared portal frame and navigation helpers
 │   │   ├── pages/
 │   │   ├── routes/
+│   │   ├── Staff/       # Staff portal pages and layout
+│   │   ├── Warehouse/   # Warehouse portal pages and layout
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   │
@@ -102,114 +109,20 @@ Inventory_management_system_mohit.ISM
 └── README.md
 ```
 
----
-
-```mermaid
-flowchart TB
-
-subgraph Client["Client Layer"]
-A["React Frontend"]
-end
-
-subgraph API["API Layer"]
-B["Express.js REST API"]
-end
-
-subgraph Security["Security Layer"]
-C["JWT Authentication"]
-D["Role-Based Authorization"]
-end
-
-subgraph Application["Application Layer"]
-E["Controllers"]
-F["Business Logic"]
-G["Utilities"]
-end
-
-subgraph Data["Data Layer"]
-H["Mongoose Models"]
-I["MongoDB"]
-end
-
-A -->|HTTP Requests| B
-B --> C
-C --> D
-D --> E
-E --> F
-F --> G
-G --> H
-H --> I
-```
+The shared portal frame and search helpers are in `frontend/src/layout/`. Reusable frontend components are grouped under `frontend/src/components/` by type (forms, charts, lists, and summary cards).
 
 ---
 
 ```mermaid
 flowchart TB
 
-    User([👤 User])
-
-    subgraph Client["Client Layer"]
-        React["React + Vite"]
-        Dashboard["Dashboard"]
-        Staff["Staff Module"]
-        Warehouse["Warehouse Module"]
-        Products["Products"]
-        Orders["Orders"]
-        Suppliers["Suppliers"]
-        Categories["Categories"]
-    end
-
-    subgraph API["API Layer"]
-        Axios["Axios Client"]
-        Routes["Express Routes"]
-    end
-
-    subgraph Security["Security Layer"]
-        JWT["JWT Authentication"]
-        RBAC["Role-Based Access"]
-    end
-
-    subgraph Application["Application Layer"]
-        Controllers["Controllers"]
-        Services["Business Logic"]
-    end
-
-    subgraph Data["Data Layer"]
-        Models["Mongoose Models"]
-        MongoDB[("MongoDB")]
-    end
-
-    User --> React
-
-    React --> Dashboard
-    React --> Staff
-    React --> Warehouse
-    React --> Products
-    React --> Orders
-    React --> Suppliers
-    React --> Categories
-
-    Dashboard --> Axios
-    Staff --> Axios
-    Warehouse --> Axios
-    Products --> Axios
-    Orders --> Axios
-    Suppliers --> Axios
-    Categories --> Axios
-
-    Axios --> Routes
-    Routes --> JWT
-    JWT --> RBAC
-    RBAC --> Controllers
-    Controllers --> Services
-    Services --> Models
-    Models --> MongoDB
-
-    MongoDB --> Models
-    Models --> Services
-    Services --> Controllers
-    Controllers --> Axios
-    Axios --> React
+    Client[React frontend] -->|Axios requests| Routes[Express routes]
+    Routes -->|Protected endpoints| Auth[JWT and role middleware]
+    Routes -->|Public endpoints| Controllers[Controllers]
+    Auth --> Controllers
+    Controllers --> Models[Mongoose models]
+    Models --> MongoDB[(MongoDB)]
+    Controllers --> Mailer[Nodemailer]
 ```
 
 ---
@@ -296,6 +209,12 @@ flowchart TB
 | PATCH | `/api/orders/status/:id` |
 | DELETE | `/api/orders/:id` |
 
+## Health
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Check whether the API process is responding |
+
 ---
 
 # Installation
@@ -310,13 +229,25 @@ cd Inventory_management_system_mohit.ISM
 
 ## Backend Setup
 
+Create `backend/.env` using the variables listed below before starting the API.
+
 ```bash
 cd backend
 
 npm install
 
-npm run dev
+npm start
 ```
+
+The backend start command uses Node's watch mode.
+
+### Optional Sample Data
+
+```bash
+npm run seed
+```
+
+Run this from `backend/` only against a disposable database. The seed script deletes existing users, categories, suppliers, warehouses, products, and orders before inserting sample records.
 
 ## Frontend Setup
 
@@ -328,48 +259,50 @@ npm install
 npm run dev
 ```
 
+Run the backend and frontend in separate terminals. The frontend reads `VITE_API_URL` as the backend origin and appends `/api` to it.
+
 ---
 
 # Environment Variables
 
-Create a `.env` file inside the `backend` directory.
+Create `backend/.env` with the variables the server reads:
 
 ```env
 PORT=4000
-
 MONGO_URI=your_mongodb_connection_string
-
 JWT_SECRET=your_jwt_secret
-
 EMAIL_USER=your_email
-
-EMAIL_PASS=your_email_password
-
-FRONTEND_URL=http://localhost:5173
-
-BACKEND_URL = https://inventory-management-system-mohit-ism.onrender.com
+EMAIL_PASS=your_email_app_password
 ```
+
+Create `frontend/.env` and set the backend origin (do not add `/api`):
+
+```env
+VITE_API_URL=http://localhost:4000
+```
+
+`PORT` defaults to `4000` if unset. Frontend origins allowed by CORS are currently configured in `backend/index.js`.
 
 ---
 
 # Security
 
-- JWT Authentication
-- Role-Based Authorization
+- JWT authentication and role checks on selected protected routes
 - Password Hashing (bcrypt)
 - Protected REST APIs
-- Secure Password Reset Flow
-- Middleware-Based Request Validation
-- File Upload Validation using Multer
+- Password reset tokens expire after 15 minutes
+- Supplier multipart uploads handled by Multer
+
+> **Security note:** The registration endpoint accepts a role from the request body. Do not expose public registration as a trusted way to assign privileged roles without restricting this behavior.
 
 ---
 
 # Future Improvements
 
-- Dashboard Charts
-- Barcode & QR Code Integration
-- Low Stock Notifications
-- Export Reports (PDF/Excel)
+- Replace demo dashboard, chart, and report values with live API data
+- QR code generation (barcode generation is already present)
+- Real-time low-stock alert delivery
+- PDF and Excel report exports (CSV export is present)
 - Docker Support
 - CI/CD Pipeline
 - Unit & Integration Testing
