@@ -61,9 +61,20 @@ export const syncStaffProfile = async (req, res) => {
         // Normalize enums
         const normalizedRole = role?.toLowerCase() || 'staff';
         const normalizedStatus = status?.toLowerCase() || 'active';
+        if (!['staff', 'manager'].includes(normalizedRole)) {
+            return res.status(400).json({ success: false, message: "Use warehouse assignment to create a warehouse admin; the master admin is provisioned from the backend." });
+        }
 
         if (id) {
             // UPDATE Logic
+            const existingUser = await User.findById(id);
+            if (!existingUser) return res.status(404).json({ success: false, message: "Staff member not found" });
+            if (existingUser.role === "admin") {
+                return res.status(403).json({ success: false, message: "The master admin can only be managed through backend provisioning" });
+            }
+            if (existingUser.role === "warehouse") {
+                return res.status(403).json({ success: false, message: "Unassign this user from their warehouse before changing their account" });
+            }
             let updateData = { 
                 name, 
                 employeeId, // Explicitly mapped
@@ -127,12 +138,11 @@ export const syncStaffProfile = async (req, res) => {
 // Fetch Staff Directory 
 export const getStaffList = async (req, res) => {
     try {
-        const staff = await User.find().select("-password").sort({ createdAt: -1 });
+        const staff = await User.find({ role: { $ne: "admin" } }).select("-password").sort({ createdAt: -1 });
 
         const totalStaff = staff.length;
         const activeStaff = staff.filter(s => s.status?.toLowerCase() === "active").length;
         const inactiveStaff = staff.filter(s => s.status?.toLowerCase() === "inactive").length;
-        const admins = staff.filter(s => s.role === "admin").length;
         const managers = staff.filter(s => s.role === "manager").length;
 
         const productivityBase = totalStaff > 0 
@@ -146,7 +156,6 @@ export const getStaffList = async (req, res) => {
                 totalStaff,
                 activeStaff,
                 inactiveStaff,
-                admins,
                 managers,
                 productivity: `${productivityBase}%`
             }
@@ -159,7 +168,15 @@ export const getStaffList = async (req, res) => {
 
 export const deleteStaff = async (req, res) => {
     try {
-        await User.findByIdAndDelete(req.params.id);
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ success: false, message: "Staff member not found" });
+        if (user.role === "admin") {
+            return res.status(403).json({ success: false, message: "The master admin cannot be deleted from the staff portal" });
+        }
+        if (user.assignedWarehouse) {
+            return res.status(409).json({ success: false, message: "Unassign this user from their warehouse before deleting the account" });
+        }
+        await user.deleteOne();
         res.status(200).json({ success: true, message: "Member removed from directory" });
     } catch (error) {
         res.status(500).json({ success: false, message: "Delete operation failed" });

@@ -12,34 +12,12 @@ import connectDB from './db/connection.js';
 
 dotenv.config();
 
-// const register = async () => {
-//     try {
-//         connectDB();
-//         const hashPasswaord = await bcrypt.hash('admin', 10);
-//         const newUser = new User({
-//             name: "admin",
-//             email: "admin@mohit.com",
-//             password: hashPasswaord,
-//             address: "admin address",
-//             role:'admin'
-//         }) 
-//         await newUser.save();
-//         console.log("Admin user created successfully");
-//     }
-//     catch (error) {
-//         console.log("Creation error:", error.message);
-//     }
-// }
-
-// register();
-
-
 const seedDB = async () => {
     try {
         await connectDB();
 
         // Clear existing data
-        await User.deleteMany({});
+        await User.deleteMany({ role: { $ne: 'admin' } });
         await Category.deleteMany({});
         await Supplier.deleteMany({});
         await Warehouse.deleteMany({});
@@ -53,7 +31,7 @@ const seedDB = async () => {
             name: `Employee ${i + 1}`,
             email: `staff${i + 1}@inventory.com`,
             password: passwordHash,
-            role: i < 2 ? 'admin' : i < 5 ? 'manager' : 'staff',
+            role: i < 5 ? 'manager' : 'staff',
             status: i % 5 === 0 ? 'Inactive' : 'Active',
             works: `Managing logistics and inventory in Sector ${String.fromCharCode(65 + (i % 4))}.`,
         }));

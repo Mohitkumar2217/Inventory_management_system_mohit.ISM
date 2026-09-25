@@ -25,7 +25,13 @@ The backend follows a modular RESTful architecture with JWT-based authentication
 ### Staff Management
 - Staff Profile Management
 - Staff Administration
-- Role Management (Admin, Manager, Warehouse Staff)
+- Role Management (Master Admin, Manager, Staff, Warehouse Admin)
+
+### Role Access
+- **Master Admin:** Created from the backend only; manages users, roles, warehouses, and all system data.
+- **Manager:** Read-only dashboard and inventory access, plus order management. Cannot administer users or roles.
+- **Staff:** Read-only dashboard and inventory access.
+- **Warehouse Admin:** Assigned to one warehouse; can view and update that warehouse and its stock only.
 
 ### Dashboard
 - Product and order chart components (some currently use demo data)
@@ -236,10 +242,12 @@ cd backend
 
 npm install
 
+npm run admin:create
+
 npm start
 ```
 
-The backend start command uses Node's watch mode.
+The admin command provisions the configured master admin. The backend start command uses Node's watch mode.
 
 ### Optional Sample Data
 
@@ -247,7 +255,11 @@ The backend start command uses Node's watch mode.
 npm run seed
 ```
 
-Run this from `backend/` only against a disposable database. The seed script deletes existing users, categories, suppliers, warehouses, products, and orders before inserting sample records.
+Run this from `backend/` only against a disposable database. The seed script deletes non-admin users and existing categories, suppliers, warehouses, products, and orders before inserting sample records. It preserves master-admin accounts.
+
+### Rotate the Master Admin Password
+
+Update `MASTER_ADMIN_PASSWORD` in `backend/.env`, then rerun `npm run admin:create` from `backend/`. The provisioning command also demotes any other `admin` accounts to regular staff.
 
 ## Frontend Setup
 
@@ -273,6 +285,9 @@ MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 EMAIL_USER=your_email
 EMAIL_PASS=your_email_app_password
+MASTER_ADMIN_NAME=Master Administrator
+MASTER_ADMIN_EMAIL=admin@example.com
+MASTER_ADMIN_PASSWORD=replace_with_a_unique_password_of_at_least_12_characters
 ```
 
 Create `frontend/.env` and set the backend origin (do not add `/api`):
@@ -287,13 +302,13 @@ VITE_API_URL=http://localhost:4000
 
 # Security
 
-- JWT authentication and role checks on selected protected routes
+- JWT authentication and role checks on protected routes
 - Password Hashing (bcrypt)
 - Protected REST APIs
 - Password reset tokens expire after 15 minutes
 - Supplier multipart uploads handled by Multer
 
-> **Security note:** The registration endpoint accepts a role from the request body. Do not expose public registration as a trusted way to assign privileged roles without restricting this behavior.
+Public registration always creates a staff account. Admin and warehouse-admin roles are assigned only through backend provisioning or authenticated master-admin controls.
 
 ---
 

@@ -12,6 +12,7 @@ import Warehouse from "./pages/admin/Warehouse.jsx";
 import Reports from "./pages/admin/Reports.jsx";
 import Settings from "./pages/admin/Settings.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import InventoryReadOnly from "./components/InventoryReadOnly.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
@@ -20,15 +21,10 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import WarehouseDashboardLayout from "./Warehouse/Warehouse.jsx";
 import WarehouseDashboard from "./Warehouse/pages/WarehouseDashboard.jsx";
 import WarehouseProducts from "./Warehouse/pages/WarehouseProducts.jsx";
-import WarehouseStaff from "./Warehouse/pages/WarehouseStaff.jsx";
-import WarehouseSuppliers from "./Warehouse/pages/WarehouseSuppliers.jsx";
-import { WarehouseReports, WarehouseSettings } from "./Warehouse/pages/WarehouseShared.jsx";
 
 //staff
 import StaffDashboard from "./Staff/Staff.jsx";
 import StaffDashboardHome from "./Staff/pages/StaffDashboardHome.jsx";
-import MyAccount from "./Staff/pages/MyAccount.jsx";
-import { StaffReports, StaffSettings } from "./Staff/pages/StaffCommon.jsx";
 
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 
@@ -37,7 +33,8 @@ const HomeRedirect = () => {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role === "admin" || user.role === "manager") return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === "admin") return <Navigate to="/admin/dashboard" replace />;
+  if (user.role === "manager") return <Navigate to="/manager-portal/dashboard" replace />;
   if (user.role === "warehouse") return <Navigate to="/warehouse-portal" replace />;
   if (user.role === "staff") return <Navigate to="/staff-portal" replace />;
   return <Navigate to="/login" replace />;
@@ -58,7 +55,7 @@ function App() {
         {/* Admin & Manager Routes */}
         <Route
           path="/admin"
-          element={<ProtectedRoute requireRole={["admin", "manager"]}><Dashboard /></ProtectedRoute>}
+          element={<ProtectedRoute requireRole={["admin"]}><Dashboard /></ProtectedRoute>}
         >
           <Route path="dashboard" element={<DashboardHome />} />
           <Route path="products" element={<Products />} />
@@ -71,6 +68,16 @@ function App() {
           <Route path="settings" element={<Settings />} />
         </Route>
 
+        <Route
+          path="/manager-portal"
+          element={<ProtectedRoute requireRole={["manager"]}><Dashboard /></ProtectedRoute>}
+        >
+          <Route index element={<StaffDashboardHome />} />
+          <Route path="dashboard" element={<StaffDashboardHome />} />
+          <Route path="inventory" element={<InventoryReadOnly />} />
+          <Route path="orders" element={<Orders />} />
+        </Route>
+
         {/* Warehouse Routes */}
         <Route
           path="/warehouse-portal"
@@ -78,11 +85,7 @@ function App() {
         >
           <Route index element={<WarehouseDashboard />} />
           <Route path="dashboard" element={<WarehouseDashboard />} />
-          <Route path="products" element={<WarehouseProducts />} />
-          <Route path="suppliers" element={<WarehouseSuppliers />} />
-          <Route path="staff" element={<WarehouseStaff />} />
-          <Route path="reports" element={<WarehouseReports />} />
-          <Route path="settings" element={<WarehouseSettings />} />
+          <Route path="inventory" element={<WarehouseProducts />} />
         </Route>
 
         {/* Staff Routes */}
@@ -92,9 +95,7 @@ function App() {
         >
           <Route index element={<StaffDashboardHome />} />
           <Route path="dashboard" element={<StaffDashboardHome />} />
-          <Route path="my-account" element={<MyAccount />} />
-          <Route path="reports" element={<StaffReports />} />
-          <Route path="settings" element={<StaffSettings />} />
+          <Route path="inventory" element={<InventoryReadOnly />} />
         </Route>
 
         {/* Catch-all */}

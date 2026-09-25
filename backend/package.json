@@ -2,7 +2,8 @@
   "type": "module",
   "scripts": {
     "start": "node --watch index.js",
-    "seed": "node seed.js"
+    "seed": "node seed.js",
+    "admin:create": "node scripts/createAdmin.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

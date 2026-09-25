@@ -26,7 +26,7 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== "") {
-      const targetRoute = findPortalSearchRoute(searchQuery, 'admin');
+      const targetRoute = findPortalSearchRoute(searchQuery, user?.role === 'manager' ? 'manager' : 'admin');
       if (targetRoute) {
         navigate(targetRoute);
       }

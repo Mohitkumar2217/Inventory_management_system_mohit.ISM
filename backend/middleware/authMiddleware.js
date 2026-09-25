@@ -65,4 +65,15 @@ const checkRole = (roles) => {
     };
 };
 
-export { verifyUser, checkRole };
+const checkAssignedWarehouse = (req, res, next) => {
+    const assignedWarehouse = req.user.assignedWarehouse?.toString();
+    if (req.user.role !== "warehouse" || !assignedWarehouse) {
+        return res.status(403).json({ success: false, message: "No warehouse is assigned to this account" });
+    }
+    if (req.params.id && req.params.id !== assignedWarehouse) {
+        return res.status(403).json({ success: false, message: "You can only access your assigned warehouse" });
+    }
+    next();
+};
+
+export { verifyUser, checkRole, checkAssignedWarehouse };

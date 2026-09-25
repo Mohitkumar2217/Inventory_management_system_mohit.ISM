@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
         default: 'staff',
         lowercase: true
     },
+    assignedWarehouse: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Warehouse",
+        default: undefined
+    },
     email: {
         type: String,
         required: [true, "Email is required"],

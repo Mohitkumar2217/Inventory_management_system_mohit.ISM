@@ -12,9 +12,9 @@ const router = express.Router();
  
 // Order matters: Static paths must come before dynamic /:id
 router.get("/profile", verifyUser, getMyProfile);
-router.put("/update-profile", verifyUser, updateOwnProfile);
+router.put("/update-profile", verifyUser, checkRole(['admin']), updateOwnProfile);
  
-router.get("/", verifyUser, checkRole(['admin', 'manager']), getStaffList);
+router.get("/", verifyUser, checkRole(['admin']), getStaffList);
 router.post("/", verifyUser, checkRole(['admin']), syncStaffProfile);
 router.put("/:id", verifyUser, checkRole(['admin']), syncStaffProfile);
 router.delete("/:id", verifyUser, checkRole(['admin']), deleteStaff);

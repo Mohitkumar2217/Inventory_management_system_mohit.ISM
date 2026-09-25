@@ -12,17 +12,16 @@ const portalDestinations = {
   ],
   staff: [
     { route: "/staff-portal/dashboard", keywords: ["dashboard", "home", "overview"] },
-    { route: "/staff-portal/my-account", keywords: ["staff", "employee", "account", "profile"] },
-    { route: "/staff-portal/reports", keywords: ["report", "analytics", "chart", "data"] },
-    { route: "/staff-portal/settings", keywords: ["settings", "config", "password"] },
+    { route: "/staff-portal/inventory", keywords: ["inventory", "product", "item", "stock", "sku"] },
+  ],
+  manager: [
+    { route: "/manager-portal/dashboard", keywords: ["dashboard", "home", "overview"] },
+    { route: "/manager-portal/inventory", keywords: ["inventory", "product", "item", "stock", "sku"] },
+    { route: "/manager-portal/orders", keywords: ["order", "purchase", "shipment", "pending"] },
   ],
   warehouse: [
     { route: "/warehouse-portal/dashboard", keywords: ["dashboard", "home", "overview"] },
-    { route: "/warehouse-portal/products", keywords: ["product", "item", "inventory", "stock", "sku"] },
-    { route: "/warehouse-portal/suppliers", keywords: ["supplier", "vendor", "delivery"] },
-    { route: "/warehouse-portal/staff", keywords: ["staff", "employee", "team", "worker"] },
-    { route: "/warehouse-portal/reports", keywords: ["report", "analytics", "chart", "data"] },
-    { route: "/warehouse-portal/settings", keywords: ["settings", "config", "password"] },
+    { route: "/warehouse-portal/inventory", keywords: ["inventory", "product", "item", "stock", "sku", "warehouse"] },
   ],
 };
 

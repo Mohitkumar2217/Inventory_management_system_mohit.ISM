@@ -37,7 +37,7 @@ const Login = () => {
         await login(token, user);
         const roleRedirects = {
           admin: "/admin/dashboard",
-          manager: "/admin/dashboard",
+          manager: "/manager-portal/dashboard",
           staff: "/staff-portal/dashboard",
           warehouse: "/warehouse-portal/dashboard",
         };
@@ -105,7 +105,7 @@ const Login = () => {
                       required
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700"
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@mohit.com"
+                      placeholder="name@company.com"
                     />
                   </div>
                 </div>
@@ -177,7 +177,7 @@ const Login = () => {
                       required
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700"
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@mohit.com"
+                      placeholder="name@company.com"
                     />
                   </div>
                 </div>

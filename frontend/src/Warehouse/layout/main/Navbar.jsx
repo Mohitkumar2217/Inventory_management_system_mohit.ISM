@@ -1,28 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaRegEnvelope } from 'react-icons/fa';
-import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi';
-import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
+import { HiOutlineBell } from 'react-icons/hi';
+import { FiX } from 'react-icons/fi';
 import { useAuth } from '../../../context/AuthContext.jsx'; // Import your Auth Context
 import { findPortalSearchRoute } from '../../../layout/portalSearch.js';
 
 export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
   const navigate = useNavigate();
   const { user } = useAuth(); // Destructure user from context
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedWarehouse, setSelectedWarehouse] = useState({
-    name: "Jaipur Branch",
-    label: "Main Warehouse",
-    id: 1
-  });
-
-  const dropdownRef = useRef(null);
-
-  const warehouses = [
-    { id: 1, name: "Jaipur Branch", label: "Main Warehouse", capacity: "85%" },
-    { id: 2, name: "Delhi Hub", label: "Logistics Center", capacity: "40%" },
-    { id: 3, name: "Mumbai Port", label: "Import Unit", capacity: "12%" },
-  ];
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== "") {
@@ -33,47 +19,12 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
     <nav className={`fixed top-0 right-0 h-20 bg-[#1a1c23] text-white z-40 transition-all duration-300 flex items-center border-b border-gray-800 ${isCollapsed ? 'left-20' : 'left-64'}`}>
       <div className="w-full px-6 flex items-center justify-between">
 
-        {/* LEFT: Location & Search (No Changes) */}
+        {/* Search */}
         <div className="flex items-center gap-6 flex-1">
-          <div className="relative" ref={dropdownRef}>
-            <div onClick={() => setIsOpen(!isOpen)} className={`hidden xl:flex items-center gap-2 px-3 py-2 rounded-lg border transition-all cursor-pointer ${isOpen ? 'bg-gray-700 border-blue-500' : 'bg-gray-800/40 border-gray-700 hover:bg-gray-700'}`}>
-              <HiOutlineOfficeBuilding className={isOpen ? "text-blue-400" : "text-blue-500"} />
-              <div className="flex flex-col text-left">
-                <span className="text-[10px] text-gray-400 leading-none">{selectedWarehouse.label}</span>
-                <span className="text-xs font-semibold">{selectedWarehouse.name}</span>
-              </div>
-              <FiChevronDown className={`text-gray-500 ml-1 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </div>
-
-            {isOpen && (
-              <div className="absolute top-full left-0 mt-2 w-56 bg-[#24262d] border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden">
-                {warehouses.map((wh) => (
-                  <div key={wh.id} onClick={() => { setSelectedWarehouse(wh); setIsOpen(false); }} className="flex items-center justify-between px-4 py-2.5 hover:bg-blue-600/10 hover:text-blue-400 cursor-pointer transition-colors group">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium">{wh.name}</span>
-                      <span className="text-[10px] text-gray-500">{wh.label}</span>
-                    </div>
-                    {selectedWarehouse.id === wh.id && <FiCheck className="text-blue-500" />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="flex items-center bg-[#24262d] border border-gray-700 rounded-xl px-4 py-2.5 w-full max-w-md transition-all focus-within:border-blue-500/50 focus-within:ring-1 focus-within:ring-blue-500/20 relative">
             <FaSearch className="text-gray-500 mr-3 shrink-0" />
             <input

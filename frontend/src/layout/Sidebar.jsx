@@ -11,11 +11,11 @@ import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { logout } = useAuth(); //
+    const { logout, user } = useAuth();
     const [isInventoryOpen, setIsInventoryOpen] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    const menuItems = [
+    const adminMenuItems = [
         { name: 'Dashboard', link: '/admin/dashboard', icon: <FaHome />, hasSub: false },
         {
             name: 'Inventory',
@@ -33,6 +33,12 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
         { name: 'Reports', link: '/admin/reports', icon: <FaChartBar />, hasSub: false },
         { name: 'Settings', link: '/admin/settings', icon: <FaCog />, hasSub: false },
     ];
+    const managerMenuItems = [
+        { name: 'Dashboard', link: '/manager-portal/dashboard', icon: <FaHome />, hasSub: false },
+        { name: 'Inventory', link: '/manager-portal/inventory', icon: <FaBoxOpen />, hasSub: false },
+        { name: 'Orders', link: '/manager-portal/orders', icon: <FaShoppingCart />, hasSub: false },
+    ];
+    const menuItems = user?.role === 'manager' ? managerMenuItems : adminMenuItems;
 
     const handleLogout = () => {
         logout(); //

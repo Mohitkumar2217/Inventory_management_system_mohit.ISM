@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import {
-    FaHome, FaBox, FaBoxOpen, FaUsers,
-    FaChartBar,
-    FaTruck, FaCog, FaBars, FaSignOutAlt
-} from 'react-icons/fa';
+import { FaHome, FaBoxOpen, FaBars, FaSignOutAlt } from 'react-icons/fa';
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 
 const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
@@ -15,26 +11,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
     // Manage which dropdowns are open
     const [openMenus, setOpenMenus] = useState(() => ({
-        Inventory: location.pathname === '/warehouse-portal/products',
+        Inventory: location.pathname === '/warehouse-portal/inventory',
     }));
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
         { name: 'Dashboard', link: '/warehouse-portal/dashboard', icon: <FaHome />, hasSub: false },
-        {
-            name: 'Inventory',
-            icon: <FaBoxOpen />,
-            hasSub: true,
-            subItems: [
-                { name: 'Products', link: '/warehouse-portal/products', icon: <FaBox /> },
-            ]
-        },
-        {
-            name: 'Suppliers', link: '/warehouse-portal/suppliers', icon: <FaTruck />, hasSub: false
-        },
-        { name: 'Staff', link: '/warehouse-portal/staff', icon: <FaUsers />, hasSub: false },
-        { name: 'Reports', link: '/warehouse-portal/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/warehouse-portal/settings', icon: <FaCog />, hasSub: false },
+        { name: 'My Warehouse', link: '/warehouse-portal/inventory', icon: <FaBoxOpen />, hasSub: false },
     ];
 
     // Check if any sub-item of a menu is active

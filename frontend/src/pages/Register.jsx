@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { User, Mail, Lock, MapPin, Loader2, UserPlus, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { User, Mail, Lock, MapPin, Loader2, Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -9,7 +9,6 @@ const Register = () => {
     email: "",
     password: "",
     address: "",
-    role: "staff",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -118,7 +117,7 @@ const Register = () => {
                   required
                   onChange={handleChange}
                   className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm"
-                  placeholder="admin@firm.com"
+                  placeholder="name@company.com"
                 />
               </div>
             </div>
@@ -159,27 +158,6 @@ const Register = () => {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Role Selection */}
-            <div className="space-y-2">
-              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400 ml-1">System Role</label>
-              <div className="relative group">
-                <select
-                  name="role"
-                  onChange={handleChange}
-                  value={formData.role}
-                  className="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-50 focus:border-emerald-500 transition-all font-bold text-slate-700 text-sm appearance-none cursor-pointer"
-                >
-                  <option value="staff">Staff</option>
-                  <option value="manager">Manager</option>
-                  <option value="warehouse">Warehouse Admin</option> 
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                  <UserPlus size={18} />
-                </div>
-              </div>
             </div>
 
             {/* Address */}

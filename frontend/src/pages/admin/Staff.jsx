@@ -63,13 +63,20 @@ export default function Staff() {
     }
   };
   useEffect(() => {
-    if (token) fetchStaff();
+    if (!token) return undefined;
+    let active = true;
+    axios.get(`${import.meta.env.VITE_API_URL}/api/staffs`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => {
+        if (active && res.data.success) setStaffList(res.data.staff);
+      })
+      .catch((error) => console.error("Fetch Error:", error))
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, [token]);
-
-  // AUTO-RESET PAGINATION ON SEARCH
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, localSearch, roleFilter]);
 
   // --- 1. HANDLERS ---
   const handleInputChange = (e) => {
@@ -108,17 +115,9 @@ export default function Staff() {
       if (res.data.success) {
         fetchStaff();
       }
-    } catch (err) {
+    } catch {
       alert("Failed to remove member.");
     }
-  };
-
-  const itemsSummary = {
-    totalStaff: staffList.length,
-    activeStaff: staffList.filter(s => s.status === "Active").length,
-    inactiveStaff: staffList.filter(s => s.status === "Inactive").length,
-    admins: staffList.filter(s => s.role === "admin").length,
-    managers: staffList.filter(s => s.role === "manager").length,
   };
 
   // --- FILTER LOGIC ---
@@ -195,9 +194,9 @@ export default function Staff() {
                     onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}
                   >
                     <option value="All">All Roles</option>
-                    <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
                     <option value="staff">Staff</option>
+                    <option value="warehouse">Warehouse Admin</option>
                   </select>
                 </div>
                 <button
@@ -238,8 +237,12 @@ export default function Staff() {
                       <td className="p-5 text-center">
                         <div className="flex justify-center gap-2">
                           <button onClick={() => handleOpenDetails(staff)} className="p-2.5 bg-cyan-50 text-cyan-500 rounded-xl hover:bg-cyan-500 hover:text-white transition-all shadow-sm"><Eye size={14} /></button>
-                          <button onClick={() => { setFormData(staff); setView("add"); }} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
-                          <button onClick={() => handleDeleteStaff(staff._id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                          {staff.role !== "warehouse" && (
+                            <>
+                              <button onClick={() => { setFormData(staff); setView("add"); }} className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm"><Edit2 size={14} /></button>
+                              <button onClick={() => handleDeleteStaff(staff._id)} className="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

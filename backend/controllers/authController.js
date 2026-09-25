@@ -103,7 +103,13 @@ export const login = async (req, res) => {
       success: true,
       message: `Welcome, ${user.name}`,
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        assignedWarehouse: user.assignedWarehouse?.toString() || null
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Login failed" });
@@ -113,14 +119,14 @@ export const login = async (req, res) => {
 // REGISTER 
 export const Register = async (req, res) => {
   try {
-    const { name, email, password, address, role } = req.body;
+    const { name, email, password, address } = req.body;
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(409).json({ success: false, message: "Email already exists" });
 
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new User({ name, email, password: hashedPassword, address, role: role || 'staff' });
+    const newUser = new User({ name, email, password: hashedPassword, address, role: 'staff' });
     await newUser.save();
 
     return res.status(201).json({ success: true, message: "Registered successfully" });

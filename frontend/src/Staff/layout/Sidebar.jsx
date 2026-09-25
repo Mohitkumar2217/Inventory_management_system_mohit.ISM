@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 import {
-    FaHome, FaBox, FaBoxOpen, FaTags, FaUsers,
-    FaWarehouse, FaChartBar, FaShoppingCart,
-    FaTruck, FaCog, FaBars, FaSignOutAlt
+    FaHome, FaBoxOpen, FaBars, FaSignOutAlt
 } from 'react-icons/fa';
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 
@@ -17,9 +15,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
 
     const menuItems = [
         { name: 'Dashboard', link: '/staff-portal/dashboard', icon: <FaHome />, hasSub: false },
-        { name: 'Staff', link: '/staff-portal/my-account', icon: <FaUsers />, hasSub: false },
-        { name: 'Reports', link: '/staff-portal/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/staff-portal/settings', icon: <FaCog />, hasSub: false },
+        { name: 'Inventory', link: '/staff-portal/inventory', icon: <FaBoxOpen />, hasSub: false },
     ];
 
     const handleLogout = () => {

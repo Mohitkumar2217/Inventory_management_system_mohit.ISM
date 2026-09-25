@@ -24,13 +24,13 @@ const supplierFiles = upload.fields([
 ]);
 
 // Get List (Protected)
-router.get("/", verifyUser, getSuppliers);
+router.get("/", verifyUser, checkRole(['admin']), getSuppliers);
 
 // Create New (Protected + Files)
-router.post("/", verifyUser, checkRole(['admin', 'manager']), supplierFiles, addSupplier);
+router.post("/", verifyUser, checkRole(['admin']), supplierFiles, addSupplier);
 
 // Update Existing (Protected + Files)
-router.put("/:id", verifyUser, checkRole(['admin', 'manager']), supplierFiles, addSupplier);
+router.put("/:id", verifyUser, checkRole(['admin']), supplierFiles, addSupplier);
 
 // Delete (Admin Only)
 router.delete("/:id", verifyUser, checkRole(['admin']), deleteSupplier);

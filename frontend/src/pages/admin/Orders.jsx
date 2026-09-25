@@ -13,7 +13,7 @@ import {
 
 export default function Orders() {
   const searchQuery = usePortalSearch();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   // --- STATES ---
   const [orders, setOrders] = useState([]);
@@ -63,7 +63,7 @@ export default function Orders() {
     status: "Pending",
     stockUpdated: false,
     notes: "",
-    trackingId: `TRK-${Math.floor(100000 + Math.random() * 900000)}`,
+    trackingId: "",
     estimatedDuration: 7,
     expectedDate: "",
     timeline: {
@@ -74,16 +74,26 @@ export default function Orders() {
     images: []
   };
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
+  const [refreshVersion, setRefreshVersion] = useState(0);
 
   const api = axios.create({
     baseURL: `${import.meta.env.VITE_API_URL}/api`,
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  const fetchOrders = async () => {
+  const fetchOrders = () => {
     setLoading(true);
-    try {
-      const res = await api.get("/orders");
+    setRefreshVersion((current) => current + 1);
+  };
+
+  useEffect(() => {
+    if (!token) return undefined;
+    let active = true;
+    axios.get(`${import.meta.env.VITE_API_URL}/api/orders`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => {
+        if (!active) return;
       if (res.data.success) {
         setOrders(res.data.orders);
         setSummaryData(res.data.summary);
@@ -93,18 +103,17 @@ export default function Orders() {
         setSupplierList(["All", ...(res.data.availableSuppliers || [])]);
         setLiveNotices(res.data.notices || []);
       }
-    } catch (err) { console.error("Fetch Error:", err); } finally { setLoading(false); }
-  };
-
-  useEffect(() => { if (token) fetchOrders(); }, [token]);
+      })
+      .catch((error) => console.error("Fetch Error:", error))
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [token, refreshVersion]);
 
   useEffect(() => {
     function handleClickOutside(event) { if (filterRef.current && !filterRef.current.contains(event.target)) setShowFilterPopup(false); }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  useEffect(() => { setCurrentPage(1); }, [searchQuery, localSearch]);
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -114,7 +123,11 @@ export default function Orders() {
   const handleAddPurchaseOrder = async (e) => {
     if (e) e.preventDefault();
     try {
-      const res = purchaseOrder._id ? await api.put(`/orders/${purchaseOrder._id}`, purchaseOrder) : await api.post("/orders", purchaseOrder);
+      const payload = {
+        ...purchaseOrder,
+        trackingId: purchaseOrder.trackingId || `TRK-${crypto.randomUUID().slice(0, 8).toUpperCase()}`
+      };
+      const res = purchaseOrder._id ? await api.put(`/orders/${purchaseOrder._id}`, payload) : await api.post("/orders", payload);
       if (res.data.success) {
         alert(res.data.message);
         fetchOrders();
@@ -128,7 +141,7 @@ export default function Orders() {
     try {
       const res = await api.patch(`/orders/status/${id}`, { status });
       if (res.data.success) fetchOrders();
-    } catch (err) { alert("Status update failed"); }
+    } catch { alert("Status update failed"); }
   };
 
   const removeOrder = async (id) => {
@@ -136,7 +149,7 @@ export default function Orders() {
     try {
       const res = await api.delete(`/orders/${id}`);
       if (res.data.success) fetchOrders();
-    } catch (err) { alert("Delete operation failed"); }
+    } catch { alert("Delete operation failed"); }
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -158,7 +171,8 @@ export default function Orders() {
   });
 
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const currentItems = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const activePage = Math.min(currentPage, Math.max(totalPages, 1));
+  const currentItems = filteredOrders.slice((activePage - 1) * itemsPerPage, activePage * itemsPerPage);
 
   const handleOpenDetails = (order) => {
     setSelectedOrder(order);
@@ -284,7 +298,7 @@ export default function Orders() {
                         <div className="flex justify-end gap-2">
                           <ActionBtn onClick={() => handleOpenDetails(order)} icon={<Eye size={14} />} color="bg-cyan-50 text-cyan-500 hover:bg-cyan-500" />
                           <ActionBtn onClick={() => handleEditDetails(order)} icon={<Edit2 size={14} />} color="bg-slate-50 text-slate-500 hover:bg-slate-800" />
-                          <ActionBtn onClick={() => removeOrder(order._id)} icon={<Trash2 size={14} />} color="bg-rose-50 text-rose-500 hover:bg-rose-500" />
+                          {user?.role === "admin" && <ActionBtn onClick={() => removeOrder(order._id)} icon={<Trash2 size={14} />} color="bg-rose-50 text-rose-500 hover:bg-rose-500" />}
                         </div>
                       </td>
                     </tr>
@@ -316,7 +330,6 @@ export default function Orders() {
             showTracking={showTracking}
             setShowTracking={setShowTracking}
             onBack={() => setView("list")}
-            handleDeleteProduct={removeOrder}
             handleEditDetails={handleEditDetails}
           />
         </div>
