@@ -16,10 +16,10 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
-        { name: 'Dashboard', link: '/staff/dashboard', icon: <FaHome />, hasSub: false }, 
-        { name: 'Staff', link: '/staff/my-account', icon: <FaUsers />, hasSub: false }, 
-        { name: 'Reports', link: '/staff/reports', icon: <FaChartBar />, hasSub: false },
-        { name: 'Settings', link: '/staff/settings', icon: <FaCog />, hasSub: false },
+        { name: 'Dashboard', link: '/staff-portal/dashboard', icon: <FaHome />, hasSub: false },
+        { name: 'Staff', link: '/staff-portal/my-account', icon: <FaUsers />, hasSub: false },
+        { name: 'Reports', link: '/staff-portal/reports', icon: <FaChartBar />, hasSub: false },
+        { name: 'Settings', link: '/staff-portal/settings', icon: <FaCog />, hasSub: false },
     ];
 
     const handleLogout = () => {
@@ -54,8 +54,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     <ul className="space-y-2">
                         {menuItems.map((item) => {
                             const activeChild = isChildActive(item.subItems);
-                            const isActiveParent = location.pathname === item.link;
-
                             return (
                                 <li key={item.name} className="relative group">
                                     {item.hasSub ? (

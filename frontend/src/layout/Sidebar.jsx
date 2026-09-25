@@ -70,8 +70,6 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     <ul className="space-y-2">
                         {menuItems.map((item) => {
                             const activeChild = isChildActive(item.subItems);
-                            const isActiveParent = location.pathname === item.link;
-
                             return (
                                 <li key={item.name} className="relative group">
                                     {item.hasSub ? (

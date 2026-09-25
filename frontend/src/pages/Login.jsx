@@ -37,9 +37,9 @@ const Login = () => {
         await login(token, user);
         const roleRedirects = {
           admin: "/admin/dashboard",
-          manager: "/manager/dashboard",
-          staff: "/staff-portal/staff/dashboard",
-          warehouse: "/warehouse-portal/warehouse/dashboard", 
+          manager: "/admin/dashboard",
+          staff: "/staff-portal/dashboard",
+          warehouse: "/warehouse-portal/dashboard",
         };
         navigate(roleRedirects[user.role] || "/login");
       }

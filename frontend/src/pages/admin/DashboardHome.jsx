@@ -6,8 +6,10 @@ import SummaryCard from '../../components/Summerys/SummaryCard.jsx';
 import SalesChart from '../../components/Charts/SalesChart.jsx';
 import TopProducts from '../../components/TopProducts.jsx';
 import RevenueChart from '../../components/Charts/RevenueCostChart.jsx';
+import usePortalSearch from '../../layout/usePortalSearch.js';
 
-const DashboardHome = ({ searchQuery = "" }) => {
+const DashboardHome = () => {
+    const searchQuery = usePortalSearch();
     const [dashboardData, setDashboardData] = React.useState({
         totalProducts: 563,
         totalStock: 1200,

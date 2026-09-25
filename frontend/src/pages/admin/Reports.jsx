@@ -34,7 +34,7 @@ const warehouseUtilization = [
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#6366f1"];
 
-export default function Reports({searchQuery}) {
+export default function Reports() {
 
   // --- EXPORT LOGIC ---
   const handleExport = () => {

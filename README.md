@@ -346,6 +346,8 @@ EMAIL_USER=your_email
 EMAIL_PASS=your_email_password
 
 FRONTEND_URL=http://localhost:5173
+
+BACKEND_URL = https://inventory-management-system-mohit-ism.onrender.com
 ```
 
 ---

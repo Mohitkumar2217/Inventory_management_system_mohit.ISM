@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-    FaHome, FaBox, FaBoxOpen, FaTags, FaUsers,
-    FaChartBar, FaShoppingCart,
+    FaHome, FaBox, FaBoxOpen, FaUsers,
+    FaChartBar,
     FaTruck, FaCog, FaBars, FaSignOutAlt
 } from 'react-icons/fa';
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
@@ -14,7 +14,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     const { logout } = useAuth();
 
     // Manage which dropdowns are open
-    const [openMenus, setOpenMenus] = useState({});
+    const [openMenus, setOpenMenus] = useState(() => ({
+        Inventory: location.pathname === '/warehouse-portal/products',
+    }));
     const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const menuItems = [
@@ -25,25 +27,12 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
             hasSub: true,
             subItems: [
                 { name: 'Products', link: '/warehouse-portal/products', icon: <FaBox /> },
-                { name: 'Orders List', link: '/warehouse-portal/orders', icon: <FaShoppingCart /> },
-                { name: 'Out Of Stock', link: '/warehouse-portal/stocks', icon: <FaShoppingCart /> },
-                { name: 'Damage', link: '/warehouse-portal/damages', icon: <FaShoppingCart /> },
             ]
         },
         {
-            name: 'Active on Order', link: '/warehouse-portal/suppliers', icon: <FaTruck />, hasSub: false
+            name: 'Suppliers', link: '/warehouse-portal/suppliers', icon: <FaTruck />, hasSub: false
         },
-        {
-            name: 'Management',
-            icon: <FaUsers />,
-            hasSub: true,
-            subItems: [
-                { name: 'Stock Managers', link: '/warehouse-portal/stock-manager', icon: <FaUsers /> },
-                { name: 'Labour Managers', link: '/warehouse-portal/labour-manager', icon: <FaUsers /> },
-                { name: 'Staff List', link: '/warehouse-portal/staff', icon: <FaUsers /> },
-            ]
-        },
-        { name: 'Categories', link: '/warehouse-portal/categories', icon: <FaTags />, hasSub: false },
+        { name: 'Staff', link: '/warehouse-portal/staff', icon: <FaUsers />, hasSub: false },
         { name: 'Reports', link: '/warehouse-portal/reports', icon: <FaChartBar />, hasSub: false },
         { name: 'Settings', link: '/warehouse-portal/settings', icon: <FaCog />, hasSub: false },
     ];
@@ -51,20 +40,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
     // Check if any sub-item of a menu is active
     const isChildActive = (subItems) => subItems?.some(sub => location.pathname === sub.link);
 
-    // Auto-open menus if a child is active on page load
-    useEffect(() => {
-        const initialOpenState = {};
-        menuItems.forEach(item => {
-            if (item.hasSub && isChildActive(item.subItems)) {
-                initialOpenState[item.name] = true;
-            }
-        });
-        setOpenMenus(initialOpenState);
-    }, []);
-
-    const toggleMenu = (name) => {
+    const toggleMenu = (name, activeChild) => {
         if (isCollapsed) setIsCollapsed(false);
-        setOpenMenus(prev => ({ ...prev, [name]: !prev[name] }));
+        setOpenMenus(prev => ({ ...prev, [name]: !(prev[name] ?? activeChild) }));
     };
 
     const handleLogout = () => {
@@ -97,13 +75,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
                     <ul className="space-y-2">
                         {menuItems.map((item) => {
                             const activeChild = isChildActive(item.subItems);
-                            const isOpen = openMenus[item.name];
+                            const isOpen = openMenus[item.name] ?? activeChild;
 
                             return (
                                 <li key={item.name} className="relative group">
                                     {item.hasSub ? (
                                         <div className="flex flex-col">
-                                            <button onClick={() => toggleMenu(item.name)}
+                                            <button onClick={() => toggleMenu(item.name, activeChild)}
                                                 className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all w-full group outline-none ${isOpen || activeChild ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' : 'hover:bg-gray-800/50 hover:text-white'}`}>
                                                 <div className="flex items-center gap-4">
                                                     <span className={`text-lg transition-colors ${isOpen || activeChild ? 'text-white' : 'group-hover:text-blue-400'}`}>{item.icon}</span>

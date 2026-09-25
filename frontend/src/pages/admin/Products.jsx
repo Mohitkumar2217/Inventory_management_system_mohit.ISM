@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import ProductSummaryCard from "../../components/Summerys/ProductSummaryCard.jsx";
 import ProductForm from "../../components/Forms/ProductForm.jsx";
 import ProductDetailPage from "../details/ProductDetailPage.jsx";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 
 import {
   Eye, Edit2, Trash2, Plus, Search, Filter,
@@ -11,7 +12,8 @@ import {
   Layers, Loader2, Truck, MapPin, Warehouse, Activity
 } from "lucide-react";
 
-export default function Products({ searchQuery = "" }) {
+export default function Products() {
+  const searchQuery = usePortalSearch();
   const { token } = useAuth();
 
   // --- STATES ---

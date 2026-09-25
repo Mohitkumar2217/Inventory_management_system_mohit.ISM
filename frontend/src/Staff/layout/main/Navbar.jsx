@@ -4,6 +4,7 @@ import { FaSearch, FaRegEnvelope } from 'react-icons/fa';
 import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../../../context/AuthContext.jsx'; // Import your Auth Context
+import { findPortalSearchRoute } from '../../../layout/portalSearch.js';
 
 export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
   const navigate = useNavigate();
@@ -17,36 +18,15 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
 
   const dropdownRef = useRef(null);
 
-  // ... (Keep warehouses and pageSignatures constant as they were)
   const warehouses = [
     { id: 1, name: "Jaipur Branch", label: "Main Warehouse", capacity: "85%" },
     { id: 2, name: "Delhi Hub", label: "Logistics Center", capacity: "40%" },
     { id: 3, name: "Mumbai Port", label: "Import Unit", capacity: "12%" },
   ];
 
-  const pageSignatures = [ 
-    { route: "/dashboard", keys: ["dash", "home", "main", "overview"] },
-    { route: "/my-account", keys: ["staff", "employee", "team", "member", "admin", "manager", "worker", "role", "email", "security"] },  
-    { route: "/reports", keys: ["report", "analytics", "chart", "forecast", "revenue", "data", "roi", "velocity"] },
-    { route: "/settings", keys: ["settings", "config", "profile", "password", "setup", "business"] },
-  ];
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== "") {
-      const input = searchQuery.toLowerCase().trim();
-      const inputWords = input.split(/\s+/);
-
-      let targetRoute = null;
-      for (const page of pageSignatures) {
-        const isMatch = inputWords.some(word =>
-          page.keys.some(key => key.includes(word) || word.includes(key))
-        );
-        if (isMatch) {
-          targetRoute = page.route;
-          break;
-        }
-      }
-
+      const targetRoute = findPortalSearchRoute(searchQuery, 'staff');
       if (targetRoute) {
         navigate(targetRoute);
       }

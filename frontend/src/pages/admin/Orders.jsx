@@ -4,13 +4,15 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import OrderSummaryCard from "../../components/Summerys/OrderSummaryCard.jsx";
 import OrderForm from "../../components/Forms/OrderForm.jsx";
 import OrderDetailPage from "../details/OrderDetailPage.jsx";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 
 import {
   Search, Filter, Plus, Trash2, Eye, ArrowLeft,
   Edit2, ChevronLeft, ChevronRight, Layers, Loader2,
 } from "lucide-react";
 
-export default function Orders({ searchQuery = "" }) {
+export default function Orders() {
+  const searchQuery = usePortalSearch();
   const { token } = useAuth();
 
   // --- STATES ---

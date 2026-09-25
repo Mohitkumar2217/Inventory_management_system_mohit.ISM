@@ -4,6 +4,7 @@ import { FaSearch, FaRegEnvelope } from 'react-icons/fa';
 import { HiOutlineBell, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { FiChevronDown, FiCheck, FiX } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext'; // Import your Auth Context
+import { findPortalSearchRoute } from '../portalSearch.js';
 
 export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
   const navigate = useNavigate();
@@ -17,41 +18,15 @@ export default function Navbar({ isCollapsed, searchQuery, setSearchQuery }) {
 
   const dropdownRef = useRef(null);
 
-  // ... (Keep warehouses and pageSignatures constant as they were)
   const warehouses = [
     { id: 1, name: "Jaipur Branch", label: "Main Warehouse", capacity: "85%" },
     { id: 2, name: "Delhi Hub", label: "Logistics Center", capacity: "40%" },
     { id: 3, name: "Mumbai Port", label: "Import Unit", capacity: "12%" },
   ];
 
-  const pageSignatures = [
-    { route: "/products", keys: ["product", "item", "inventory", "stock", "sku", "brand", "electronics", "beauty", "food", "lakme", "sony", "apple", "nike", "cream", "serum", "watch"] },
-    { route: "/orders", keys: ["order", "purchase", "bill", "invoice", "price", "pending", "completed", "cancelled", "gst", "vendor", "valuation"] },
-    { route: "/staff", keys: ["staff", "employee", "team", "member", "admin", "manager", "worker", "role", "email", "security"] },
-    { route: "/warehouse", keys: ["warehouse", "zone", "location", "storage", "pallet", "bay", "ledger", "out of stock"] },
-    { route: "/suppliers", keys: ["supplier", "dealer", "distributor", "network", "partner", "verified"] },
-    { route: "/categories", keys: ['categories', "category", "dept", "group", "class", "department", "tax", "slug"] },
-    { route: "/reports", keys: ["report", "analytics", "chart", "forecast", "revenue", "data", "roi", "velocity"] },
-    { route: "/settings", keys: ["settings", "config", "profile", "password", "setup", "business"] },
-    { route: "/dashboard", keys: ["dash", "home", "main", "overview"] }
-  ];
-
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && searchQuery.trim() !== "") {
-      const input = searchQuery.toLowerCase().trim();
-      const inputWords = input.split(/\s+/);
-
-      let targetRoute = null;
-      for (const page of pageSignatures) {
-        const isMatch = inputWords.some(word =>
-          page.keys.some(key => key.includes(word) || word.includes(key))
-        );
-        if (isMatch) {
-          targetRoute = page.route;
-          break;
-        }
-      }
-
+      const targetRoute = findPortalSearchRoute(searchQuery, 'admin');
       if (targetRoute) {
         navigate(targetRoute);
       }

@@ -9,8 +9,10 @@ import {
   ArrowLeft, Globe, MapPin, ChevronLeft, ChevronRight, Loader2,
 } from "lucide-react";
 import SupplierDetailPage from "../details/SupplierDetailPage.jsx";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 
-export default function Suppliers({ searchQuery }) {
+export default function Suppliers() {
+  const searchQuery = usePortalSearch();
   const { token } = useAuth();
 
   // --- STATES ---

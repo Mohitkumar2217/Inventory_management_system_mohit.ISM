@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx"; // 
 import StaffForm from "../../components/Forms/StaffForm.jsx";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
   UserCog, Mail, Briefcase, Phone, BadgeCheck, MapPin, FileText, Landmark,
   Calendar, Info, ChevronLeft, ChevronRight, Filter, Loader2
 } from "lucide-react";
 
-export default function Staff({ searchQuery }) {
+export default function Staff() {
+  const searchQuery = usePortalSearch();
   const { token } = useAuth();
   // --- STATES ---
   const [staffList, setStaffList] = useState([]);

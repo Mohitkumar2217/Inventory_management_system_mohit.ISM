@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Lock, Loader2, ShieldCheck } from "lucide-react";
@@ -21,7 +21,7 @@ const ResetPassword = () => {
       await API.post(`/reset-password/${token}`, { password });
       alert("Password updated successfully!");
       navigate("/login");
-    } catch (err) {
+    } catch {
       setError("Link expired or invalid. Please request a new one.");
     } finally {
       setLoading(false);
@@ -34,6 +34,7 @@ const ResetPassword = () => {
         <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[2.5rem] p-10 shadow-2xl">
           <h2 className="text-xl font-bold text-slate-800 mb-2">New Password</h2>
           <p className="text-slate-500 text-sm mb-8 font-medium">Set a secure password for your account.</p>
+          {error && <p className="mb-6 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
 
           <form onSubmit={handleReset} className="space-y-6">
             <div className="space-y-2">

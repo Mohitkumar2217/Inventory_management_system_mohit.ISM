@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 import {
     Plus, Trash2, Edit2, Eye, Layers, Percent,
     ChevronLeft, ChevronRight, Loader2, Search, X, Filter
@@ -8,7 +9,8 @@ import {
 import CategoryForm from "../../components/Forms/CategoryForm";
 import CategoryDetails from "../details/CategoryDetails";
 
-export default function Categories({ searchQuery = "" }) {
+export default function Categories() {
+    const searchQuery = usePortalSearch();
     const initialFormData = {
         name: '',
         code: '',

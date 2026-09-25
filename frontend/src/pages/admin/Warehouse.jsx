@@ -3,13 +3,15 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx";
 import WareHouseSummaryCard from "../../components/Summerys/WarehouseSummaryCard.jsx";
 import WarehouseForm from "../../components/Forms/WarehouseForm.jsx";
+import usePortalSearch from "../../layout/usePortalSearch.js";
 import {
   Search, Plus, Trash2, Eye, ArrowLeft, Edit2,
   PackageSearch, MapPin, Hash, ChevronLeft, ChevronRight, Filter, Loader2,
   Layers, Info, Calendar, Activity, Box, DollarSign, Users, ShieldCheck
 } from "lucide-react";
 
-export default function Warehouse({ searchQuery = "" }) {
+export default function Warehouse() {
+  const searchQuery = usePortalSearch();
   const { token } = useAuth();
   // --- STATES ---
   const [stockList, setStockList] = useState([]);
