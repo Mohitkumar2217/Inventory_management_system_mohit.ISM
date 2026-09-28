@@ -2,6 +2,9 @@ import express from "express";
 import { 
     getMyProfile, 
     updateOwnProfile, 
+    updateMySettings,
+    changeOwnPassword,
+    exportInventoryData,
     getStaffList, 
     syncStaffProfile, 
     deleteStaff 
@@ -12,6 +15,9 @@ const router = express.Router();
  
 // Order matters: Static paths must come before dynamic /:id
 router.get("/profile", verifyUser, getMyProfile);
+router.put("/settings", verifyUser, updateMySettings);
+router.put("/change-password", verifyUser, changeOwnPassword);
+router.get("/export", verifyUser, checkRole(['admin']), exportInventoryData);
 router.put("/update-profile", verifyUser, checkRole(['admin']), updateOwnProfile);
  
 router.get("/", verifyUser, checkRole(['admin']), getStaffList);

@@ -66,8 +66,8 @@ const userSchema = new mongoose.Schema({
     secondaryEmail: { type: String },
     // Business & System Context
     businessName: { type: String },
-    currency: { type: String, enum: ["INR"] },
-    timezone: { type: String, enum: ["IST (UTC+5:30)"] },
+    currency: { type: String, enum: ["INR", "USD", "EUR", "GBP"] },
+    timezone: { type: String, enum: ["IST (UTC+5:30)", "GMT (UTC+0)", "EST (UTC-5)"] },
     // System Config
     twoFactor: { type: Boolean },
     emailNotifications: { type: Boolean },

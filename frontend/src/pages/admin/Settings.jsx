@@ -4,70 +4,68 @@ import PageTitle from "../../components/PageTitle";
 import SettingsForm from "../../components/Forms/SettingsFrom";
 import { useAuth } from "../../context/AuthContext";
 import {
-  Shield, Bell, Globe, Database, Save, User,
-  Camera, Clock, Activity, UserCheck, ShieldCheck, Cpu
+  Shield, Bell, Globe, Database, User,
+  Camera, UserCheck, ShieldCheck, Activity
 } from "lucide-react";
 
 export default function Settings() {
-  const { token, user } = useAuth(); // Retrieve current user from AuthContext
+  const { token, user, login } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [actionStatus, setActionStatus] = useState(null);
+  const [lastSaved, setLastSaved] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Initialize with placeholder structure, but we will fill this from API/Context
   const [settingsData, setSettingsData] = useState({
     name: user?.name || "",
-    role: user?.role || "Staff",
+    role: user?.role || "staff",
     works: user?.works || "",
-    img: user?.img || "https://i.pravatar.cc/150?img=11",
+    img: user?.img || "",
     employeeId: user?.employeeId || "",
-    gender: user?.gender || "Not Set",
-    language: "English (US)",
+    gender: user?.gender || "not specified",
+    language: user?.language || "English",
     phone: user?.phone || "",
     email: user?.email || "",
-    secondaryEmail: "",
+    secondaryEmail: user?.secondaryEmail || "",
     address: user?.address || "",
-    businessName: "Logistics Hub",
-    department: user?.department || "Operations",
-    currency: "INR",
-    timezone: "IST (UTC+5:30)",
-    twoFactor: false,
-    emailNotifications: false,
-    lowStockAlerts: false,
-    autoBackup: false,
-    pushNotifications: true
+    businessName: user?.businessName || "",
+    department: user?.department || "",
+    currency: user?.currency || "INR",
+    timezone: user?.timezone || "IST (UTC+5:30)",
+    emailNotifications: user?.emailNotifications || false,
+    lowStockAlerts: user?.lowStockAlerts || false,
+    pushNotifications: user?.pushNotifications || false
   });
 
-  const api = axios.create({
+  const api = useMemo(() => axios.create({
     baseURL: `${import.meta.env.VITE_API_URL}/api`,
     headers: { Authorization: `Bearer ${token}` }
-  });
-
-  // Fetch real profile data for the current logged-in user
-  const fetchUser = async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const res = await api.get("/staffs/profile");
-      if (res.data.success) {
-        setSettingsData(prev => ({
-          ...prev,
-          ...res.data.member,
-          img: res.data.member.img || prev.img,
-          name: res.data.member.name || prev.name
-        }));
-      }
-    } catch (err) {
-      console.error("Fetch Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }), [token]);
 
   useEffect(() => {
-    fetchUser();
-  }, [token]);
+    let isCurrent = true;
+    api.get("/staffs/profile")
+      .then(({ data }) => {
+        if (isCurrent && data.success) {
+          setSettingsData(prev => ({ ...prev, ...data.member }));
+          setIsConnected(true);
+        }
+      })
+      .catch(error => {
+        if (isCurrent) {
+          setIsConnected(false);
+          setActionStatus({ type: "error", message: error.response?.data?.message || "Could not load account settings." });
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+    return () => { isCurrent = false; };
+  }, [api]);
 
   const completionStats = useMemo(() => {
     const requiredFields = ['name', 'email', 'phone', 'address'];
@@ -77,6 +75,7 @@ export default function Settings() {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    setActionStatus(null);
     setSettingsData(prev => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value
@@ -98,15 +97,71 @@ export default function Settings() {
     e.preventDefault();
     setIsSaving(true);
     try {
-      // Sync the logged-in user's changes to the database
-      const res = await api.put("/staffs/update-profile", settingsData);
-      if (res.data.success) alert("Your profile has been updated successfully!");
+      const res = await api.put("/staffs/settings", settingsData);
+      if (res.data.success) {
+        setSettingsData(prev => ({ ...prev, ...res.data.member }));
+        login(token, { ...user, ...res.data.member });
+        setLastSaved(new Date());
+        setActionStatus({ type: "success", message: "Settings saved." });
+      }
     } catch (err) {
-      alert("Sync failed: " + (err.response?.data?.message || err.message));
+      setActionStatus({ type: "error", message: err.response?.data?.message || "Could not save settings." });
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleChangePassword = async ({ currentPassword, newPassword }) => {
+    setIsChangingPassword(true);
+    setActionStatus(null);
+    try {
+      await api.put("/staffs/change-password", { currentPassword, newPassword });
+      setActionStatus({ type: "success", message: "Password changed successfully." });
+      return true;
+    } catch (err) {
+      setActionStatus({ type: "error", message: err.response?.data?.message || "Could not change password." });
+      return false;
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+    const handleExport = async () => {
+      setIsExporting(true);
+      setActionStatus(null);
+      try {
+        const { data } = await api.get("/staffs/export");
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `inventory-export-${new Date().toISOString().slice(0, 10)}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        setActionStatus({ type: "success", message: "Inventory export downloaded." });
+      } catch (err) {
+        setActionStatus({ type: "error", message: err.response?.data?.message || "Could not export inventory data." });
+      } finally {
+        setIsExporting(false);
+      }
+    };
+
+    const handleClearCache = async () => {
+      if (!window.confirm("Clear cached application data? You will remain signed in.")) return;
+      try {
+        Object.keys(localStorage).forEach(key => {
+          if (key !== "pos-token" && key !== "pos-user") localStorage.removeItem(key);
+        });
+        sessionStorage.clear();
+        if ("caches" in window) {
+          const cacheKeys = await window.caches.keys();
+          await Promise.all(cacheKeys.map(key => window.caches.delete(key)));
+        }
+        setActionStatus({ type: "success", message: "Application cache cleared." });
+      } catch {
+        setActionStatus({ type: "error", message: "Could not clear application cache." });
+      }
+    };
 
   const tabs = [
     { id: "profile", label: "My Profile", icon: <User size={18} /> },
@@ -125,19 +180,21 @@ export default function Settings() {
           <div>
             <PageTitle>System Settings</PageTitle>
             <div className="flex items-center gap-3 mt-2">
-              <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest border border-blue-100 flex items-center gap-1">
-                <Activity size={12} /> System Healthy
+              <span className={`${isConnected ? "bg-emerald-50 text-emerald-700 border-emerald-100" : "bg-slate-100 text-slate-500 border-slate-200"} text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-widest border flex items-center gap-1`}>
+                <Activity size={12} /> {isLoading ? "Loading" : isConnected ? "Connected" : "Offline"}
               </span>
               <span className="text-slate-300">|</span>
-              <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest flex items-center gap-1">
-                <Clock size={12} /> Last Sync: Just Now
+              <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest">
+                {lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` : "Changes save when committed"}
               </p>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-100 shadow-sm font-black text-[10px] text-slate-400 uppercase tracking-widest">
-            <Cpu size={14} className="text-blue-500" /> Server Status: Optimal
-          </div>
+          {actionStatus && (
+            <p role="status" className={`text-sm font-bold ${actionStatus.type === "error" ? "text-rose-600" : "text-emerald-700"}`}>
+              {actionStatus.message}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -171,13 +228,22 @@ export default function Settings() {
                 <p className="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Configure your {activeTab} environment</p>
               </div>
 
-              <SettingsForm
-                activeTab={activeTab}
-                formData={settingsData}
-                onChange={handleInputChange}
-                onSave={handleSave}
-                isSaving={isSaving}
-              />
+              {isLoading ? (
+                <div className="py-16 text-center text-sm font-bold text-slate-400">Loading saved settings...</div>
+              ) : (
+                <SettingsForm
+                  activeTab={activeTab}
+                  formData={settingsData}
+                  onChange={handleInputChange}
+                  onSave={handleSave}
+                  onChangePassword={handleChangePassword}
+                  onExport={handleExport}
+                  onClearCache={handleClearCache}
+                  isSaving={isSaving}
+                  isChangingPassword={isChangingPassword}
+                  isExporting={isExporting}
+                />
+              )}
             </div>
           </div>
 
@@ -189,12 +255,12 @@ export default function Settings() {
               <div className="relative">
                 <div className="relative inline-block mb-4 mt-2">
                   <img
-                    src={settingsData.img}
+                    src={settingsData.img || "https://i.pravatar.cc/150?img=11"}
                     alt="Logged In User"
                     className="w-28 h-28 rounded-[2.5rem] object-cover border-4 border-white shadow-2xl"
                   />
                   <button
-                    onClick={() => fileInputRef.current.click()}
+                    onClick={() => fileInputRef.current?.click()}
                     className="absolute -bottom-2 -right-2 bg-blue-600 text-white p-2.5 rounded-2xl shadow-xl border-2 border-white hover:bg-slate-900 transition-all active:scale-90"
                   >
                     <Camera size={16} />
@@ -226,12 +292,12 @@ export default function Settings() {
               <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
                 <UserCheck size={18} className="text-emerald-500 mb-2" />
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</p>
-                <p className="text-sm font-black text-slate-800">Verified</p>
+                <p className="text-sm font-black text-slate-800 capitalize">{settingsData.status || "Active"}</p>
               </div>
               <div className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm">
                 <ShieldCheck size={18} className="text-blue-500 mb-2" />
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Security</p>
-                <p className="text-sm font-black text-slate-800">High</p>
+                <p className="text-sm font-black text-slate-800 capitalize">{settingsData.role || "Account"}</p>
               </div>
             </div>
           </div>

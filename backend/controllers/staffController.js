@@ -1,5 +1,85 @@
 import User from "../models/User.js";
 import bcrypt from "bcrypt";
+import Category from "../models/Category.js";
+import Order from "../models/Order.js";
+import Product from "../models/Product.js";
+import Supplier from "../models/Supplier.js";
+import Warehouse from "../models/Warehouse.js";
+
+const personalSettingsFields = [
+    "name", "phone", "address", "img", "works", "gender", "language",
+    "secondaryEmail", "businessName", "currency", "timezone",
+    "emailNotifications", "lowStockAlerts", "pushNotifications"
+];
+
+export const updateMySettings = async (req, res) => {
+    try {
+        const updateData = Object.fromEntries(
+            personalSettingsFields
+                .filter(field => Object.hasOwn(req.body, field))
+                .map(field => [field, req.body[field]])
+        );
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, message: "Settings saved", member: updatedUser });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const changeOwnPassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword || newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: "Enter your current password and a new password of at least 8 characters" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+        const passwordMatches = await bcrypt.compare(currentPassword, user.password);
+        if (!passwordMatches) {
+            return res.status(400).json({ success: false, message: "Current password is incorrect" });
+        }
+
+        const passwordHash = await bcrypt.hash(newPassword, 12);
+        await User.updateOne({ _id: req.user._id }, { $set: { password: passwordHash } });
+
+        res.status(200).json({ success: true, message: "Password changed successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const exportInventoryData = async (req, res) => {
+    try {
+        const [products, categories, suppliers, orders, warehouses] = await Promise.all([
+            Product.find().lean(),
+            Category.find().lean(),
+            Supplier.find().lean(),
+            Order.find().lean(),
+            Warehouse.find().lean()
+        ]);
+
+        res.status(200).json({
+            exportedAt: new Date().toISOString(),
+            exportedBy: req.user.email,
+            data: { products, categories, suppliers, orders, warehouses }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Could not export inventory data" });
+    }
+};
  
 export const getMyProfile = async (req, res) => {
     try {
