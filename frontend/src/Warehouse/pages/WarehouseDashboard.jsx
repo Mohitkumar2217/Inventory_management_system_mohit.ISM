@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { ArrowRight, Box, Loader2, Warehouse } from "lucide-react";
+import apiClient from "../../api/client.js";
 
 const Stat = ({ label, value }) => (
   <div className="border-l-2 border-blue-700 pl-4">
@@ -19,9 +19,7 @@ export default function WarehouseDashboard() {
 
   useEffect(() => {
     let active = true;
-    axios.get(`${import.meta.env.VITE_API_URL}/api/warehouse`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiClient.get("/warehouse")
       .then(({ data }) => {
         if (active) setWarehouse(data.stocks?.[0] || null);
       })

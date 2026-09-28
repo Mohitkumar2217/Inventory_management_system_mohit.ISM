@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Loader2, Save } from "lucide-react";
 import { useAuth } from "../../context/AuthContext.jsx";
-
-const apiUrl = `${import.meta.env.VITE_API_URL}/api/warehouse`;
+import apiClient from "../../api/client.js";
 
 export default function WarehouseProducts() {
   const { token } = useAuth();
@@ -16,7 +14,7 @@ export default function WarehouseProducts() {
 
   useEffect(() => {
     let active = true;
-    axios.get(apiUrl, { headers: { Authorization: `Bearer ${token}` } })
+    apiClient.get("/warehouse")
       .then(({ data }) => {
         const assignedWarehouse = data.stocks?.[0];
         if (!active) return;
@@ -75,12 +73,12 @@ export default function WarehouseProducts() {
     setError("");
     setMessage("");
     try {
-      const { data } = await axios.put(`${apiUrl}/${warehouse._id}`, {
+      const { data } = await apiClient.put(`/warehouse/${warehouse._id}`, {
         ...form,
         quantity: Number(form.quantity),
         capacity: Number(form.capacity),
         address: { ...form.address, pin: Number(form.address.pin) },
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       setWarehouse(data.stock);
       setMessage("Warehouse data saved.");
     } catch (requestError) {

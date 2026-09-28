@@ -1,8 +1,8 @@
-import axios from "axios";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, ShieldCheck, ArrowLeft, Send } from "lucide-react";
+import apiClient from "../api/client.js";
 
 const Login = () => {
   // View states
@@ -17,11 +17,6 @@ const Login = () => {
 
   const navigate = useNavigate();
   const { login } = useAuth();
-  const API = useMemo(() => axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api/auth`, // NO SLASH AT END
-    // withCredentials: true
-  }), []);
-
   const handleRegister = (e) => {
     e.preventDefault();
     navigate("/register");
@@ -31,10 +26,10 @@ const Login = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await API.post("/login", { email, password });
+      const response = await apiClient.post("/auth/login", { email, password });
       if (response.data.success) {
-        const { token, user } = response.data;
-        await login(token, user);
+        const { accessToken, user } = response.data;
+        login(accessToken, user);
         const roleRedirects = {
           admin: "/admin/dashboard",
           manager: "/manager-portal/dashboard",
@@ -57,7 +52,7 @@ const Login = () => {
     setMessage(null);
     try {
       // Replace with your actual forgot-password endpoint
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/forgot-password`, { email });
+      await apiClient.post("/auth/forgot-password", { email });
       setMessage("Reset link sent! Please check your email inbox.");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to send reset link.");

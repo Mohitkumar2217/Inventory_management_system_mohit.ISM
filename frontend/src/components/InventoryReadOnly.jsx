@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Loader2, PackageSearch } from "lucide-react";
+import apiClient from "../api/client.js";
 
 export default function InventoryReadOnly() {
   const { token } = useAuth();
@@ -11,9 +11,7 @@ export default function InventoryReadOnly() {
 
   useEffect(() => {
     let active = true;
-    axios.get(`${import.meta.env.VITE_API_URL}/api/products`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiClient.get("/products")
       .then((response) => {
         if (active) setProducts(response.data.products || []);
       })

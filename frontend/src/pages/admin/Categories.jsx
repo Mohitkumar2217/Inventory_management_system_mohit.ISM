@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import apiClient from "../../api/client.js";
 import usePortalSearch from "../../layout/usePortalSearch.js";
 import {
     Plus, Trash2, Edit2, Eye, Layers, Percent,
@@ -50,10 +50,7 @@ export default function Categories() {
     const [statusFilter, setStatusFilter] = useState("All");
 
     
-    const api = axios.create({
-        baseURL: `${import.meta.env.VITE_API_URL}/api`,
-        headers: { Authorization: `Bearer ${token}` }
-    });
+    const api = apiClient;
 
     const fetchCategories = async () => {
         setLoading(true);

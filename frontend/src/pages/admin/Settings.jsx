@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import axios from "axios";
 import PageTitle from "../../components/PageTitle";
 import SettingsForm from "../../components/Forms/SettingsFrom";
 import { useAuth } from "../../context/AuthContext";
+import apiClient from "../../api/client.js";
 import {
   Shield, Bell, Globe, Database, User,
   Camera, UserCheck, ShieldCheck, Activity
@@ -41,10 +41,7 @@ export default function Settings() {
     pushNotifications: user?.pushNotifications || false
   });
 
-  const api = useMemo(() => axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
-    headers: { Authorization: `Bearer ${token}` }
-  }), [token]);
+  const api = apiClient;
 
   useEffect(() => {
     let isCurrent = true;

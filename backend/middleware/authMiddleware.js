@@ -7,9 +7,9 @@ import User from "../models/User.js";
 const verifyUser = async (req, res, next) => {
     try {
         // Get token from header
-        const token = req.headers.authorization?.split(' ')[1];
+        const [scheme, token] = (req.headers.authorization || "").split(" ");
 
-        if (!token) {
+        if (scheme !== "Bearer" || !token) {
             return res.status(401).json({ 
                 success: false, 
                 message: "Access Denied: No Token Provided" 
@@ -17,9 +17,9 @@ const verifyUser = async (req, res, next) => {
         }
 
         // Verify Token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET);
         
-        if (!decoded) {
+        if (decoded.type !== "access" || !decoded.sub) {
             return res.status(401).json({ 
                 success: false, 
                 message: "Access Denied: Invalid Token" 
@@ -27,7 +27,7 @@ const verifyUser = async (req, res, next) => {
         }
 
         // Find User in DB 
-        const user = await User.findById(decoded.id).select('-password');
+        const user = await User.findById(decoded.sub).select('-password');
         
         if (!user) {
             return res.status(404).json({ 

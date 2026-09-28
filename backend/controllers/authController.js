@@ -2,10 +2,75 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import nodemailer from 'nodemailer';
+import crypto from "node:crypto";
+import RefreshToken from "../models/RefreshToken.js";
+
+const refreshLifetimeMs = 7 * 24 * 60 * 60 * 1000;
+
+const getAccessSecret = () => process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET;
+const getRefreshSecret = () => process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+
+const createAccessToken = user => jwt.sign(
+  { sub: user._id.toString(), type: "access" },
+  getAccessSecret(),
+  { expiresIn: "15m" }
+);
+
+const getRefreshCookieOptions = () => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/api/auth",
+  maxAge: refreshLifetimeMs
+});
+
+const readRefreshCookie = req => {
+  const cookie = req.headers.cookie?.split(";").map(value => value.trim())
+    .find(value => value.startsWith("ims_refresh="));
+  return cookie ? cookie.slice("ims_refresh=".length) : null;
+};
+
+export const requireAuthClientHeader = (req, res, next) => {
+  if (req.get("X-IMS-Client") !== "web") {
+    return res.status(403).json({ success: false, message: "Request origin could not be verified." });
+  }
+  next();
+};
+
+const hashToken = token => crypto.createHash("sha256").update(token).digest("hex");
+
+const createRefreshToken = async user => {
+  const jti = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + refreshLifetimeMs);
+  const token = jwt.sign(
+    { sub: user._id.toString(), jti, type: "refresh" },
+    getRefreshSecret(),
+    { expiresIn: "7d" }
+  );
+
+  await RefreshToken.create({
+    userId: user._id,
+    jti,
+    tokenHash: hashToken(token),
+    expiresAt
+  });
+  return token;
+};
+
+const publicUser = user => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  assignedWarehouse: user.assignedWarehouse?.toString() || null
+});
 
 // SEND RESET EMAIL
 export const forgotPassword = async (req, res) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, message: "Password reset secret is not configured." });
+    }
     const { email } = req.body;
     const user = await User.findOne({ email });
 
@@ -15,8 +80,8 @@ export const forgotPassword = async (req, res) => {
 
     // Generate a temporary token valid for 15 minutes
     const resetToken = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET || 'fallback_secret',
+      { id: user._id, type: "password-reset" },
+      process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
 
@@ -66,14 +131,22 @@ export const resetPassword = async (req, res) => {
     const { password } = req.body;
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, message: "Password reset secret is not configured." });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.type !== "password-reset" || !password || password.length < 8) {
+      return res.status(400).json({ success: false, message: "Password reset link or password is invalid." });
+    }
 
     // Hash new password with 12 salt rounds
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Update user
-    await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+    const user = await User.findByIdAndUpdate(decoded.id, { password: hashedPassword });
+    if (!user) return res.status(404).json({ success: false, message: "Account not found." });
+    await RefreshToken.deleteMany({ userId: user._id });
 
     res.status(200).json({ success: true, message: "Password updated successfully!" });
 
@@ -97,19 +170,19 @@ export const login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ success: false, message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "2d" });
+    if (!getAccessSecret() || !getRefreshSecret()) {
+      return res.status(500).json({ success: false, message: "Authentication secrets are not configured." });
+    }
+
+    const accessToken = createAccessToken(user);
+    const refreshToken = await createRefreshToken(user);
+    res.cookie("ims_refresh", refreshToken, getRefreshCookieOptions());
 
     return res.status(200).json({
       success: true,
       message: `Welcome, ${user.name}`,
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        assignedWarehouse: user.assignedWarehouse?.toString() || null
-      }
+      accessToken,
+      user: publicUser(user)
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Login failed" });
@@ -139,4 +212,70 @@ export const Register = async (req, res) => {
       error: error.message // testing in postman
     });
   }
+};
+
+export const refreshSession = async (req, res) => {
+  if (!getAccessSecret() || !getRefreshSecret()) {
+    return res.status(500).json({ success: false, message: "Authentication secrets are not configured." });
+  }
+
+  const oldToken = readRefreshCookie(req);
+  if (!oldToken) {
+    return res.status(401).json({ success: false, message: "Refresh token is missing." });
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(oldToken, getRefreshSecret());
+  } catch {
+    res.clearCookie("ims_refresh", getRefreshCookieOptions());
+    return res.status(401).json({ success: false, message: "Refresh session is invalid or expired." });
+  }
+
+  if (decoded.type !== "refresh" || !decoded.sub || !decoded.jti) {
+    res.clearCookie("ims_refresh", getRefreshCookieOptions());
+    return res.status(401).json({ success: false, message: "Refresh token is invalid." });
+  }
+
+  try {
+    const session = await RefreshToken.findOne({
+      userId: decoded.sub,
+      jti: decoded.jti,
+      tokenHash: hashToken(oldToken),
+      expiresAt: { $gt: new Date() }
+    });
+    if (!session) {
+      res.clearCookie("ims_refresh", getRefreshCookieOptions());
+      return res.status(401).json({ success: false, message: "Refresh session has expired or was revoked." });
+    }
+
+    const user = await User.findById(decoded.sub).select("-password");
+    if (!user) {
+      await session.deleteOne();
+      res.clearCookie("ims_refresh", getRefreshCookieOptions());
+      return res.status(401).json({ success: false, message: "Account no longer exists." });
+    }
+
+    const refreshToken = await createRefreshToken(user);
+    await session.deleteOne();
+    const accessToken = createAccessToken(user);
+    res.cookie("ims_refresh", refreshToken, getRefreshCookieOptions());
+    return res.status(200).json({ success: true, accessToken, user: publicUser(user) });
+  } catch {
+    return res.status(500).json({ success: false, message: "Could not refresh the session." });
+  }
+};
+
+export const logout = async (req, res) => {
+  const refreshToken = readRefreshCookie(req);
+  try {
+    if (refreshToken) {
+      await RefreshToken.deleteOne({ tokenHash: hashToken(refreshToken) });
+    }
+  } catch {
+    res.clearCookie("ims_refresh", getRefreshCookieOptions());
+    return res.status(503).json({ success: false, message: "Session cookie cleared, but server-side revocation failed." });
+  }
+  res.clearCookie("ims_refresh", getRefreshCookieOptions());
+  return res.status(200).json({ success: true, message: "Logged out successfully." });
 };

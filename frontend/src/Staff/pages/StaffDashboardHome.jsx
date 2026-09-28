@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { ArrowRight, Loader2 } from "lucide-react";
+import apiClient from "../../api/client.js";
 
 const Metric = ({ label, value }) => (
   <div className="border-l-2 border-emerald-700 pl-4">
@@ -19,9 +19,7 @@ export default function StaffDashboardHome() {
 
   useEffect(() => {
     let active = true;
-    axios.get(`${import.meta.env.VITE_API_URL}/api/products`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiClient.get("/products")
       .then(({ data }) => {
         if (active) setSummary(data.summary || {});
       })

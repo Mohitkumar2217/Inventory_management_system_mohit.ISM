@@ -283,6 +283,9 @@ Create `backend/.env` with the variables the server reads:
 PORT=4000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
+JWT_ACCESS_SECRET=your_distinct_access_jwt_secret
+JWT_REFRESH_SECRET=your_distinct_refresh_jwt_secret
+FRONTEND_URL=http://localhost:5173
 EMAIL_USER=your_email
 EMAIL_PASS=your_email_app_password
 MASTER_ADMIN_NAME=Master Administrator
@@ -297,6 +300,8 @@ VITE_API_URL=http://localhost:4000
 ```
 
 `PORT` defaults to `4000` if unset. Frontend origins allowed by CORS are currently configured in `backend/index.js`.
+
+Access tokens expire after 15 minutes. Refresh tokens are rotated, stored as hashes in MongoDB, and sent only in an HttpOnly cookie. Set distinct, high-entropy values for `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` in production; they fall back to `JWT_SECRET` when omitted. `FRONTEND_URL` must match the deployed frontend origin so credentialed refresh-cookie requests pass CORS.
 
 ---
 

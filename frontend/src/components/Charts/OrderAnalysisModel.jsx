@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useAuth } from "../../context/AuthContext";
+import apiClient from "../../api/client.js";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Loader2 } from 'lucide-react';
 
 const OrderAnalysisModal = ({ isOpen, onClose, item }) => {
-    const { token } = useAuth();
     const [chartData, setChartData] = useState([]);
     const [loading, setLoading] = useState(false);
 
@@ -19,9 +17,7 @@ const OrderAnalysisModal = ({ isOpen, onClose, item }) => {
         setChartData([]); // Clear previous data
         setLoading(true);
         try {
-            const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/orders/analysis/trends?type=${item.label}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await apiClient.get(`/orders/analysis/trends?type=${encodeURIComponent(item.label)}`);
             if (res.data.success) {
                 setChartData(res.data.chartData);
             }

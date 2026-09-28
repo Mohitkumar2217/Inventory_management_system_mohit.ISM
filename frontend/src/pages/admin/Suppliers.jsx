@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx";
+import apiClient from "../../api/client.js";
 import SupplierSummaryCard from "../../components/Summerys/SupplierSummaryCard.jsx";
 import SupplierForm from "../../components/Forms/SupplierForm.jsx";
 
@@ -58,10 +58,7 @@ export default function Suppliers() {
   };
   const [formData, setFormData] = useState(initialFormState);
 
-  const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const api = apiClient;
 
   const fetchVendors = async () => {
     setLoading(true);

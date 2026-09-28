@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx";
+import apiClient from "../../api/client.js";
 import OrderSummaryCard from "../../components/Summerys/OrderSummaryCard.jsx";
 import OrderForm from "../../components/Forms/OrderForm.jsx";
 import OrderDetailPage from "../details/OrderDetailPage.jsx";
@@ -76,10 +76,7 @@ export default function Orders() {
   const [purchaseOrder, setPurchaseOrder] = useState(initialPurchaseForm);
   const [refreshVersion, setRefreshVersion] = useState(0);
 
-  const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const api = apiClient;
 
   const fetchOrders = () => {
     setLoading(true);
@@ -89,9 +86,7 @@ export default function Orders() {
   useEffect(() => {
     if (!token) return undefined;
     let active = true;
-    axios.get(`${import.meta.env.VITE_API_URL}/api/orders`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    apiClient.get("/orders")
       .then((res) => {
         if (!active) return;
       if (res.data.success) {

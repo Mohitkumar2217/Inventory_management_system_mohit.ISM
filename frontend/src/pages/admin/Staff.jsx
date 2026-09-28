@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx"; // 
+import apiClient from "../../api/client.js";
 import StaffForm from "../../components/Forms/StaffForm.jsx";
 import usePortalSearch from "../../layout/usePortalSearch.js";
 import {
@@ -43,10 +43,7 @@ export default function Staff() {
   const [formData, setFormData] = useState(initialFormState);
 
   // --- API CONFIGURATION ---
-  const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const api = apiClient;
 
   // --- 1. FETCH DATA FROM BACKEND ---
   const fetchStaff = async () => {
@@ -65,9 +62,7 @@ export default function Staff() {
   useEffect(() => {
     if (!token) return undefined;
     let active = true;
-    axios.get(`${import.meta.env.VITE_API_URL}/api/staffs`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    apiClient.get("/staffs")
       .then((res) => {
         if (active && res.data.success) setStaffList(res.data.staff);
       })

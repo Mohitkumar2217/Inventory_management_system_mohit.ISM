@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext.jsx";
+import apiClient from "../../api/client.js";
 import ProductSummaryCard from "../../components/Summerys/ProductSummaryCard.jsx";
 import ProductForm from "../../components/Forms/ProductForm.jsx";
 import ProductDetailPage from "../details/ProductDetailPage.jsx";
@@ -46,10 +46,7 @@ export default function Products() {
   };
   const [formData, setFormData] = useState(initialFormState);
 
-  const api = axios.create({
-    baseURL: `${import.meta.env.VITE_API_URL}/api`,
-    headers: { Authorization: `Bearer ${token}` }
-  });
+  const api = apiClient;
 
   const fetchInventory = async () => {
     setLoading(true);

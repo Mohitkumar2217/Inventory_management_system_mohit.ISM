@@ -15,14 +15,15 @@ dotenv.config();
 connectDB();
 const app = express();
 
-app.use(cors({
-  origin: [
+const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5173",
-    "https://inventory-management-system-mohit-i.vercel.app"
-  ]
-}));
+    "https://inventory-management-system-mohit-i.vercel.app",
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));

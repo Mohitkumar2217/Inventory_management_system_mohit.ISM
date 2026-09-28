@@ -1,9 +1,14 @@
 import express from "express";
-import { login, Register,forgotPassword, resetPassword } from "../controllers/authController.js"; 
+import {
+	login, Register, forgotPassword, resetPassword,
+	refreshSession, logout, requireAuthClientHeader
+} from "../controllers/authController.js";
 
 const authRoutes = express.Router();
 
-authRoutes.post("/login", login);
+authRoutes.post("/login", requireAuthClientHeader, login);
+authRoutes.post("/refresh", requireAuthClientHeader, refreshSession);
+authRoutes.post("/logout", requireAuthClientHeader, logout);
 authRoutes.post("/register", Register);  
 authRoutes.post('/forgot-password', forgotPassword);
 authRoutes.post('/reset-password/:token', resetPassword);
